@@ -17,7 +17,7 @@ using xyDocGen.Core.Renderer;
 using xyToolz.Filesystem;
 using xyToolz.Helper.Logging;
 
-class Program
+public class Program
 {
 
     /// <summary>
@@ -25,7 +25,7 @@ class Program
     /// </summary>
     /// <param name="args"></param>
     /// <returns></returns>
-    static int Main(string[] args)
+    public static int Main(string[] args)
     {
         try
         {
