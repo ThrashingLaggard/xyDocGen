@@ -10,7 +10,7 @@
 		<Authors>ThrashingLaggard</Authors>
 		<Company>ThrashingLaggardIndustries</Company>
 		<PackAsTool>true</PackAsTool>
-		<ToolCommandName>xyDocGen</ToolCommandName>
+		<ToolCommandName>xydoc</ToolCommandName>
 		<PackageId>xyDocGen</PackageId>
 		<Description>Helper library for generating [Markdown/...] documentation from C# projects</Description>
 		<PackageTags>documentation;markdown;csharp;api</PackageTags>
