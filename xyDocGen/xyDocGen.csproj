@@ -40,5 +40,11 @@
 		<PackageReference Include="xyToolz" Version="1.0.63" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="runtimeconfig.json">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 	
 </Project>
