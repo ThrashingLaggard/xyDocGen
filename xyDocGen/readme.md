@@ -11,7 +11,8 @@ Extracts all types, methods, properties, events, fields, and nested types.
 
 ## Usage example:
 
-xyDocGen.exe [--root <path>] [--out <output-folder>] [--format <md|pdf|json|html>] [--private] [--exclude <folders>]
+xydocgen --root . --out docs/api --exclude ".git;bin;obj;node_modules;.vs;TestResults"
+
 
 
 

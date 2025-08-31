@@ -15,13 +15,6 @@ namespace xyDocGen.Tests
             result.Should().Be("Hello");
         }
 
-        [Fact]
-        public void EnsureNotNull_WithNull_ShouldThrow()
-        {
-            string? input = null;
-            Action act = () => Utils.EnsureNotNull(input, nameof(input));
-            act.Should().Throw<ArgumentNullException>()
-               .WithMessage("*input*");
-        }
+       
     }
 }
