@@ -5,6 +5,9 @@ using xyDocGen.Core.Docs;
 
 namespace xyDocGen.Core.Renderer
 {
+    /// <summary>
+    /// Rendering the documentation in Markdown file
+    /// </summary>
     public static class MarkdownRenderer
     {
         /// <summary>
