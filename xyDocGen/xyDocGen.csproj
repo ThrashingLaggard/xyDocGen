@@ -61,7 +61,7 @@
 		<None Update="xyDocGen.runtimeconfig.json">
 			<Pack>true</Pack>
 			<PackagePath>\</PackagePath>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			
 		</None>
 	</ItemGroup>
 	
