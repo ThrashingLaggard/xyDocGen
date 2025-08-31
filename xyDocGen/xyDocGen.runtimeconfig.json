@@ -10,7 +10,8 @@
     "applyPatches": true,
     "configProperties": {
       "System.GC.Server": true,
-      "System.GC.RetainVM": false
+      "System.GC.RetainVM": false,
+      "System.Reflection.Metadata.MetadataUpdater.IsSupported": true
     }
   }
 }

@@ -19,12 +19,29 @@ using xyToolz.Helper.Logging;
 
 class Program
 {
+
+
+    static int Main(string[] args)
+    {
+        try
+        {
+            // Run the async main method synchronously
+            MainAsync(args).GetAwaiter().GetResult();
+            return 0; // success
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"❌ Error: {ex.Message}");
+            return 1; // failure
+        }
+    }
+
     /// <summary>
     /// Entry point of the CLI program.
     /// Responsible for parsing arguments, collecting source files, 
     /// extracting type information, and writing documentation output.
     /// </summary>
-    async static Task Main(string[] args) 
+    async static Task MainAsync(string[] args) 
     {
         string rootPath = "";
         string outPath = "";
