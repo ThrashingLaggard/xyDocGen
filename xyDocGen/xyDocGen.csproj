@@ -9,6 +9,9 @@
 		<PackageVersion>1.0.1</PackageVersion>
 		<Authors>ThrashingLaggard</Authors>
 		<Company>ThrashingLaggardIndustries</Company>
+		<PackAsTool>true</PackAsTool>
+		<ToolCommandName>xyDocGen</ToolCommandName>
+		<PackageId>xyDocGen</PackageId>
 		<Description>Helper library for generating [Markdown/...] documentation from C# projects</Description>
 		<PackageTags>documentation;markdown;csharp;api</PackageTags>
 		<RepositoryUrl>https://github.com/ThrashingLaggard/xyDocGen</RepositoryUrl>
@@ -28,6 +31,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="FluentAssertions" Version="8.6.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.11.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
 		<PackageReference Include="PdfSharpCore" Version="1.3.67" />
