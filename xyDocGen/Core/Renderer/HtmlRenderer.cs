@@ -57,6 +57,7 @@ namespace xyDocGen.Core
 
                 sb.AppendLine($"  <h3>{title}</h3>");
                 sb.AppendLine("  <ul>");
+
                 foreach (var m in members)
                 {
                     sb.AppendLine($"    <li><strong>{m.Kind}:</strong> <code>{m.Signature}</code><br>{m.Summary}</li>");
