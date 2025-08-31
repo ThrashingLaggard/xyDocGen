@@ -35,6 +35,7 @@
 	  </None>
 	</ItemGroup>
 
+	
 	<ItemGroup>
 		<PackageReference Include="FluentAssertions" Version="8.6.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.11.0" />
@@ -45,12 +46,14 @@
 		<PackageReference Include="xyToolz" Version="1.0.63" />
 	</ItemGroup>
 
+	
 	<ItemGroup>
 	  <None Update="xyDocGen.runtimeconfig.json">
 	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>
 
+	
 	<!-- Pack runtimeconfig.json ins NuGet Paket -->
 	<ItemGroup>
 		<None Update="xyDocGen.runtimeconfig.json">
