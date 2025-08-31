@@ -22,6 +22,7 @@
 		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 		<PackageLicenseExpression> LGPL-3.0-or-later</PackageLicenseExpression>
 
+		<OutputType>Exe</OutputType>
 		<SelfContained>false</SelfContained>
 		<RuntimeIdentifier></RuntimeIdentifier>
 		<CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>

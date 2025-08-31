@@ -3,7 +3,7 @@
   "isRoot": true,
   "tools": {
     "xydocgen": {
-      "version": "1.0.11",
+      "version": "1.0.12",
       "commands": [
         "xyDocGen"
       ],
