@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using FluentAssertions.Types;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -24,45 +25,41 @@ namespace xyDocGen.Core.Extractors
         /// <summary>
         /// Process all members in a namespace or global scope
         /// </summary>
-        public List<TypeDoc> ProcessMembers(SyntaxList<MemberDeclarationSyntax> members, string ns, string file)
+        public List<TypeDoc> ProcessMembers(SyntaxList<MemberDeclarationSyntax> members, string? ns, string file)
         {
-            var allTypes = new List<TypeDoc>();
-
+            var typesInFile = new List<TypeDoc>();
             foreach (var m in members)
             {
                 switch (m)
                 {
                     case ClassDeclarationSyntax cls:
-                        allTypes.Add(HandleType(cls, ns, file));
+                        typesInFile.Add(HandleType(cls, ns, file));
                         break;
                     case StructDeclarationSyntax st:
-                        allTypes.Add(HandleType(st, ns, file));
+                        typesInFile.Add(HandleType(st, ns, file));
                         break;
                     case InterfaceDeclarationSyntax itf:
-                        allTypes.Add(HandleType(itf, ns, file));
+                        typesInFile.Add(HandleType(itf, ns, file));
                         break;
                     case RecordDeclarationSyntax rec:
-                        allTypes.Add(HandleType(rec, ns, file));
+                        typesInFile.Add(HandleType(rec, ns, file));
                         break;
                     case EnumDeclarationSyntax en:
-                        allTypes.Add(HandleEnum(en, ns, file));
+                        typesInFile.Add(HandleEnum(en, ns, file));
                         break;
                 }
             }
-
-            // Remove nulls if any were skipped due to visibility
-            return allTypes.Where(t => t != null).ToList();
+            return typesInFile;
         }
 
         /// <summary>
         /// Handles class/struct/interface/record extraction, including members and nested types
         /// </summary>
-        private TypeDoc HandleType(TypeDeclarationSyntax type, string ns, string file, string parentName = null)
+        public TypeDoc HandleType(TypeDeclarationSyntax type, string? ns, string file, TypeDoc? parentType = null)
         {
             var modifiers = type.Modifiers.ToString();
             bool isPublic = modifiers.Contains("public");
-            if (!_includeNonPublic && !isPublic)
-                return null!;
+            if (!_includeNonPublic && !isPublic) return null!;
 
             var td = new TypeDoc
             {
@@ -74,16 +71,15 @@ namespace xyDocGen.Core.Extractors
                 BaseTypes = Utils.ExtractBaseTypes(type.BaseList),
                 Summary = Utils.ExtractSummary(type),
                 FilePath = file,
-                Parent = parentName
+                Parent = parentType?.Name!
             };
 
-            // --- Members ---
             foreach (var mem in type.Members)
             {
                 switch (mem)
                 {
                     case ConstructorDeclarationSyntax ctor:
-                        if (_includeNonPublic || HasPublicLike(ctor.Modifiers))
+                        if (_includeNonPublic || Utils.HasPublicLike(ctor.Modifiers))
                             td.Constructors.Add(new MemberDoc
                             {
                                 Kind = "ctor",
@@ -92,9 +88,8 @@ namespace xyDocGen.Core.Extractors
                                 Summary = Utils.ExtractSummary(ctor)
                             });
                         break;
-
                     case MethodDeclarationSyntax mth:
-                        if (_includeNonPublic || HasPublicLike(mth.Modifiers))
+                        if (_includeNonPublic || Utils.HasPublicLike(mth.Modifiers))
                             td.Methods.Add(new MemberDoc
                             {
                                 Kind = "method",
@@ -103,9 +98,8 @@ namespace xyDocGen.Core.Extractors
                                 Summary = Utils.ExtractSummary(mth)
                             });
                         break;
-
                     case PropertyDeclarationSyntax prop:
-                        if (_includeNonPublic || HasPublicLike(prop.Modifiers))
+                        if (_includeNonPublic || Utils.HasPublicLike(prop.Modifiers))
                             td.Properties.Add(new MemberDoc
                             {
                                 Kind = "property",
@@ -114,9 +108,8 @@ namespace xyDocGen.Core.Extractors
                                 Summary = Utils.ExtractSummary(prop)
                             });
                         break;
-
                     case EventDeclarationSyntax evd:
-                        if (_includeNonPublic || HasPublicLike(evd.Modifiers))
+                        if (_includeNonPublic || Utils.HasPublicLike(evd.Modifiers))
                             td.Events.Add(new MemberDoc
                             {
                                 Kind = "event",
@@ -125,9 +118,8 @@ namespace xyDocGen.Core.Extractors
                                 Summary = Utils.ExtractSummary(evd)
                             });
                         break;
-
                     case EventFieldDeclarationSyntax evf:
-                        if (_includeNonPublic || HasPublicLike(evf.Modifiers))
+                        if (_includeNonPublic || Utils.HasPublicLike(evf.Modifiers))
                             td.Events.Add(new MemberDoc
                             {
                                 Kind = "event",
@@ -136,9 +128,8 @@ namespace xyDocGen.Core.Extractors
                                 Summary = Utils.ExtractSummary(evf)
                             });
                         break;
-
                     case FieldDeclarationSyntax fld:
-                        if (_includeNonPublic || HasPublicLike(fld.Modifiers))
+                        if (_includeNonPublic || Utils.HasPublicLike(fld.Modifiers))
                             td.Fields.Add(new MemberDoc
                             {
                                 Kind = "field",
@@ -147,24 +138,30 @@ namespace xyDocGen.Core.Extractors
                                 Summary = Utils.ExtractSummary(fld)
                             });
                         break;
-
-                    // Nested types
                     case ClassDeclarationSyntax ncls:
                     case StructDeclarationSyntax nst:
                     case InterfaceDeclarationSyntax nitf:
                     case RecordDeclarationSyntax nrec:
-                        td.NestedTypes.Add(HandleType((TypeDeclarationSyntax)mem, ns, file, parentName: type.Identifier.Text));
+                        if (_includeNonPublic || Utils.HasPublicLike(((TypeDeclarationSyntax)mem).Modifiers))
+                        {
+                            td.NestedTypes.Add(HandleType((TypeDeclarationSyntax)mem, ns, file, parentType: td));
+                        }
+                        break;
+                    case EnumDeclarationSyntax nen:
+                        if (_includeNonPublic || Utils.HasPublicLike(nen.Modifiers))
+                        {
+                            td.NestedTypes.Add(HandleEnum(nen, ns, file));
+                        }
                         break;
                 }
             }
-
             return td;
         }
 
         /// <summary>
         /// Handles enums and their members
         /// </summary>
-        private TypeDoc HandleEnum(EnumDeclarationSyntax en, string ns, string file)
+        private TypeDoc HandleEnum(EnumDeclarationSyntax en, string? ns, string file)
         {
             var modifiers = en.Modifiers.ToString();
             bool isPublic = modifiers.Contains("public");
