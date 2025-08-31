@@ -1,0 +1,90 @@
+﻿/* --- Global styles --- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.5;
+    margin: 2rem;
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+/* --- Headings --- */
+h1 {
+    font-size: 2rem;
+    color: #2c3e50;
+    border-bottom: 2px solid #2980b9;
+    padding-bottom: 0.3rem;
+}
+
+h2 {
+    font-size: 1.5rem;
+    color: #34495e;
+    border-bottom: 1px solid #95a5a6;
+    padding-bottom: 0.2rem;
+    margin-top: 1.5rem;
+}
+
+h3 {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    margin-top: 1rem;
+}
+
+/* --- TypeDoc info --- */
+p {
+    margin: 0.3rem 0;
+}
+
+strong {
+    color: #2980b9;
+}
+
+/* --- Member lists --- */
+ul {
+    list-style-type: none;
+    padding-left: 1rem;
+}
+
+li {
+    margin: 0.2rem 0.5rem;
+    padding: 0.3rem;
+    background-color: #ecf0f1;
+    border-radius: 4px;
+}
+
+    li strong {
+        color: #c0392b;
+    }
+
+/* --- Nested types --- */
+.nested {
+    margin-left: 2rem;
+    border-left: 2px dashed #7f8c8d;
+    padding-left: 1rem;
+}
+
+/* --- Code / signatures --- */
+code {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #ecf0f1;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+}
+
+/* --- Links --- */
+a {
+    color: #2980b9;
+    text-decoration: none;
+}
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+/* --- Footer (optional) --- */
+footer {
+    margin-top: 2rem;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    border-top: 1px solid #bdc3c7;
+    padding-top: 0.5rem;
+}
