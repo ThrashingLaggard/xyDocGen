@@ -1,4 +1,4 @@
-﻿# xyDocGen
+﻿# xyDocumentor
 
 xyDocGen is an open source tool for automatically generating API documentation from C# projects.  
 It supports Markdown, HTML, PDF, and JSON, and handles all nested types recursively.
