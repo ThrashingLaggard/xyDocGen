@@ -20,7 +20,11 @@ using xyToolz.Helper.Logging;
 class Program
 {
 
-
+    /// <summary>
+    /// Test
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
     static int Main(string[] args)
     {
         try
