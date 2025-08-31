@@ -23,6 +23,7 @@
 		<PackageLicenseExpression> LGPL-3.0-or-later</PackageLicenseExpression>
 	</PropertyGroup>
 
+	
 	<ItemGroup>
 	  <None Include="..\README.md">
 	    <Pack>True</Pack>
