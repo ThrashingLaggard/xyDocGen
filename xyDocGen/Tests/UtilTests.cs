@@ -7,6 +7,7 @@ namespace xyDocGen.Tests
 {
     public class UtilsTests
     {
+
         [Fact]
         public void CleanDoc_ShouldRemoveBrackets()
         {
