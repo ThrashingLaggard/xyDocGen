@@ -5,6 +5,9 @@ using Xunit;
 using xyDocGen.Core;
 using xyDocGen.Core.Extractors;
 
+/// <summary>
+/// Useless Test
+/// </summary>
 public class TypeExtractorTests
 {
     [Fact]
