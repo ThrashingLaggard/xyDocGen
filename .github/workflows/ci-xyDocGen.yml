@@ -23,13 +23,13 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore xyDocGen/xyDocGen.csproj  # Restore NuGet packages
+      run: dotnet restore xyDocGen/xyDocumentor.csproj # Restore NuGet packages
 
     - name: Generate new version from commits
       id: versioning
       run: |
         # Get current version from the .csproj
-        current_version=$(grep -oPm1 "(?<=<PackageVersion>)[^<]+" xyDocGen/xyDocGen.csproj)
+        current_version=$(grep -oPm1 "(?<=<PackageVersion>)[^<]+" xyDocGen/xyDocumentor.csproj)
         echo "Current version: $current_version"
 
         # Get last commit message
@@ -94,7 +94,7 @@ jobs:
     - name: Update .csproj with new version
       run: |
         # Replace <PackageVersion> tag in .csproj file with the new version
-        sed -i "s/<PackageVersion>.*<\/PackageVersion>/<PackageVersion>${{ env.version }}<\/PackageVersion>/" xyDocGen/xyDocGen.csproj
+        sed -i "s/<PackageVersion>.*<\/PackageVersion>/<PackageVersion>${{ env.version }}<\/PackageVersion>/" xyDocGen/xyDocumentor.csproj
 
     - name: Commit updated version
       run: | 
@@ -102,7 +102,7 @@ jobs:
         git config user.email "github-actions[bot]@users.noreply.github.com"
 
         git pull origin master  
-        git add xyDocGen/xyDocGen.csproj
+        git add xyDocGen/xyDocumentor.csproj
         if git diff --cached --quiet; then
           echo "Nothing to commit – skipping."
         else
@@ -113,18 +113,18 @@ jobs:
       continue-on-error: true
 
     - name: Build xyDocGen
-      run: dotnet build xyDocGen/xyDocGen.csproj --configuration Release --no-restore  # Build the project
+      run: dotnet build xyDocGen/xyDocumentor.csproj --configuration Release --no-restore  # Build the project
 
     - name: Test xyDocGen
-      run: dotnet test xyDocGen/xyDocGen.csproj --no-build --verbosity normal  # Run unit tests
+      run: dotnet test xyDocGen/xyDocumentor.csproj --no-build --verbosity normal  # Run unit tests
 
     - name: Pack NuGet package
-      run: dotnet pack xyDocGen/xyDocGen.csproj --configuration Release --no-build -o out  # Create .nupkg file
+      run: dotnet pack xyDocGen/xyDocumentor.csproj --configuration Release --no-build -o out  # Create .nupkg file
 
     - name: Check package version exists
       id: check_version
       run: |
-        version=$(grep -oPm1 "(?<=<PackageVersion>)[^<]+" xyDocGen/xyDocGen.csproj)
+        version=$(grep -oPm1 "(?<=<PackageVersion>)[^<]+" xyDocGen/xyDocumentor.csproj)
         echo "Detected version: $version"
 
         content_type=$(curl -sI -o /dev/null -w "%{content_type}" https://api.nuget.org/v3-flatcontainer/xydocgen/$version/xydocgen.$version.nupkg)
