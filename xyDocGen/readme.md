@@ -1,4 +1,4 @@
-﻿# xyDocumentor
+﻿### xyDocumentor
 
 xyDocumentor is an open source CLI tool for automatically generating API documentation from C# projects.  
 It supports Markdown, HTML, PDF, and JSON, and handles all nested types recursively.
@@ -10,17 +10,18 @@ Extracts all types, methods, properties, events, fields, and nested types.
 
 ## Usage example:
 
-#recommended
+# Local
 (dotnet new tool-manifest)
 (dotnet tool install --local xyDocGen --version 1.0.14)
 dotnet xydocgen --root . --out docs/api --exclude ".git;bin;obj;node_modules;.vs;TestResults"
-or
+
+# Global
 (dotnet tool install --global xyDocGen --version 1.0.14)
 xydocgen --root . --out docs/api --exclude ".git;bin;obj;node_modules;.vs;TestResults"
 
 
 
 
-# Author
+## Author
 ThrashingLaggard
 https://github.com/ThrashingLaggard

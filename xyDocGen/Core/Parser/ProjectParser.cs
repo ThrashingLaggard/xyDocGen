@@ -15,15 +15,25 @@ namespace xyDocumentor.Core.Parser
     /// </summary>
     public class ProjectParser
     {
+        /// <summary>
+        /// Indicates whether non-public members should be included in the operation.
+        /// </summary>
+        /// <remarks>This field determines if non-public members, such as private or internal members, 
+        /// are considered during the operation. It is a read-only field and cannot be modified  after
+        /// initialization.</remarks>
         private readonly bool _includeNonPublic;
         private readonly HashSet<string> _excludeParts;
 
-        public ProjectParser(bool includeNonPublic, IEnumerable<string> excludeParts = null)
+        /// <summary>
+        /// Constructs the ProjectParser and sets values accordingly to the parameters
+        /// </summary>
+        /// <param name="param_IsIncludingNonPublic"></param>
+        /// <param name="param_ExcludeTheseParts"></param>
+        public ProjectParser(bool param_IsIncludingNonPublic, IEnumerable<string> param_ExcludeTheseParts = null)
         {
-            _includeNonPublic = includeNonPublic;
-            _excludeParts = excludeParts != null
-                ? new HashSet<string>(excludeParts, StringComparer.OrdinalIgnoreCase)
-                : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            _includeNonPublic = param_IsIncludingNonPublic;
+            _excludeParts = param_ExcludeTheseParts == null? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                                                                      : new HashSet<string>(param_ExcludeTheseParts, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -107,7 +117,7 @@ namespace xyDocumentor.Core.Parser
                 Name = type.Identifier.Text + (type.TypeParameterList?.ToString() ?? string.Empty),
                 Namespace = ns ?? "<global>",
                 Modifiers = modifiers.Trim(),
-                Attributes = Utils.FlattenAttributes(type.AttributeLists),
+                Attributes = (List<string>)Utils.FlattenAttributes(type.AttributeLists),
                 BaseTypes = Utils.ExtractBaseTypes(type.BaseList),
                 Summary = Utils.ExtractXmlSummaryFromSyntaxNode(type),
                 FilePath = file,
@@ -149,7 +159,7 @@ namespace xyDocumentor.Core.Parser
                 Name = en.Identifier.Text,
                 Namespace = ns ?? "<global>",
                 Modifiers = modifiers.Trim(),
-                Attributes = Utils.FlattenAttributes(en.AttributeLists),
+                Attributes = (List<string>) Utils.FlattenAttributes(en.AttributeLists),
                 BaseTypes = new List<string>(),
                 Summary = Utils.ExtractXmlSummaryFromSyntaxNode(en),
                 FilePath = file

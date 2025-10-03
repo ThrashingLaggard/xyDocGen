@@ -67,7 +67,7 @@ namespace xyDocumentor.Core.Extractors
                 Name = type.Identifier.Text + (type.TypeParameterList?.ToString() ?? string.Empty),
                 Namespace = ns ?? "<global>",
                 Modifiers = modifiers.Trim(),
-                Attributes = Utils.FlattenAttributes(type.AttributeLists),
+                Attributes = (List<string>)Utils.FlattenAttributes(type.AttributeLists),
                 BaseTypes = Utils.ExtractBaseTypes(type.BaseList),
                 Summary = Utils.ExtractXmlSummaryFromSyntaxNode(type),
                 FilePath = file,
@@ -174,7 +174,7 @@ namespace xyDocumentor.Core.Extractors
                 Name = en.Identifier.Text,
                 Namespace = ns ?? "<global>",
                 Modifiers = modifiers.Trim(),
-                Attributes = Utils.FlattenAttributes(en.AttributeLists),
+                Attributes = (List<string>)Utils.FlattenAttributes(en.AttributeLists),
                 BaseTypes = new List<string>(),
                 Summary = Utils.ExtractXmlSummaryFromSyntaxNode(en),
                 FilePath = file
