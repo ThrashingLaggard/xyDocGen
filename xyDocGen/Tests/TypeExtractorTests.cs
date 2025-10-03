@@ -2,8 +2,8 @@
 using Microsoft.CodeAnalysis.CSharp;
 using System.Linq;
 using Xunit;
-using xyDocGen.Core;
-using xyDocGen.Core.Extractors;
+using xyDocumentor.Core;
+using xyDocumentor.Core.Extractors;
 
 /// <summary>
 /// Useless Test

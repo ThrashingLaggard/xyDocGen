@@ -1,6 +1,6 @@
 using Xunit;
-using xyDocGen.Core.Docs;
-using xyDocGen.Core.Renderer;
+using xyDocumentor.Core.Docs;
+using xyDocumentor.Core.Renderer;
 
 public class MarkdownRendererTests
 {

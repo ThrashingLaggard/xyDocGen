@@ -3,7 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
-namespace xyDocGen.Core.Renderer
+namespace xyDocumentor.Core.Renderer
 {
     /// <summary>
     /// Renders a directory structure as tree text

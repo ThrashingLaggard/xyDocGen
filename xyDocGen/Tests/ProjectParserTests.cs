@@ -1,8 +1,8 @@
 ﻿using Xunit;
 using FluentAssertions;
-using xyDocGen.Core.Parser;
+using xyDocumentor.Core.Parser;
 
-namespace xyDocGen.Tests
+namespace xyDocumentor.Tests
 {
     public class ProjectParserTests
     {

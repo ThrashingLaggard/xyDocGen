@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using xyDocGen.Core.Docs;
+using xyDocumentor.Core.Docs;
 
-namespace xyDocGen.Interfaces
+namespace xyDocumentor.Interfaces
 {
     public interface IDocRenderer
     {

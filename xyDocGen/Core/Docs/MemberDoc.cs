@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace xyDocGen.Core.Docs
+namespace xyDocumentor.Core.Docs
 {
     /// <summary>
     /// Represents a single member of a type (field, property, method, constructor, event, enum-member)

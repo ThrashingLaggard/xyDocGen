@@ -5,10 +5,10 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using xyDocGen.Core.Docs;
-using xyDocGen.Core.Helpers;
+using xyDocumentor.Core.Docs;
+using xyDocumentor.Core.Helpers;
 
-namespace xyDocGen.Core.Extractors
+namespace xyDocumentor.Core.Extractors
 {
     /// <summary>
     /// Extracts types (classes, structs, interfaces, records, enums) and their members from C# syntax trees
@@ -69,7 +69,7 @@ namespace xyDocGen.Core.Extractors
                 Modifiers = modifiers.Trim(),
                 Attributes = Utils.FlattenAttributes(type.AttributeLists),
                 BaseTypes = Utils.ExtractBaseTypes(type.BaseList),
-                Summary = Utils.ExtractSummary(type),
+                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(type),
                 FilePath = file,
                 Parent = parentType?.Name!
             };
@@ -85,7 +85,7 @@ namespace xyDocGen.Core.Extractors
                                 Kind = "ctor",
                                 Signature = ctor.Identifier.Text + ctor.ParameterList.ToString(),
                                 Modifiers = ctor.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractSummary(ctor)
+                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(ctor)
                             });
                         break;
                     case MethodDeclarationSyntax mth:
@@ -95,7 +95,7 @@ namespace xyDocGen.Core.Extractors
                                 Kind = "method",
                                 Signature = $"{mth.ReturnType} {mth.Identifier}{mth.TypeParameterList}{mth.ParameterList}",
                                 Modifiers = mth.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractSummary(mth)
+                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(mth)
                             });
                         break;
                     case PropertyDeclarationSyntax prop:
@@ -105,7 +105,7 @@ namespace xyDocGen.Core.Extractors
                                 Kind = "property",
                                 Signature = $"{prop.Type} {prop.Identifier}{prop.AccessorList}",
                                 Modifiers = prop.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractSummary(prop)
+                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(prop)
                             });
                         break;
                     case EventDeclarationSyntax evd:
@@ -115,7 +115,7 @@ namespace xyDocGen.Core.Extractors
                                 Kind = "event",
                                 Signature = $"event {evd.Type} {evd.Identifier}",
                                 Modifiers = evd.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractSummary(evd)
+                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(evd)
                             });
                         break;
                     case EventFieldDeclarationSyntax evf:
@@ -125,7 +125,7 @@ namespace xyDocGen.Core.Extractors
                                 Kind = "event",
                                 Signature = $"event {evf.Declaration.Type} {string.Join(", ", evf.Declaration.Variables.Select(v => v.Identifier.Text))}",
                                 Modifiers = evf.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractSummary(evf)
+                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(evf)
                             });
                         break;
                     case FieldDeclarationSyntax fld:
@@ -135,7 +135,7 @@ namespace xyDocGen.Core.Extractors
                                 Kind = "field",
                                 Signature = $"{fld.Declaration.Type} {string.Join(", ", fld.Declaration.Variables.Select(v => v.Identifier.Text))}",
                                 Modifiers = fld.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractSummary(fld)
+                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(fld)
                             });
                         break;
                     case ClassDeclarationSyntax ncls:
@@ -176,7 +176,7 @@ namespace xyDocGen.Core.Extractors
                 Modifiers = modifiers.Trim(),
                 Attributes = Utils.FlattenAttributes(en.AttributeLists),
                 BaseTypes = new List<string>(),
-                Summary = Utils.ExtractSummary(en),
+                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(en),
                 FilePath = file
             };
 
@@ -186,7 +186,7 @@ namespace xyDocGen.Core.Extractors
                 {
                     Kind = "enum-member",
                     Signature = m.Identifier.Text + (m.EqualsValue != null ? $" = {m.EqualsValue.Value}" : string.Empty),
-                    Summary = Utils.ExtractSummary(m)
+                    Summary = Utils.ExtractXmlSummaryFromSyntaxNode(m)
                 });
             }
 

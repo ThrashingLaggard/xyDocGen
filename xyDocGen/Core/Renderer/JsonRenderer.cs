@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using xyDocGen.Core.Docs;
+using xyDocumentor.Core.Docs;
 
-namespace xyDocGen.Core
+namespace xyDocumentor.Core
 {
     /// <summary>
     /// Renders TypeDoc objects as JSON strings.

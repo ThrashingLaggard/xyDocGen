@@ -10,10 +10,10 @@ using System.Net.WebSockets;
 using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
-using xyDocGen.Core;
-using xyDocGen.Core.Docs;
-using xyDocGen.Core.Extractors;
-using xyDocGen.Core.Renderer;
+using xyDocumentor.Core;
+using xyDocumentor.Core.Docs;
+using xyDocumentor.Core.Extractors;
+using xyDocumentor.Core.Renderer;
 using xyToolz.Filesystem;
 using xyToolz.Helper.Logging;
 

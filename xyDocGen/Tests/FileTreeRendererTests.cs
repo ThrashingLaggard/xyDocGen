@@ -2,7 +2,7 @@ using Xunit;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
-using xyDocGen.Core.Renderer;
+using xyDocumentor.Core.Renderer;
 
 public class FileTreeRendererTests
 {

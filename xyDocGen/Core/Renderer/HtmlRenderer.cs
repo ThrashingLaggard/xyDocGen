@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Text;
-using xyDocGen.Core.Docs;
+using xyDocumentor.Core.Docs;
 
-namespace xyDocGen.Core
+namespace xyDocumentor.Core
 {
     /// <summary>
     /// Renders TypeDoc objects as HTML pages with optional CSS styling.

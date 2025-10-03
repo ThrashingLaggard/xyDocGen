@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using xyDocGen.Core.Docs;
+using xyDocumentor.Core.Docs;
 
-namespace xyDocGen.Core.Renderer
+namespace xyDocumentor.Core.Renderer
 {
     /// <summary>
     /// Provides static methods to generate structured code documentation

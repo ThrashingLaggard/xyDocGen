@@ -1,6 +1,6 @@
 using Xunit;
-using xyDocGen.Core.Docs;
-using xyDocGen.Core.Renderer;
+using xyDocumentor.Core.Docs;
+using xyDocumentor.Core.Renderer;
 using System.IO;
 
 public class PdfRendererTests

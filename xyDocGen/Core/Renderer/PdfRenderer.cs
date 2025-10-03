@@ -3,9 +3,9 @@ using PdfSharpCore.Pdf;
 using System;
 using System.Linq;
 using System.Xml.Linq;
-using xyDocGen.Core.Docs;
+using xyDocumentor.Core.Docs;
 
-namespace xyDocGen.Core.Renderer
+namespace xyDocumentor.Core.Renderer
 {
     public static class PdfRenderer
     {

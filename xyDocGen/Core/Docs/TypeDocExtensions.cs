@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace xyDocGen.Core.Docs
+namespace xyDocumentor.Core.Docs
 {
     public static class TypeDocExtensions
     {

@@ -1,9 +1,9 @@
 ﻿using FluentAssertions;
 using System;
 using Xunit;
-using xyDocGen.Core.Helpers;
+using xyDocumentor.Core.Helpers;
 
-namespace xyDocGen.Tests
+namespace xyDocumentor.Tests
 {
     public class UtilsTests
     {

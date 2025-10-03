@@ -5,10 +5,10 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using xyDocGen.Core.Docs;
-using xyDocGen.Core.Helpers;
+using xyDocumentor.Core.Docs;
+using xyDocumentor.Core.Helpers;
 
-namespace xyDocGen.Core.Parser
+namespace xyDocumentor.Core.Parser
 {
     /// <summary>
     /// Parses C# files in a directory and returns all TypeDocs
@@ -109,7 +109,7 @@ namespace xyDocGen.Core.Parser
                 Modifiers = modifiers.Trim(),
                 Attributes = Utils.FlattenAttributes(type.AttributeLists),
                 BaseTypes = Utils.ExtractBaseTypes(type.BaseList),
-                Summary = Utils.ExtractSummary(type),
+                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(type),
                 FilePath = file,
                 Parent = parentName
             };
@@ -151,7 +151,7 @@ namespace xyDocGen.Core.Parser
                 Modifiers = modifiers.Trim(),
                 Attributes = Utils.FlattenAttributes(en.AttributeLists),
                 BaseTypes = new List<string>(),
-                Summary = Utils.ExtractSummary(en),
+                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(en),
                 FilePath = file
             };
 

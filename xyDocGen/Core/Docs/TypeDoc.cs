@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace xyDocGen.Core.Docs
+namespace xyDocumentor.Core.Docs
 {
     /// <summary>
     /// Represents a type (class, struct, interface, record, enum) and its members

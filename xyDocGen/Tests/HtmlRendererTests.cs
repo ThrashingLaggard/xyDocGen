@@ -1,6 +1,6 @@
 using Xunit;
-using xyDocGen.Core;
-using xyDocGen.Core.Docs;
+using xyDocumentor.Core;
+using xyDocumentor.Core.Docs;
 
 public class HtmlRendererTests
 {
