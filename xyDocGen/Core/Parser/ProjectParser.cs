@@ -25,29 +25,30 @@ namespace xyDocumentor.Core.Parser
         private readonly HashSet<string> _excludeParts;
 
         /// <summary>
-        /// Constructs the ProjectParser and sets values accordingly to the parameters
+        /// Constructs the ProjectParser based on the parameters
         /// </summary>
-        /// <param name="param_IsIncludingNonPublic"></param>
-        /// <param name="param_ExcludeTheseParts"></param>
-        public ProjectParser(bool param_IsIncludingNonPublic, IEnumerable<string> param_ExcludeTheseParts = null)
+        /// <param name="includesNonPublic_"></param>
+        /// <param name="excludeTheseParts_"></param>
+        public ProjectParser(bool includesNonPublic_, IEnumerable<string> excludeTheseParts_ = null)
         {
-            _includeNonPublic = param_IsIncludingNonPublic;
-            _excludeParts = param_ExcludeTheseParts == null? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                                                                      : new HashSet<string>(param_ExcludeTheseParts, StringComparer.OrdinalIgnoreCase);
+            _includeNonPublic = includesNonPublic_;
+            _excludeParts = excludeTheseParts_ is null?      new HashSet<string>(StringComparer.OrdinalIgnoreCase) : 
+                                                                                        new HashSet<string>(excludeTheseParts_, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
         /// Scan a root folder recursively and return all TypeDocs
         /// </summary>
+        /// <param name="rootPath"></param>
+        /// <returns></returns>
         public List<TypeDoc> ParseProject(string rootPath)
         {
-            var allCs = Directory.EnumerateFiles(rootPath, "*.cs", SearchOption.AllDirectories)
-                                 .Where(p => !IsExcluded(p))
-                                 .ToList();
+            // 
+            List<string> listedCsFiles = Directory.EnumerateFiles(rootPath, "*.cs", SearchOption.AllDirectories).Where(p => !IsExcluded(p)).ToList();
 
             var allTypes = new List<TypeDoc>();
 
-            foreach (var file in allCs)
+            foreach (var file in listedCsFiles)
             {
                 var text = File.ReadAllText(file);
                 var tree = CSharpSyntaxTree.ParseText(text, new CSharpParseOptions(LanguageVersion.Preview));

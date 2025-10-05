@@ -9,7 +9,7 @@ using xyDocumentor.Core.Helpers;
 namespace xyDocumentor.Core.Extractors
 {
     /// <summary>
-    /// Extracts types (classes, structs, interfaces, records, enums) and their members from C# syntax trees
+    /// Extracts types (classes, structs, interfaces, records, enums) and their members from C# syntax trees 
     /// </summary>
     public class TypeExtractor
     {

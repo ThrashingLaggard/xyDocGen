@@ -58,7 +58,7 @@
 	</ItemGroup>
 
 	
-	<!-- Pack runtimeconfig.json ins NuGet Paket -->
+	<!-- Pack runtimeconfig.json ins NuGet Paket!!! -->
 	<ItemGroup>
 		<None Update="xyDocGen.runtimeconfig.json">
 			<Pack>true</Pack>

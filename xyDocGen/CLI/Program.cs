@@ -21,7 +21,7 @@ public class Program
 {
 
     /// <summary>
-    /// Test
+    /// Mimimi, i dont want to be async, or else im not a valid starting point for the program, mimimi!
     /// </summary>
     /// <param name="args"></param>
     /// <returns></returns>
@@ -31,20 +31,21 @@ public class Program
         {
             // Run the async main method synchronously
             MainAsync(args).GetAwaiter().GetResult();
-            return 0; // success
+            return 0; // weirdly its success 
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error: {ex.Message}");
-            return 1; // failure
+            xyLog.ExLog(ex);
+            return 1; // what a failure
         }
     }
 
     /// <summary>
-    /// Entry point of the CLI program.
-    /// Responsible for parsing arguments, collecting source files, 
+    ///  Responsible for parsing arguments, collecting source files, 
     /// extracting type information, and writing documentation output.
     /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
     async static Task MainAsync(string[] args) 
     {
         string rootPath = "";
