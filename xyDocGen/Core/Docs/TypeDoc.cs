@@ -10,10 +10,10 @@ namespace xyDocumentor.Core.Docs
         /// <summary>Kind of type: "class", "struct", "interface", "record", "enum"</summary>
         public string Kind { get; init; } = string.Empty;
 
-        /// <summary>Type name including gen
-        /// eric parameters</summary>
+        /// <summary>Type name including generic parameters</summary>
         public string Name { get; init; } = string.Empty;
 
+        /// <summary> Types within  </summary>
         public List<TypeDoc> NestedTypes { get; set; }
 
         /// <summary>Namespace the type belongs to, "<global>" if none</summary>
@@ -44,9 +44,7 @@ namespace xyDocumentor.Core.Docs
         public List<MemberDoc> Events { get; } = new();
         public List<MemberDoc> Fields { get; } = new();
 
-        /// <summary>
-        /// Display name including parent if nested
-        /// </summary>
+        ///<summary> Display name including parent if nested </summary>
         public string DisplayName => string.IsNullOrWhiteSpace(Parent) ? Name : $"{Parent}.{Name}";
     }
 }

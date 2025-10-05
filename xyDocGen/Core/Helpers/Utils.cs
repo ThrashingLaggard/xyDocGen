@@ -15,15 +15,15 @@ namespace xyDocumentor.Core.Helpers
         /// <summary>
         /// Flattens all attributes of a type/member into a simple list of names
         /// </summary>
-        /// <param name="lst_AttributesFromMember"> List of SyntaxNodes</param>
+        /// <param name="listedAttributesFromMember_"> List of SyntaxNodes</param>
         /// <returns></returns>
-        public static IEnumerable<string> FlattenAttributes(SyntaxList<AttributeListSyntax> lst_AttributesFromMember)
+        public static IEnumerable<string> FlattenAttributes(SyntaxList<AttributeListSyntax> listedAttributesFromMember_)
         {
             // Store the results to return them for later use
             List<string> lst_Results = new();
 
             // For every SyntaxNode (here: List of Attributes) in the List
-            foreach (AttributeListSyntax als_ListOfAttributes in lst_AttributesFromMember)
+            foreach (AttributeListSyntax als_ListOfAttributes in listedAttributesFromMember_)
             {
                 // For every attribute
                 foreach (AttributeSyntax as_Attribute in als_ListOfAttributes.Attributes)
@@ -40,22 +40,22 @@ namespace xyDocumentor.Core.Helpers
         /// <summary>
         /// Extracts base types and interfaces
         /// </summary>
-        /// <param name="baseList"></param>
+        /// <param name="baseList_"></param>
         /// <returns></returns>
-        public static List<string> ExtractBaseTypes(BaseListSyntax baseList)
+        public static List<string> ExtractBaseTypes(BaseListSyntax baseList_)
         {
             // Storage for returning the results
             List<string> lst_BaseTypes = [];
 
             // Checks for an invalid parameter
-            if (baseList is null || baseList.Span.IsEmpty)
+            if (baseList_ is null || baseList_.Span.IsEmpty)
             {
                 // log invalid parameter here
                 return lst_BaseTypes;
             }
 
             // For every type in the externally provided list
-            foreach (BaseTypeSyntax type in baseList.Types)
+            foreach (BaseTypeSyntax type in baseList_.Types)
             {
                 // Add its String representation
                 lst_BaseTypes.Add(type.Type.ToString());
@@ -66,10 +66,10 @@ namespace xyDocumentor.Core.Helpers
         /// <summary>
         /// Extracts the clean text from the XML summary for a given syntax node.
         /// </summary>
-        public static string ExtractXmlSummaryFromSyntaxNode(SyntaxNode node)
+        public static string ExtractXmlSummaryFromSyntaxNode(SyntaxNode node_)
         {
             // Read the trivia syntax element from the target node
-            DocumentationCommentTriviaSyntax trivia = node.GetLeadingTrivia().Select(t => t.GetStructure()).OfType<DocumentationCommentTriviaSyntax>().FirstOrDefault();
+            DocumentationCommentTriviaSyntax trivia = node_.GetLeadingTrivia().Select(t => t.GetStructure()).OfType<DocumentationCommentTriviaSyntax>().FirstOrDefault();
 
             if (trivia != null)
             {
@@ -122,12 +122,12 @@ namespace xyDocumentor.Core.Helpers
         /// <summary>
         /// Remove XML Tags from the target and decode it into a String
         /// </summary>
-        /// <param name="raw"></param>
+        /// <param name="raw_"></param>
         /// <returns></returns>
-        public static string CleanDoc(string raw)
+        public static string CleanDoc(string raw_)
         {
             // Remove html elements
-            string s_CleanedResult = raw.Replace("<para>", "\n").Replace("</para>", "\n");
+            string s_CleanedResult = raw_.Replace("<para>", "\n").Replace("</para>", "\n");
 
             // Remove any remaining tags
             s_CleanedResult = Regex.Replace(s_CleanedResult, "<.*?>", string.Empty);
@@ -144,13 +144,13 @@ namespace xyDocumentor.Core.Helpers
         /// <summary>
         /// Check if a member has public-like visibility
         /// </summary>
-        /// <param name="modifiers"></param>
+        /// <param name="modifiers_"></param>
         /// <returns></returns>
-        public static bool HasPublicLike(SyntaxTokenList modifiers)
+        public static bool HasPublicLike(SyntaxTokenList modifiers_)
         {
             // Check if the given SyntaxToken is either: treat "public" and "protected" as "public-like"
-            if (modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword))) return true;
-            if (modifiers.Any(m => m.IsKind(SyntaxKind.ProtectedKeyword))) return true;
+            if (modifiers_.Any(m => m.IsKind(SyntaxKind.PublicKeyword))) return true;
+            if (modifiers_.Any(m => m.IsKind(SyntaxKind.ProtectedKeyword))) return true;
 
             // default is private => false
             return false;

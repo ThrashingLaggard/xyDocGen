@@ -118,9 +118,7 @@ public class Program
     }
 
     /// <summary>
-    ///  Determining output format 
-    ///  
-    /// 
+    ///  Determibes the output format 
     /// </summary>
     /// <param name="ExternalArguments"></param>
     /// <param name="args"></param>
@@ -128,7 +126,7 @@ public class Program
     public static string GetFormat(List<string> ExternalArguments, string[] args) => ExternalArguments.Contains("--format")? args[Array.IndexOf(args, "--format") + 1].ToLower(): "md";          // default: Markdown!
 
     /// <summary>
-    /// Checking how to handle non public data 
+    /// Checks how to handle non public data 
     /// </summary>
     /// <param name="ExternalArguments"></param>
     /// <returns></returns>

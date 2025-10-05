@@ -1,8 +1,6 @@
-﻿using FluentAssertions.Types;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using xyDocumentor.Core.Docs;
@@ -17,188 +15,230 @@ namespace xyDocumentor.Core.Extractors
     {
         private readonly bool _includeNonPublic;
 
-        public TypeExtractor(bool includeNonPublic)
+
+        /// <summary>
+        /// Contruct the Extractor and decide whether to include non public members in the process
+        /// </summary>
+        /// <param name="includeNonPublic_"></param>
+        public TypeExtractor(bool includeNonPublic_)
         {
-            _includeNonPublic = includeNonPublic;
+            _includeNonPublic = includeNonPublic_;
         }
 
         /// <summary>
         /// Process all members in a namespace or global scope
         /// </summary>
-        public List<TypeDoc> ProcessMembers(SyntaxList<MemberDeclarationSyntax> members, string? ns, string file)
+        /// <param name="listedMembers_"></param>
+        /// <param name="namespace_"></param>
+        /// <param name="file_"></param>
+        /// <returns></returns>
+        public List<TypeDoc> ProcessMembers(SyntaxList<MemberDeclarationSyntax> listedMembers_, string? namespace_, string file_)
         {
-            var typesInFile = new List<TypeDoc>();
-            foreach (var m in members)
+            // Used to store the values for return
+            List<TypeDoc> ListedTypesInFile = [];
+
+            // For every member declaration:  Call the HandleType() Method with the according parameter
+            foreach (MemberDeclarationSyntax memberDeclaration in listedMembers_)
             {
-                switch (m)
+                switch (memberDeclaration)
                 {
-                    case ClassDeclarationSyntax cls:
-                        typesInFile.Add(HandleType(cls, ns, file));
+                    case ClassDeclarationSyntax __Class:
+                        ListedTypesInFile.Add(HandleType(__Class, namespace_, file_));
                         break;
-                    case StructDeclarationSyntax st:
-                        typesInFile.Add(HandleType(st, ns, file));
+                    case StructDeclarationSyntax __Struct:
+                        ListedTypesInFile.Add(HandleType(__Struct, namespace_, file_));
                         break;
-                    case InterfaceDeclarationSyntax itf:
-                        typesInFile.Add(HandleType(itf, ns, file));
+                    case InterfaceDeclarationSyntax __Interface:
+                        ListedTypesInFile.Add(HandleType(__Interface, namespace_, file_));
                         break;
-                    case RecordDeclarationSyntax rec:
-                        typesInFile.Add(HandleType(rec, ns, file));
+                    case RecordDeclarationSyntax __Record:
+                        ListedTypesInFile.Add(HandleType(__Record, namespace_, file_));
                         break;
-                    case EnumDeclarationSyntax en:
-                        typesInFile.Add(HandleEnum(en, ns, file));
+                    case EnumDeclarationSyntax __Enum:
+                        ListedTypesInFile.Add(HandleEnum(__Enum, namespace_, file_));
                         break;
                 }
             }
-            return typesInFile;
+            return ListedTypesInFile;
         }
 
         /// <summary>
         /// Handles class/struct/interface/record extraction, including members and nested types
         /// </summary>
-        public TypeDoc HandleType(TypeDeclarationSyntax type, string? ns, string file, TypeDoc? parentType = null)
+        /// <param name="type_"></param>
+        /// <param name="namespace_"></param>
+        /// <param name="filePath_"></param>
+        /// <param name="parentType_"></param>
+        /// <returns></returns>
+        public TypeDoc HandleType(TypeDeclarationSyntax type_, string? namespace_, string filePath_, TypeDoc? parentType_ = null)
         {
-            var modifiers = type.Modifiers.ToString();
+            // Store in here for better readability
+            string modifiers = type_.Modifiers.ToString();
+
+            // Is the type public?
             bool isPublic = modifiers.Contains("public");
+
+            // If not and therefore not to be processed return null
             if (!_includeNonPublic && !isPublic) return null!;
 
-            var td = new TypeDoc
+            // Fill in all the needed data
+            TypeDoc td_Result = new()
             {
-                Kind = type.Keyword.ValueText,
-                Name = type.Identifier.Text + (type.TypeParameterList?.ToString() ?? string.Empty),
-                Namespace = ns ?? "<global>",
+                Kind = type_.Keyword.ValueText,
+                Name = type_.Identifier.Text + (type_.TypeParameterList?.ToString() ?? string.Empty),
+                Namespace = namespace_ ?? "<global>",
                 Modifiers = modifiers.Trim(),
-                Attributes = (List<string>)Utils.FlattenAttributes(type.AttributeLists),
-                BaseTypes = Utils.ExtractBaseTypes(type.BaseList),
-                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(type),
-                FilePath = file,
-                Parent = parentType?.Name!
+                Attributes = (List<string>)Utils.FlattenAttributes(type_.AttributeLists),
+                BaseTypes = Utils.ExtractBaseTypes(type_.BaseList),
+                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(type_),
+                FilePath = filePath_,
+                Parent = parentType_?.Name!
             };
 
-            foreach (var mem in type.Members)
+            // For every member in the type: Create a typedoc and add them to the corresponding list
+            foreach (MemberDeclarationSyntax member in type_.Members)
             {
-                switch (mem)
+                switch (member)
                 {
-                    case ConstructorDeclarationSyntax ctor:
-                        if (_includeNonPublic || Utils.HasPublicLike(ctor.Modifiers))
-                            td.Constructors.Add(new MemberDoc
+                    case ConstructorDeclarationSyntax __Constructor:
+                        if (_includeNonPublic || Utils.HasPublicLike(__Constructor.Modifiers))
+                            td_Result.Constructors.Add(new MemberDoc
                             {
                                 Kind = "ctor",
-                                Signature = ctor.Identifier.Text + ctor.ParameterList.ToString(),
-                                Modifiers = ctor.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(ctor)
+                                Signature = __Constructor.Identifier.Text + __Constructor.ParameterList.ToString(),
+                                Modifiers = __Constructor.Modifiers.ToString().Trim(),
+                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(__Constructor)
                             });
                         break;
-                    case MethodDeclarationSyntax mth:
-                        if (_includeNonPublic || Utils.HasPublicLike(mth.Modifiers))
-                            td.Methods.Add(new MemberDoc
+                    case MethodDeclarationSyntax __Mehtod:
+                        if (_includeNonPublic || Utils.HasPublicLike(__Mehtod.Modifiers))
+                            td_Result.Methods.Add(new MemberDoc
                             {
                                 Kind = "method",
-                                Signature = $"{mth.ReturnType} {mth.Identifier}{mth.TypeParameterList}{mth.ParameterList}",
-                                Modifiers = mth.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(mth)
+                                Signature = $"{__Mehtod.ReturnType} {__Mehtod.Identifier}{__Mehtod.TypeParameterList}{__Mehtod.ParameterList}",
+                                Modifiers = __Mehtod.Modifiers.ToString().Trim(),
+                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(__Mehtod)
                             });
                         break;
-                    case PropertyDeclarationSyntax prop:
-                        if (_includeNonPublic || Utils.HasPublicLike(prop.Modifiers))
-                            td.Properties.Add(new MemberDoc
+                    case PropertyDeclarationSyntax __Property:
+                        if (_includeNonPublic || Utils.HasPublicLike(__Property.Modifiers))
+                            td_Result.Properties.Add(new MemberDoc
                             {
                                 Kind = "property",
-                                Signature = $"{prop.Type} {prop.Identifier}{prop.AccessorList}",
-                                Modifiers = prop.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(prop)
+                                Signature = $"{__Property.Type} {__Property.Identifier}{__Property.AccessorList}",
+                                Modifiers = __Property.Modifiers.ToString().Trim(),
+                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(__Property)
                             });
                         break;
-                    case EventDeclarationSyntax evd:
-                        if (_includeNonPublic || Utils.HasPublicLike(evd.Modifiers))
-                            td.Events.Add(new MemberDoc
+                    case EventDeclarationSyntax __Event:
+                        if (_includeNonPublic || Utils.HasPublicLike(__Event.Modifiers))
+                            td_Result.Events.Add(new MemberDoc
                             {
                                 Kind = "event",
-                                Signature = $"event {evd.Type} {evd.Identifier}",
-                                Modifiers = evd.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(evd)
+                                Signature = $"event {__Event.Type} {__Event.Identifier}",
+                                Modifiers = __Event.Modifiers.ToString().Trim(),
+                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(__Event)
                             });
                         break;
-                    case EventFieldDeclarationSyntax evf:
-                        if (_includeNonPublic || Utils.HasPublicLike(evf.Modifiers))
-                            td.Events.Add(new MemberDoc
+                    case EventFieldDeclarationSyntax __EventField:
+                        if (_includeNonPublic || Utils.HasPublicLike(__EventField.Modifiers))
+                            td_Result.Events.Add(new MemberDoc
                             {
                                 Kind = "event",
-                                Signature = $"event {evf.Declaration.Type} {string.Join(", ", evf.Declaration.Variables.Select(v => v.Identifier.Text))}",
-                                Modifiers = evf.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(evf)
+                                Signature = $"event {__EventField.Declaration.Type} {string.Join(", ", __EventField.Declaration.Variables.Select(v => v.Identifier.Text))}",
+                                Modifiers = __EventField.Modifiers.ToString().Trim(),
+                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(__EventField)
                             });
                         break;
-                    case FieldDeclarationSyntax fld:
-                        if (_includeNonPublic || Utils.HasPublicLike(fld.Modifiers))
-                            td.Fields.Add(new MemberDoc
+                    case FieldDeclarationSyntax __Field:
+                        if (_includeNonPublic || Utils.HasPublicLike(__Field.Modifiers))
+                            td_Result.Fields.Add(new MemberDoc
                             {
                                 Kind = "field",
-                                Signature = $"{fld.Declaration.Type} {string.Join(", ", fld.Declaration.Variables.Select(v => v.Identifier.Text))}",
-                                Modifiers = fld.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(fld)
+                                Signature = $"{__Field.Declaration.Type} {string.Join(", ", __Field.Declaration.Variables.Select(v => v.Identifier.Text))}",
+                                Modifiers = __Field.Modifiers.ToString().Trim(),
+                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(__Field)
                             });
                         break;
-                    case ClassDeclarationSyntax ncls:
-                    case StructDeclarationSyntax nst:
-                    case InterfaceDeclarationSyntax nitf:
-                    case RecordDeclarationSyntax nrec:
-                        if (_includeNonPublic || Utils.HasPublicLike(((TypeDeclarationSyntax)mem).Modifiers))
+                    case ClassDeclarationSyntax __Class:
+                    case StructDeclarationSyntax __Struct:
+                    case InterfaceDeclarationSyntax __Interface:
+                    case RecordDeclarationSyntax __Record:
+                        if (_includeNonPublic || Utils.HasPublicLike(((TypeDeclarationSyntax)member).Modifiers))
                         {
-                            td.NestedTypes.Add(HandleType((TypeDeclarationSyntax)mem, ns, file, parentType: td));
+                            td_Result.NestedTypes.Add(HandleType((TypeDeclarationSyntax)member, namespace_, filePath_, parentType_: td_Result));
                         }
                         break;
                     case EnumDeclarationSyntax nen:
                         if (_includeNonPublic || Utils.HasPublicLike(nen.Modifiers))
                         {
-                            td.NestedTypes.Add(HandleEnum(nen, ns, file));
+                            td_Result.NestedTypes.Add(HandleEnum(nen, namespace_, filePath_));
                         }
                         break;
                 }
             }
-            return td;
+            return td_Result;
         }
 
         /// <summary>
         /// Handles enums and their members
         /// </summary>
-        private TypeDoc HandleEnum(EnumDeclarationSyntax en, string? ns, string file)
+        /// <param name="enumDeclaration_"></param>
+        /// <param name="namespace_"></param>
+        /// <param name="filePath_"></param>
+        /// <returns></returns>
+        private TypeDoc HandleEnum(EnumDeclarationSyntax enumDeclaration_, string? namespace_, string filePath_)
         {
-            var modifiers = en.Modifiers.ToString();
+            // Store the declaration modifiers for better readability
+            string modifiers = enumDeclaration_.Modifiers.ToString();
+
+            // Is the Enum public?
             bool isPublic = modifiers.Contains("public");
+
+            // If its not public and thus not to be included return NULL
             if (!_includeNonPublic && !isPublic)
                 return null!;
+            //Else
 
-            var td = new TypeDoc
+            // Fill in all the needed data
+            TypeDoc td_Result = new()
             {
                 Kind = "enum",
-                Name = en.Identifier.Text,
-                Namespace = ns ?? "<global>",
+                Name = enumDeclaration_.Identifier.Text,
+                Namespace = namespace_ ?? "<global>",
                 Modifiers = modifiers.Trim(),
-                Attributes = (List<string>)Utils.FlattenAttributes(en.AttributeLists),
+                Attributes = (List<string>)Utils.FlattenAttributes(enumDeclaration_.AttributeLists),
                 BaseTypes = new List<string>(),
-                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(en),
-                FilePath = file
+                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(enumDeclaration_),
+                FilePath = filePath_
             };
 
-            foreach (var m in en.Members)
+            // For every member of the Enum: add the corresponding MemberDoc
+            foreach (EnumMemberDeclarationSyntax member in enumDeclaration_.Members)
             {
-                td.Fields.Add(new MemberDoc
+                td_Result.Fields.Add(new MemberDoc
                 {
                     Kind = "enum-member",
-                    Signature = m.Identifier.Text + (m.EqualsValue != null ? $" = {m.EqualsValue.Value}" : string.Empty),
-                    Summary = Utils.ExtractXmlSummaryFromSyntaxNode(m)
+                    Signature = member.Identifier.Text + (member.EqualsValue != null ? $" = {member.EqualsValue.Value}" : string.Empty),
+                    Summary = Utils.ExtractXmlSummaryFromSyntaxNode(member)
                 });
             }
 
-            return td;
+            // Return the filled result
+            return td_Result;
         }
 
         /// <summary>
         /// Checks if a member is public/protected/internal
+        /// 
+        /// by checklng the listed modifiers  
         /// </summary>
-        private static bool HasPublicLike(SyntaxTokenList mods)
+        /// <param name="listedModifiers_"></param>
+        /// <returns></returns>
+        private static bool HasPublicLike(SyntaxTokenList listedModifiers_)
         {
-            return mods.Any(t =>
+            // For every modifier in the list, check what kind it is
+            return listedModifiers_.Any(t =>
                 t.IsKind(SyntaxKind.PublicKeyword) ||
                 t.IsKind(SyntaxKind.ProtectedKeyword) ||
                 t.IsKind(SyntaxKind.InternalKeyword));
