@@ -26,12 +26,12 @@ namespace xyDocumentor.Core.Extractors
         }
 
         /// <summary>
-        /// Process all members in a namespace or global scope
+        /// Process all members in a namespace or global scope 
         /// </summary>
         /// <param name="listedMembers_"></param>
         /// <param name="namespace_"></param>
         /// <param name="file_"></param>
-        /// <returns></returns>
+        /// <returns> A List of TypeDocs filled with all members in the chosen scope</returns>
         public List<TypeDoc> ProcessMembers(SyntaxList<MemberDeclarationSyntax> listedMembers_, string? namespace_, string file_)
         {
             // Used to store the values for return
@@ -63,7 +63,7 @@ namespace xyDocumentor.Core.Extractors
         }
 
         /// <summary>
-        /// Handles class/struct/interface/record extraction, including members and nested types
+        /// Handles class/struct/interface/record extraction, including members and nested types by creating the corresponding TypeDocs and MemberDocs
         /// </summary>
         /// <param name="type_"></param>
         /// <param name="namespace_"></param>
@@ -181,7 +181,7 @@ namespace xyDocumentor.Core.Extractors
         }
 
         /// <summary>
-        /// Handles enums and their members
+        /// Handles enums and their members by creating corresponding TypeDocs and MemberDocs
         /// </summary>
         /// <param name="enumDeclaration_"></param>
         /// <param name="namespace_"></param>
@@ -245,3 +245,4 @@ namespace xyDocumentor.Core.Extractors
         }
     }
 }
+
