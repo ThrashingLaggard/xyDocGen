@@ -18,6 +18,9 @@ using xyDocumentor.Core.Renderer;
 using xyToolz.Filesystem;
 using xyToolz.Helper.Logging;
 
+/// <summary>
+/// Basic startup class for the project
+/// </summary>
 public class Program
 {
 
