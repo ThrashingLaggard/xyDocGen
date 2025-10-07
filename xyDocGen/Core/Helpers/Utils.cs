@@ -2,11 +2,15 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using xyDocumentor.Core.Docs;
+using xyDocumentor.Core.Renderer;
+using xyToolz.Filesystem;
 
 namespace xyDocumentor.Core.Helpers
 {
@@ -66,10 +70,10 @@ namespace xyDocumentor.Core.Helpers
         /// <summary>
         /// Extracts the clean text from the XML summary for a given syntax node.
         /// </summary>
-        public static string ExtractXmlSummaryFromSyntaxNode(SyntaxNode node_)
+        public static string ExtractXmlSummaryFromSyntaxNode(SyntaxNode syn_Node_)
         {
             // Read the trivia syntax element from the target node
-            DocumentationCommentTriviaSyntax trivia = node_.GetLeadingTrivia().Select(t => t.GetStructure()).OfType<DocumentationCommentTriviaSyntax>().FirstOrDefault();
+            DocumentationCommentTriviaSyntax trivia = syn_Node_.GetLeadingTrivia().Select(t => t.GetStructure()).OfType<DocumentationCommentTriviaSyntax>().FirstOrDefault();
 
             if (trivia != null)
             {
@@ -144,13 +148,13 @@ namespace xyDocumentor.Core.Helpers
         /// <summary>
         /// Check if a member has public-like visibility
         /// </summary>
-        /// <param name="modifiers_"></param>
+        /// <param name="stl_Modifiers_"></param>
         /// <returns></returns>
-        public static bool HasPublicLike(SyntaxTokenList modifiers_)
+        public static bool HasPublicLike(SyntaxTokenList stl_Modifiers_)
         {
             // Check if the given SyntaxToken is either: treat "public" and "protected" as "public-like"
-            if (modifiers_.Any(m => m.IsKind(SyntaxKind.PublicKeyword))) return true;
-            if (modifiers_.Any(m => m.IsKind(SyntaxKind.ProtectedKeyword))) return true;
+            if (stl_Modifiers_.Any(m => m.IsKind(SyntaxKind.PublicKeyword))) return true;
+            if (stl_Modifiers_.Any(m => m.IsKind(SyntaxKind.ProtectedKeyword))) return true;
 
             // default is private => false
             return false;
@@ -159,21 +163,21 @@ namespace xyDocumentor.Core.Helpers
         /// <summary>
         /// Creates a MemberDoc from a Roslyn MemberDeclarationSyntax instance
         /// </summary>
-        /// <param name="member"></param>
+        /// <param name="mds_Member_"></param>
         /// <returns> A MemberDoc with the combined data of a single member of [...]</returns>
-        public static MemberDoc CreateMemberDoc(MemberDeclarationSyntax member)
+        public static MemberDoc CreateMemberDoc(MemberDeclarationSyntax mds_Member_)
         {
             // Fill MemberDoc with the data of the given member
             MemberDoc doc = new()
             {
                 // What kind of member is this?
-                Kind = member.Kind().ToString().Replace("Declaration", "").ToLower(),
+                Kind = mds_Member_.Kind().ToString().Replace("Declaration", "").ToLower(),
 
                 // Get the signature for the target
-                Signature = ExtractSignature(member),
+                Signature = ExtractSignature(mds_Member_),
 
                 // Read the summary from the xml comment
-                Summary = ExtractXmlSummaryFromSyntaxNode(member)
+                Summary = ExtractXmlSummaryFromSyntaxNode(mds_Member_)
             };
             return doc;
         }
@@ -181,11 +185,11 @@ namespace xyDocumentor.Core.Helpers
         /// <summary>
         /// Check the DeclarationSyntax and return the corresponding signature as a readable string
         /// </summary>
-        /// <param name="member"></param>
+        /// <param name="mds_Member_"></param>
         /// <returns>string s_Signature = "depends on the type of member declaration"</returns>
-        private static string ExtractSignature(MemberDeclarationSyntax member)
+        private static string ExtractSignature(MemberDeclarationSyntax mds_Member_)
         {
-            switch (member)
+            switch (mds_Member_)
             {
                 case MethodDeclarationSyntax m:
                     {
@@ -219,10 +223,72 @@ namespace xyDocumentor.Core.Helpers
                     }
                 default:
                     {
-                        string s_DefaultString = member.ToString().Split('\n').FirstOrDefault()?.Trim() ?? "(unknown)";
+                        string s_DefaultString = mds_Member_.ToString().Split('\n').FirstOrDefault()?.Trim() ?? "(unknown)";
                         return s_DefaultString;
                     }
             }
         }
+
+
+        /// <summary>
+        /// Writes each TypeDoc to a file, grouped by namespace, in the requested format.
+        /// Supports JSON, HTML, PDF, Markdown.
+        /// </summary>
+        public static async Task<bool> WriteDataToFilesOrderedByNamespace(IEnumerable<TypeDoc> alltypes, string outpath, string format)
+        {
+            bool isWritten = false;
+
+            // Iterating through the list 
+            foreach (TypeDoc tD in alltypes)
+            {
+                // Creating a folder for each namespace
+                string namespaceFolder = Path.Combine(outpath, tD.Namespace.Replace('<', '_').Replace('>', '_'));
+                Directory.CreateDirectory(namespaceFolder);
+
+                string fileName = Path.Combine(namespaceFolder, tD.DisplayName.Replace(' ', '_'));
+                string content;
+
+                // Choosing the format and saving converted data to the target file
+                switch (format)
+                {
+                    case "json":
+                        fileName += ".json";
+                        content = JsonRenderer.Render(tD);
+                        isWritten = await xyFiles.SaveToFile(content, fileName);
+                        break;
+
+                    case "html":
+                        fileName += ".html";
+                        content = HtmlRenderer.Render(tD, cssPath: null);
+                        isWritten = await xyFiles.SaveToFile(content, fileName);
+                        break;
+
+                    case "pdf":
+                        fileName += ".pdf";
+                        PdfRenderer.RenderToFile(tD, fileName);
+                        isWritten = true;
+                        break;
+
+                    default: // Markdown
+                        fileName += ".md";
+                        content = MarkdownRenderer.Render(tD);
+                        isWritten = await xyFiles.SaveToFile(content, fileName);
+                        break;
+                }
+            }
+            return isWritten;
+        }
+
+
+        /// <summary>
+        /// Checks if a given file path contains any excluded folder parts.
+        /// </summary>
+        public static bool IsExcluded(string path, HashSet<string> excludeParts)
+        {
+            var parts = path.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+            return parts.Any(p => excludeParts.Contains(p));
+        }
+
+
     }
 }

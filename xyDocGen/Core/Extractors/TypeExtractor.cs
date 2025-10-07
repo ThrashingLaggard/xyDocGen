@@ -3,8 +3,10 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using xyDocumentor.Core.Docs;
 using xyDocumentor.Core.Helpers;
+using xyToolz.Filesystem;
 
 namespace xyDocumentor.Core.Extractors
 {
@@ -242,6 +244,54 @@ namespace xyDocumentor.Core.Extractors
                 t.IsKind(SyntaxKind.PublicKeyword) ||
                 t.IsKind(SyntaxKind.ProtectedKeyword) ||
                 t.IsKind(SyntaxKind.InternalKeyword));
+        }
+
+        /// <summary>
+        /// Parses all collected .cs files into <see cref="TypeDoc"/> objects.
+        /// Uses Roslyn to analyze syntax trees and namespaces.
+        /// </summary>
+        public static async Task<List<TypeDoc>> TryParseDataFromFile(List<string> listedExternalArguments, string[] args, IEnumerable<string> relevantFiles, bool includeNonPublic)
+        {
+            // Getting the data from the files
+            TypeExtractor extractor = new(includeNonPublic);
+
+            // Storing data from the files
+            List<TypeDoc> allTypes = new();
+
+            // Parsing each file to C# and collect them
+            foreach (string file in relevantFiles)
+            {
+                // Read data
+                string text = await xyFiles.LoadFileAsync(file);
+
+                // Parse to C#
+                SyntaxTree tree = CSharpSyntaxTree.ParseText(text);
+
+                // Get the root of the syntax tree
+                CompilationUnitSyntax compilationUnitRoot = tree.GetCompilationUnitRoot();
+
+                // Collect the declared namespaces
+                List<BaseNamespaceDeclarationSyntax> namespaceDeclarations = compilationUnitRoot.Members.OfType<BaseNamespaceDeclarationSyntax>().ToList();
+
+                // Check if there are namespaces
+                if (!namespaceDeclarations.Any())
+                {
+                    // Processing all members without namespace
+                    allTypes.AddRange(extractor.ProcessMembers(compilationUnitRoot.Members, null, file));
+
+                }
+                else
+                {
+                    // Processing all members within all the "super secret" (sub)namespaces
+                    foreach (BaseNamespaceDeclarationSyntax nsD in namespaceDeclarations)
+                    {
+                        // Collect all members in a namespace
+                        allTypes.AddRange(extractor.ProcessMembers(nsD.Members, nsD.Name.ToString(), file));
+                    }
+                }
+            }
+
+            return allTypes;
         }
     }
 }
