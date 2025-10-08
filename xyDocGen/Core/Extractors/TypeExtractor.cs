@@ -283,10 +283,10 @@ namespace xyDocumentor.Core.Extractors
                 else
                 {
                     // Processing all members within all the "super secret" (sub)namespaces
-                    foreach (BaseNamespaceDeclarationSyntax nsD in namespaceDeclarations)
+                    foreach (BaseNamespaceDeclarationSyntax bNDS in namespaceDeclarations)
                     {
                         // Collect all members in a namespace
-                        allTypes.AddRange(extractor.ProcessMembers(nsD.Members, nsD.Name.ToString(), file));
+                        allTypes.AddRange(extractor.ProcessMembers(bNDS.Members, bNDS.Name.ToString(), file));
                     }
                 }
             }

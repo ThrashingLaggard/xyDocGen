@@ -2,4 +2,6 @@
 - Remarks mit auslesen und ausgeben
 - Methoden aus der Program.cs auslagern
 - Funktion einbauen, um alle Befehle anzuzeigen
-- Format mit als Unterordner hinzufügen
+- Ausgabepfad mit ausgeben
+
+- Format mit als Unterordner hinzufügen.....????

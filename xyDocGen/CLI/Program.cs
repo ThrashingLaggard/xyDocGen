@@ -59,9 +59,13 @@ public class Program
         HashSet<string> excludedParts = [];
         IEnumerable<TypeDoc> flattenedTypes = [];
         List<string> externalArguments = args.ToList();
-        string output = $"\n✅ Finished. Types: {flattenedTypes.Count()}, Format: {format}, Output: {outPath}\n";
 
-        (rootPath,outPath,format,includeNonPublic,excludedParts)= StringAnalyser.AnalyzeArgs(externalArguments, args); 
+        if (await AskForHelp(externalArguments))
+        {
+            return;    
+        }
+
+            (rootPath, outPath, format, includeNonPublic, excludedParts) = StringAnalyser.AnalyzeArgs(externalArguments, args); 
 
         // Setting the output path 
         Directory.CreateDirectory(outPath);
@@ -73,10 +77,38 @@ public class Program
         flattenedTypes = TypeDocExtensions.FlattenTypes(dataFromFiles);
         await FileTreeRenderer.BuildIndexAndTree(flattenedTypes,format,rootPath,outPath,excludedParts);
 
+        string output = $"\n✅ Finished. Types: {flattenedTypes.Count()}, Format: {format}, Output: {outPath}\n";
         xyLog.Log(output);
     }
 
+    public static async Task<bool> AskForHelp(List<string> externalArguments)
+    {
+        if (externalArguments.First() is "--help")
+        {
+            string commands = await OutputCommands();
+            Console.WriteLine(commands);
+            Console.Out.Flush();
+            return true;
+        }
+        return false;
+    }
 
+    public static async Task<string> OutputCommands()
+    {
+        string commands =
+            "xydocgen     ===      Base command\n"+
+            "--root     ===      Root path\n" +
+            "--folder     ===     Target folder\n" +
+            "--subfolder     -->     Allways comes with folder, default is 'api'\n" +
+            "--out     ===     Target folder and subfolder together in one\n" +
+            "--exclude     ===     Components to ignore\n" +
+            "--format     ===     Specify output flavour\n" +
+            "--private     ===     Add to ignore unpublic components\n"+
+            "--help     ===     Output list of commands";
+
+
+        return commands;
+    }
 
  
 
