@@ -11,18 +11,19 @@ Generates a tree to visualize the project structure.
 
 ## Usage example:
 
-(easy input)										   (standard result values)
+(Sample for easiest input to generate everything according to the standard settings)
 xydocgen               =====>>>>>               xydocgen      --root [current working directory]     --folder docs     --subfolder api     --exclude .git;bin;obj;node_modules;.vs;TestResults     --format md     
 
 (Use dotnet at the start when installed locally)
 dotnet xydocgen --root . --out docs/api --exclude .git;bin;obj;node_modules;.vs;TestResults
 
-(add this to exclude non public)
-dotnet xydocgen  --privat 
+(add this keyword to exclude non public)
+xydocgen  --privat 
 
-(Choose your flavour)
+(Choose your output flavour)
 xydocgen --format [json/pdf/html/md]
 
+(Another Sample)
 xydocgen --root X://User/TestPrograms/TestRoot--out TestFolder/TestSubFolder 
 
 (Output a list of commands, MUST be the first argument if used (others will then be ignored))
@@ -45,20 +46,13 @@ xydocgen --help
 - Reading and outputting the remarks
 - Upgrading the visual result of the outputs
 - 
-- Format mit als Unterordner hinzufügen.....????
+- Format mit als Unterordner hinzufügen.....                                 was soll das heißen?????
 
 
-- 
+
 # Author
 ThrashingLaggard
 https://github.com/ThrashingLaggard
-
-
-
-
-
-
-
 
 ## Contact
 Ideas or questions:

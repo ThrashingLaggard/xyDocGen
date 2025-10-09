@@ -60,12 +60,12 @@ public class Program
         IEnumerable<TypeDoc> flattenedTypes = [];
         List<string> externalArguments = args.ToList();
 
-        if (await AskForHelp(externalArguments))
+        if (await StringAnalyzer.AskForHelp(externalArguments))
         {
             return;    
         }
 
-            (rootPath, outPath, format, includeNonPublic, excludedParts) = StringAnalyser.AnalyzeArgs(externalArguments, args); 
+            (rootPath, outPath, format, includeNonPublic, excludedParts) = StringAnalyzer.AnalyzeArgs(externalArguments, args); 
 
         // Setting the output path 
         Directory.CreateDirectory(outPath);
@@ -81,34 +81,6 @@ public class Program
         xyLog.Log(output);
     }
 
-    public static async Task<bool> AskForHelp(List<string> externalArguments)
-    {
-        if (externalArguments.First() is "--help")
-        {
-            string commands = await OutputCommands();
-            Console.WriteLine(commands);
-            Console.Out.Flush();
-            return true;
-        }
-        return false;
-    }
-
-    public static async Task<string> OutputCommands()
-    {
-        string commands =
-            "xydocgen     ===      Base command\n"+
-            "--root     ===      Root path\n" +
-            "--folder     ===     Target folder\n" +
-            "--subfolder     -->     Allways comes with folder, default is 'api'\n" +
-            "--out     ===     Target folder and subfolder together in one\n" +
-            "--exclude     ===     Components to ignore\n" +
-            "--format     ===     Specify output flavour\n" +
-            "--private     ===     Add to ignore unpublic components\n"+
-            "--help     ===     Output list of commands";
-
-
-        return commands;
-    }
 
  
 
