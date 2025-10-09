@@ -21,7 +21,7 @@ namespace xyDocumentor.Core.Helpers
 
             bool isPrivate = GetPublicityHandling(externalArguments);
             HashSet<string> excludedParts = GetIgnorableFiles(externalArguments, args);
-            return new(rootPath, outPath, format, isPrivate, excludedParts);
+            return new(rootPath, outPath, format, !isPrivate, excludedParts);
         }
 
 
@@ -103,11 +103,9 @@ namespace xyDocumentor.Core.Helpers
 
         public static async Task<bool> AskForHelp(List<string> externalArguments)
         {
-            if (externalArguments.First() is "--help")
+            if (externalArguments.Contains("--help"))
             {
                 string commands = await OutputCommands();
-                Console.WriteLine(commands);
-                Console.Out.Flush();
                 return true;
             }
             return false;
@@ -128,6 +126,8 @@ namespace xyDocumentor.Core.Helpers
                 "--private     ===     Add to ignore unpublic components\n" +
                 "--help     ===     Output list of commands";
 
+            Console.WriteLine(commands);
+            Console.Out.Flush();
 
             return commands;
         }

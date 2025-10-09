@@ -55,7 +55,7 @@ public class Program
         string format = "";
         string outPath = "";
         string rootPath = "";
-        bool includeNonPublic = false;
+        bool includeNonPublic = true;
         HashSet<string> excludedParts = [];
         IEnumerable<TypeDoc> flattenedTypes = [];
         List<string> externalArguments = args.ToList();

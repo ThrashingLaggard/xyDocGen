@@ -137,7 +137,7 @@ namespace xyDocumentor.Core.Renderer
 
             // Renders the table header for Signature and Description columns.
             sb.AppendLine("| Signature | Description |");
-            sb.AppendLine("|----------|--------------|");
+            sb.AppendLine("|-----------|-------------|");
 
             // Iterates through each member to create a new table row.
             foreach (var member in members)

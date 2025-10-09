@@ -250,6 +250,11 @@ namespace xyDocumentor.Core.Extractors
         /// Parses all collected .cs files into <see cref="TypeDoc"/> objects.
         /// Uses Roslyn to analyze syntax trees and namespaces.
         /// </summary>
+        /// <param name="listedExternalArguments"></param>
+        /// <param name="args"></param>
+        /// <param name="relevantFiles"></param>
+        /// <param name="includeNonPublic"></param>
+        /// <returns></returns>
         public static async Task<List<TypeDoc>> TryParseDataFromFile(List<string> listedExternalArguments, string[] args, IEnumerable<string> relevantFiles, bool includeNonPublic)
         {
             // Getting the data from the files
