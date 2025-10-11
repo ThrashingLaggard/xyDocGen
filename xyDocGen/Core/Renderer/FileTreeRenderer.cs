@@ -15,7 +15,7 @@ namespace xyDocumentor.Core.Renderer
     public static class FileTreeRenderer
     {
         /// <summary>
-        /// Recursiie method to render the tree structure for better representation
+        /// Recursive method to render the tree structure for better representation of the project
         /// </summary>
         /// <param name="di_Directory_">Target folder</param>
         /// <param name="prefix_"> Prefix for this level of the tree</param>
@@ -52,6 +52,16 @@ namespace xyDocumentor.Core.Renderer
             }
         }
 
+        /// <summary>
+        /// Checks if the index is at the lowest tree level and changes the prefix if so
+        /// </summary>
+        /// <param name="di_SubDirectories"></param>
+        /// <param name="fi_Files"></param>
+        /// <param name="i"></param>
+        /// <returns>
+        /// If Index is at last position: └─
+        /// Else(Most of the time): ├─ 
+        /// </returns>
         static string ChangePrefixIfIndexIsAtLastTreeLevel(DirectoryInfo[] di_SubDirectories, FileInfo[] fi_Files, int i) => !((di_SubDirectories.Length + i) == ((di_SubDirectories.Length + fi_Files.Length) -1)) ?"├─" : "└─";
             
 
@@ -92,7 +102,7 @@ namespace xyDocumentor.Core.Renderer
         /// </summary>
         public static async Task<StringBuilder> BuildProjectIndex(IEnumerable<TypeDoc> flattenedtypes, string format, string outpath)
         {
-            // Rendering INDEX.md  ordered by namespace
+            // Stores INDEX.md  ordered by namespace
             StringBuilder indexBuilder = new StringBuilder();
 
             // Adding the headline

@@ -236,17 +236,21 @@ namespace xyDocumentor.Core.Helpers
         /// </summary>
         public static async Task<bool> WriteDataToFilesOrderedByNamespace(IEnumerable<TypeDoc> alltypes, string outpath, string format)
         {
+            string content;
             bool isWritten = false;
+            string cleanedNamespace = "";
 
             // Iterating through the list 
             foreach (TypeDoc tD in alltypes)
             {
+                // Ensuring there is a value even if there is no namespace and cleaning an existing one's name
+                cleanedNamespace = tD.Namespace is not null ?           tD.Namespace.Replace('<', '_').Replace('>', '_')      :        "_";
+            
                 // Creating a folder for each namespace
-                string namespaceFolder = Path.Combine(outpath, tD.Namespace.Replace('<', '_').Replace('>', '_'));
+                string namespaceFolder = Path.Combine(outpath, cleanedNamespace);
                 Directory.CreateDirectory(namespaceFolder);
 
                 string fileName = Path.Combine(namespaceFolder, tD.DisplayName.Replace(' ', '_'));
-                string content;
 
                 // Choosing the format and saving converted data to the target file
                 switch (format)
