@@ -60,6 +60,7 @@ public class Program
         IEnumerable<TypeDoc> flattenedTypes = [];
         List<string> externalArguments = args.ToList();
 
+        // If the --help keyword is detected in the parameter, output the list of commands and refrain from anything else
         if (await StringAnalyzer.AskForHelp(externalArguments))
         {
             return;    

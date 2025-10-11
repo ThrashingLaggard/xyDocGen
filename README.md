@@ -33,11 +33,20 @@ xydocgen --help
 ## Installation
 
 ### Local:
-(dotnet new tool-manifest)
-(dotnet tool install --local xyDocGen --version 1.0.xx)
+dotnet new tool-manifest
+dotnet tool install --local xyDocGen --version 1.0.xx
 
 ### Global:
-(dotnet tool install --global xyDocGen --version 1.0.xx)
+dotnet tool install --global xyDocGen --version 1.0.xx
+
+
+## Update
+
+### Checking the Version of installed dotnet tools
+dotnet list tool [--local/--global]
+
+### Updating the Version
+dotnet tool update xydocgen [--local/--global]
 
 
 
@@ -45,8 +54,11 @@ xydocgen --help
 
 - Reading and outputting the remarks
 - Upgrading the visual result of the outputs
-- 
-- Format mit als Unterordner hinzufügen.....                                 was soll das heißen?????
+- Adding parameters to output index and/or tree into the console
+- Format mit als Unterordner hinzufügen..... was sollte das heißen?????
+- Changing the output structure:
+  - Moving the output of index and tree into the first level 
+  - 
 
 
 

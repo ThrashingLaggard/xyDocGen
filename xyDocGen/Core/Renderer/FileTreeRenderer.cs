@@ -13,43 +13,74 @@ namespace xyDocumentor.Core.Renderer
     /// </summary>
     public static class FileTreeRenderer
     {
-        public static void RenderTree(DirectoryInfo dir, string prefix, bool isLast, StringBuilder sb, HashSet<string> excludeParts)
+        /// <summary>
+        /// Recursiie method to render the tree structure for better representation
+        /// </summary>
+        /// <param name="di_Directory_">Target folder</param>
+        /// <param name="prefix_"> Prefix for this level of the tree</param>
+        /// <param name="isLast_">Last folder in this directory?</param>
+        /// <param name="sb_TreeBuilder_">Stores the tree</param>
+        /// <param name="hs_ExcludeTheseParts_"></param>
+        public static void RenderTree(DirectoryInfo di_Directory_, string prefix_, bool isLast_, StringBuilder sb_TreeBuilder_, HashSet<string> hs_ExcludeTheseParts_)
         {
-            if (excludeParts.Contains(dir.Name)) return;
+            // Ignore unwanted folders
+            if (hs_ExcludeTheseParts_.Contains(di_Directory_.Name))
+            {
+                return;
+            }                
 
-            sb.AppendLine($"{prefix}{(isLast ? "└─" : "├─")}{dir.Name}/");
+            // Build the current level of the tree
+            sb_TreeBuilder_.AppendLine($"{prefix_}{(isLast_ ?"└─" : "├─")}{di_Directory_.Name}/");
 
-            var children = dir.GetDirectories()
-                              .Where(d => !excludeParts.Contains(d.Name))
-                              .OrderBy(d => d.Name)
-                              .ToArray();
+            var children = di_Directory_.GetDirectories().Where(d => !hs_ExcludeTheseParts_.Contains(d.Name)).OrderBy(d => d.Name).ToArray();
 
-            var files = dir.GetFiles()
-                           .Where(f => !excludeParts.Contains(f.Name))
-                           .OrderBy(f => f.Name)
-                           .ToArray();
+            var files = di_Directory_.GetFiles().Where(f => !hs_ExcludeTheseParts_.Contains(f.Name)).OrderBy(f => f.Name).ToArray();
 
             for (int i = 0; i < children.Length; i++)
-                RenderTree(children[i], prefix + (isLast ? "  " : "│ "), i == children.Length - 1, sb, excludeParts);
+            {
+                //
+                RenderTree(children[i], prefix_ + (isLast_ ? "  " : "│ "), i == children.Length - 1, sb_TreeBuilder_, hs_ExcludeTheseParts_);
+            }
 
             for (int i = 0; i < files.Length; i++)
             {
                 var file = files[i];
-                sb.AppendLine($"{prefix}{(children.Length + i == children.Length + files.Length - 1 ? "└─" : "├─")}{file.Name}");
+                sb_TreeBuilder_.AppendLine($"{prefix_}{(children.Length + i == children.Length + files.Length - 1 ? "└─" : "├─")}{file.Name}");
             }
         }
 
+
+
         /// <summary>
-        /// Builds both the namespace-based API index (INDEX.md) 
-        /// and the project folder structure (PROJECT-STRUCTURE.md).
+        /// Builds PROJECT-STRUCTURE.md, a visual tree representation of the file system.
         /// </summary>
-        public static async Task BuildIndexAndTree(IEnumerable<TypeDoc> flattenedTypes, string format, string rootPath, string outPath, HashSet<string> excludedParts, string prefix = "")
+        /// <param name="treeBuilder"></param>
+        /// <param name="format"></param>
+        /// <param name="rootPath"></param>
+        /// <param name="outPath"></param>
+        /// <param name="excludedParts"></param>
+        /// <param name="prefix"></param>
+        /// <returns></returns>
+        public static async Task<StringBuilder> BuildProjectTree(StringBuilder treeBuilder, string format, string rootPath, string outPath, HashSet<string> excludedParts, string prefix = "")
         {
-            StringBuilder indexBuilder = await BuildProjectIndex(flattenedTypes, format, outPath);
-            indexBuilder.Clear();
-            StringBuilder projectBuilder = await BuildProjectTree(indexBuilder, format, rootPath, outPath, excludedParts);
-            indexBuilder = null;
+            string headline = "# Project structure\n";
+            string fileName = "PROJECT-STRUCTURE.md";
+
+            // Adding the headline
+            treeBuilder.AppendLine(headline);
+
+            // Rendering PROJECT-STRUCTURE.md 
+            FileTreeRenderer.RenderTree(new DirectoryInfo(rootPath), prefix, true, treeBuilder, excludedParts);
+
+            // Combining the target path
+            string targetPath = Path.Combine(outPath, fileName);
+
+            // Write the tree into the target file
+            await xyFiles.SaveToFile(treeBuilder.ToString(), targetPath);
+
+            return treeBuilder;
         }
+
         /// <summary>
         /// Builds an INDEX.md file listing all documented types, grouped by namespace.
         /// </summary>
@@ -91,30 +122,25 @@ namespace xyDocumentor.Core.Renderer
 
             return indexBuilder;
         }
+
         /// <summary>
-        /// Builds PROJECT-STRUCTURE.md, a visual tree representation of the file system.
+        /// Builds both the namespace-based API index (INDEX.md) 
+        /// and the project folder structure (PROJECT-STRUCTURE.md).
         /// </summary>
-        public static async Task<StringBuilder> BuildProjectTree(StringBuilder treeBuilder, string format, string rootPath, string outPath, HashSet<string> excludedParts, string prefix = "")
+        /// <param name="flattenedTypes"></param>
+        /// <param name="format"></param>
+        /// <param name="rootPath"></param>
+        /// <param name="outPath"></param>
+        /// <param name="excludedParts"></param>
+        /// <param name="prefix"></param>
+        /// <returns></returns>
+        public static async Task BuildIndexAndTree(IEnumerable<TypeDoc> flattenedTypes, string format, string rootPath, string outPath, HashSet<string> excludedParts, string prefix = "")
         {
-            string headline = "# Project structure\n";
-            string fileName = "PROJECT-STRUCTURE.md";
-
-            // Adding the headline
-            treeBuilder.AppendLine(headline);
-
-            // Rendering PROJECT-STRUCTURE.md 
-            FileTreeRenderer.RenderTree(new DirectoryInfo(rootPath), prefix, true, treeBuilder, excludedParts);
-
-            // Combining the target path
-            string targetPath = Path.Combine(outPath, fileName);
-
-            // Write the tree into the target file
-            await xyFiles.SaveToFile(treeBuilder.ToString(), targetPath);
-
-            return treeBuilder;
+            StringBuilder indexBuilder = await BuildProjectIndex(flattenedTypes, format, outPath);
+            indexBuilder.Clear();
+            StringBuilder projectBuilder = await BuildProjectTree(indexBuilder, format, rootPath, outPath, excludedParts);
+            indexBuilder = null;
         }
-
-
 
     }
 }

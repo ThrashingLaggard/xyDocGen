@@ -90,17 +90,47 @@ namespace xyDocumentor.Core.Helpers
         /// .git;bin;obj;node_modules;.vs;TestResults
         /// 
         /// </summary>
-        /// <param name="ExternalArguments"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        public static HashSet<string> GetIgnorableFiles(List<string> ExternalArguments, string[] args) => new((ExternalArguments.Contains("--exclude") ? args[Array.IndexOf(args, "--exclude") + 1] : ".git;bin;obj;node_modules;.vs;TestResults").Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        public static HashSet<string> GetIgnorableFiles(string[] args) => new(// Nice now its readable, lol
+                                                                                                                        (
+                                                                                                                            args.Contains("--exclude") ? args[Array.IndexOf(args, "--exclude") + 1] : ".git;bin;obj;node_modules;.vs;TestResults"
+                                                                                                                        )
+                                                                                                                        .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                                                                                                                    );
+
+
+
+        public static HashSet<string> GetIgnorableFiles(IList<string> args)
+        {
+            HashSet<string> hs_FilesToIgnore = new();
+
+            if (args.Contains("--exclude"))
+            {
+                int index = args.IndexOf("--exclude");
+                string[] splitIgnoredInput = args[index + 1].Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                hs_FilesToIgnore = new(splitIgnoredInput);
+            }
+            else
+            {
+                string ignoredByDefault = ".git;bin;obj;node_modules;.vs;TestResults";
+                string[] splitDefaultIgnorableFiles = ignoredByDefault.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                hs_FilesToIgnore = new(splitDefaultIgnorableFiles);
+            }
+            return hs_FilesToIgnore;
+        }
 
 
 
 
-
-
-
+        /// <summary>
+        /// Checks for the --help keyword and if found calls the OutputCommands() method
+        /// </summary>
+        /// <param name="externalArguments"></param>
+        /// <returns>
+        /// True if keyword is found 
+        /// else returns false
+        /// </returns>
         public static async Task<bool> AskForHelp(List<string> externalArguments)
         {
             if (externalArguments.Contains("--help"))
@@ -112,22 +142,29 @@ namespace xyDocumentor.Core.Helpers
         }
 
 
-
-        public static async Task<string> OutputCommands()
+        /// <summary>
+        /// Output the commands for this tool into the console
+        /// </summary>
+        /// <returns></returns>
+        private static async Task<string> OutputCommands()
         {
+            // Set the string for the ouputing the commands
             string commands =
-                "xydocgen     ===      Base command\n" +
-                "--root     ===      Root path\n" +
-                "--folder     ===     Target folder\n" +
-                "--subfolder     -->     Allways comes with folder, default is 'api'\n" +
-                "--out     ===     Target folder and subfolder together in one\n" +
-                "--exclude     ===     Components to ignore\n" +
-                "--format     ===     Specify output flavour\n" +
-                "--private     ===     Add to ignore unpublic components\n" +
-                "--help     ===     Output list of commands";
+                "xydocgen        ===      Base command\n" +
+                "--help             ===      Output list of commands\n" +
+                "--private         ===      Add to ignore unpublic components\n" +
+                "--root             ===      Root path, default is 'the current working directory'\n" +
+                "--folder          ===      Target folder, default is 'docs'\n" +
+                "--subfolder     -->       Allways comes with folder, default is 'api'\n" +
+                "--out               ===      Target folder and subfolder together in one\n" +
+                "--exclude        ===      Components to ignore, default are: '.git;bin;obj;node_modules;.vs;TestResults' \n" +
+                "--format         ===      Specify output flavour, default is 'Markdown'\n";
 
-            Console.WriteLine(commands);
-            Console.Out.Flush();
+            // Output asap
+            {
+                Console.WriteLine(commands);
+                Console.Out.Flush();
+            }
 
             return commands;
         }

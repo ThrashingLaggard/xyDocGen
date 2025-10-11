@@ -7,7 +7,7 @@ namespace xyDocumentor.Core
     /// <summary>
     /// Renders TypeDoc objects as JSON strings.
     /// </summary>
-    public static class JsonRenderer
+    public static class JsonRenderer 
     {
         private static readonly JsonSerializerOptions _options = new JsonSerializerOptions
         {

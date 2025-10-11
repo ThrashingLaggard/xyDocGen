@@ -1,7 +1,39 @@
-﻿- Option/ Parameter einfügen, um auch private Methoden mit auszugeben
+﻿Interne Anpassungen:
 - Remarks mit auslesen und ausgeben
-- Methoden aus der Program.cs auslagern
-- Funktion einbauen, um alle Befehle anzuzeigen
-- Ausgabepfad mit ausgeben
+- Baum & Index auf Wunsch direkt in Kosole ausgeben
+- Befehle für output in Dictionary speichern?
+
+
+Ändern der Ausgabe Struktur: 
+- Projektbaum und Index direkt sichtbar auf die erste Ordner Ebene verlegen
+- Ausgabe der Befehle mit Erklärungen
+
 
 - Format mit als Unterordner hinzufügen.....????
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Checking the Version of installed dotnet tools
+dotnet list tool [--local/--global]
+
+Updating the Version
+dotnet tool update xydocgen [--local/--global]
