@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using xyDocumentor.Core.Docs;
@@ -29,27 +30,32 @@ namespace xyDocumentor.Core.Renderer
                 return;
             }                
 
+            //Read all not-to-be-ignored child directories
+            DirectoryInfo[] di_SubDirectories = di_Directory_.GetDirectories().Where(d => !hs_ExcludeTheseParts_.Contains(d.Name)).OrderBy(d => d.Name).ToArray();
+
+            // Read all not-to-be-ignored files from the target folder
+            FileInfo[] fi_Files = di_Directory_.GetFiles().Where(f => !hs_ExcludeTheseParts_.Contains(f.Name)).OrderBy(f => f.Name).ToArray();
+
             // Build the current level of the tree
             sb_TreeBuilder_.AppendLine($"{prefix_}{(isLast_ ?"└─" : "├─")}{di_Directory_.Name}/");
 
-            var children = di_Directory_.GetDirectories().Where(d => !hs_ExcludeTheseParts_.Contains(d.Name)).OrderBy(d => d.Name).ToArray();
-
-            var files = di_Directory_.GetFiles().Where(f => !hs_ExcludeTheseParts_.Contains(f.Name)).OrderBy(f => f.Name).ToArray();
-
-            for (int i = 0; i < children.Length; i++)
+            // For every subfolder: call this method on itself
+            for (int i = 0; i < di_SubDirectories.Length; i++)
             {
-                //
-                RenderTree(children[i], prefix_ + (isLast_ ? "  " : "│ "), i == children.Length - 1, sb_TreeBuilder_, hs_ExcludeTheseParts_);
+                RenderTree(di_SubDirectories[i], prefix_ + (isLast_ ? "  " : "│ "), i == di_SubDirectories.Length - 1, sb_TreeBuilder_, hs_ExcludeTheseParts_);
             }
 
-            for (int i = 0; i < files.Length; i++)
-            {
-                var file = files[i];
-                sb_TreeBuilder_.AppendLine($"{prefix_}{(children.Length + i == children.Length + files.Length - 1 ? "└─" : "├─")}{file.Name}");
+            // For every file: Build the current tree level
+            for (int i = 0; i < fi_Files.Length; i++)
+            {                                                                                                                                                                                                                                            //string fileName = fi_Files[i].Name; //sb_TreeBuilder_.AppendLine($"{prefix_}{(di_SubDirectories.Length + i == di_SubDirectories.Length + fi_Files.Length - 1 ? "└─" : "├─")}{fileName}");
+                sb_TreeBuilder_.AppendLine($"{prefix_}{ChangePrefixIfIndexIsAtLastTreeLevel(di_SubDirectories,fi_Files,i)}{fi_Files[i].Name}");
             }
         }
 
+        static string ChangePrefixIfIndexIsAtLastTreeLevel(DirectoryInfo[] di_SubDirectories, FileInfo[] fi_Files, int i) => !((di_SubDirectories.Length + i) == ((di_SubDirectories.Length + fi_Files.Length) -1)) ?"├─" : "└─";
+            
 
+        
 
         /// <summary>
         /// Builds PROJECT-STRUCTURE.md, a visual tree representation of the file system.

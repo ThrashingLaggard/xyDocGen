@@ -135,7 +135,7 @@ namespace xyDocumentor.Core.Helpers
                 arguments = args[indexOfArguments];
             }
             // Split up the string for better use
-            splitArguments = SplitString(arguments, ';');
+            splitArguments = SplitString(arguments);
 
             // Add the arguments to the hashset to return them as results!
             hs_FilesToIgnore = new(splitArguments);
