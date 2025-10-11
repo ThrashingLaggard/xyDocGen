@@ -20,7 +20,7 @@ namespace xyDocumentor.Core.Helpers
             string format = GetFormat(externalArguments, args);
 
             bool isPrivate = GetPublicityHandling(externalArguments);
-            HashSet<string> excludedParts = GetIgnorableFiles(externalArguments, args);
+            HashSet<string> excludedParts = GetIgnorableFiles(args);
             return new(rootPath, outPath, format, !isPrivate, excludedParts);
         }
 
@@ -92,35 +92,93 @@ namespace xyDocumentor.Core.Helpers
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
-        public static HashSet<string> GetIgnorableFiles(string[] args) => new(// Nice now its readable, lol
-                                                                                                                        (
-                                                                                                                            args.Contains("--exclude") ? args[Array.IndexOf(args, "--exclude") + 1] : ".git;bin;obj;node_modules;.vs;TestResults"
-                                                                                                                        )
-                                                                                                                        .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                                                                                                                    );
+        public static HashSet<string> GetIgnorableFiles(IList<string> args) => new(// Nice now its readable, lol
+                                                                                                                             SplitString(args.Contains("--exclude") ? args[args.IndexOf("--exclude") + 1] : ".git;bin;obj;node_modules;.vs;TestResults", ';')
+                                                                                                                        );
+                                                                                                                        
 
 
-
-        public static HashSet<string> GetIgnorableFiles(IList<string> args)
+        /// <summary>
+        /// 
+        /// Does the same as GetIgnorableFiles() but without using the ternary operator and with the creation of some new variables for better debugging...:
+        /// 
+        /// Collects folder names that should be excluded 
+        /// Default exclusion list can be overridden via --exclude.
+        /// 
+        /// standard fallback: 
+        /// .git;bin;obj;node_modules;.vs;TestResults
+        /// 
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public static HashSet<string> GetIgnorableFilesDebug(IList<string> args)
         {
-            HashSet<string> hs_FilesToIgnore = new();
+            // All arguments for this keyword in one string 
+            string arguments = "";
+            // All arguments from the string have their own entry in here
+            IEnumerable<string> splitArguments = [];
+            // Stores the unwanted files
+            HashSet<string> hs_FilesToIgnore = [];
 
-            if (args.Contains("--exclude"))
+            // If the keyword is found
+            if (!args.Contains("--exclude"))
             {
-                int index = args.IndexOf("--exclude");
-                string[] splitIgnoredInput = args[index + 1].Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                hs_FilesToIgnore = new(splitIgnoredInput);
+                // default arguments
+                arguments = ".git;bin;obj;node_modules;.vs;TestResults";
             }
             else
             {
-                string ignoredByDefault = ".git;bin;obj;node_modules;.vs;TestResults";
-                string[] splitDefaultIgnorableFiles = ignoredByDefault.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                hs_FilesToIgnore = new(splitDefaultIgnorableFiles);
+                // Check for its index and take the following
+                int indexOfArguments = args.IndexOf("--exclude") + 1;
+
+                // Read the string at that positon
+                arguments = args[indexOfArguments];
             }
+            // Split up the string for better use
+            splitArguments = SplitString(arguments, ';');
+
+            // Add the arguments to the hashset to return them as results!
+            hs_FilesToIgnore = new(splitArguments);
             return hs_FilesToIgnore;
         }
 
+        private static HashSet<string> GetIgnorableFilesShorterDebug(IList<string> args)
+        {
+            // All arguments for this keyword in one string 
+            string arguments = "";
 
+            // If the keyword is found
+            if (!args.Contains("--exclude"))
+            {
+                // Get the default arguments
+                arguments = ".git;bin;obj;node_modules;.vs;TestResults";
+            }
+            else
+            {
+                // Check for its index and take the following
+                int indexOfArguments = args.IndexOf("--exclude") + 1;
+
+                // Read the string at that positon
+                arguments = args[indexOfArguments];
+            }
+            // Split up the string for better use and add the arguments to the hashset to return them as results!
+            return new HashSet<string>(SplitString(arguments));
+        }
+        private static HashSet<string> GetIgnorableFilesEvenShorterDebug(IList<string> args)
+        {
+            // All arguments for this keyword in one string 
+            string arguments = !args.Contains("--exclude") ? ".git;bin;obj;node_modules;.vs;TestResults" : args[args.IndexOf("--exclude") + 1];
+
+            //  Split up the string for better use 
+            IEnumerable<string> splitArguments = SplitString(arguments);
+            
+            //Add the arguments to the hashset to return them as results!
+            return new HashSet<string>(splitArguments);
+        }
+
+
+
+        private static IEnumerable<string> SplitString(string target, char separator = ';') => target.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
 
         /// <summary>
