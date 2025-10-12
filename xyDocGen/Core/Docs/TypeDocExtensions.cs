@@ -17,7 +17,7 @@ namespace xyDocumentor.Core.Docs
         /// <param name="td_CallingType_"> the TypeDoc instance calling the method</param>
         /// <returns></returns>
         public static List<TypeDoc> NestedTypes(this TypeDoc td_CallingType_) => td_CallingType_.GetNestedList();
-        
+
 
         /// <summary>
         /// Returns all nested types stored in the mapping.
@@ -25,25 +25,25 @@ namespace xyDocumentor.Core.Docs
         /// <param name="CallingTypeDoc_"></param>
         /// <returns></returns>
         private static List<TypeDoc> GetNestedList(this TypeDoc CallingTypeDoc_)
-        {   
+        {
             // If there is no value for the key, return a new empty list.
             if (!NestedMapping.TryGetValue(CallingTypeDoc_, out List<TypeDoc> list))
             {
                 list = [];
                 NestedMapping[CallingTypeDoc_] = list;
             }
-            
+
             // Else return the listed values.
             return list;
         }
 
 
 
-       /// <summary>
-       /// Recursively yields this type + all nested types
-       /// </summary>
-       /// <param name="td_CallingType_"></param>
-       /// <returns></returns>
+        /// <summary>
+        /// Recursively yields this type + all nested types
+        /// </summary>
+        /// <param name="td_CallingType_"></param>
+        /// <returns></returns>
         public static IEnumerable<TypeDoc> FlattenNested(this TypeDoc td_CallingType_)
         {
             // Add the caller to the output
@@ -51,7 +51,7 @@ namespace xyDocumentor.Core.Docs
 
             // For every nested type 
             foreach (TypeDoc td_NestedType in td_CallingType_.NestedTypes())
-            {   
+            {
                 // For every subtype
                 foreach (TypeDoc td_SubType in td_NestedType.FlattenNested())
                 {
@@ -70,26 +70,37 @@ namespace xyDocumentor.Core.Docs
         /// <returns></returns>
         public static IEnumerable<MemberDoc> AllMembers(this TypeDoc td_CallingType_)
         {
-            foreach (MemberDoc md_Field in td_CallingType_.Fields)
+            //foreach (MemberDoc md_Field in td_CallingType_.Fields)
+            //{
+            //    yield return md_Field;
+            //}
+            //foreach (MemberDoc md_Property in td_CallingType_.Properties) 
+            //{
+            //    yield return md_Property;
+            //}
+            //foreach (MemberDoc md_Method in td_CallingType_.Methods) 
+            //{
+            //    yield return md_Method;
+            //}
+            //foreach (MemberDoc md_Constructor in td_CallingType_.Constructors)
+            //{
+            //    yield return md_Constructor;
+            //}
+            //foreach (MemberDoc md_Event in td_CallingType_.Events) 
+            //{
+            //    yield return md_Event;
+            //}
+
+            // Combine all direct members using LINQ Concat, then yield them all.
+            foreach (var member in td_CallingType_.Fields
+                .Concat(td_CallingType_.Properties)
+                .Concat(td_CallingType_.Methods)
+                .Concat(td_CallingType_.Constructors)
+                .Concat(td_CallingType_.Events))
             {
-                yield return md_Field;
+                yield return member;
             }
-            foreach (MemberDoc md_Property in td_CallingType_.Properties) 
-            {
-                yield return md_Property;
-            }
-            foreach (MemberDoc md_Method in td_CallingType_.Methods) 
-            {
-                yield return md_Method;
-            }
-            foreach (MemberDoc md_Constructor in td_CallingType_.Constructors)
-            {
-                yield return md_Constructor;
-            }
-            foreach (MemberDoc md_Event in td_CallingType_.Events) 
-            {
-                yield return md_Event;
-            }
+
             foreach (TypeDoc td_NestedType in td_CallingType_.NestedTypes())
             {
                 foreach (MemberDoc md_NestedMember in td_NestedType.AllMembers())
@@ -112,8 +123,10 @@ namespace xyDocumentor.Core.Docs
                 case "method": td_CallingType_.Methods.Add(md_Member_); break;
                 case "property": td_CallingType_.Properties.Add(md_Member_); break;
                 case "event": td_CallingType_.Events.Add(md_Member_); break;
-                case "field": td_CallingType_.Fields.Add(md_Member_); break;
-                case "enum-member": td_CallingType_.Fields.Add(md_Member_); break;
+                case "field":
+                case "enum-member":
+                    td_CallingType_.Fields.Add(md_Member_);
+                    break;
             }
         }
 

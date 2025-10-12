@@ -39,6 +39,7 @@ namespace xyDocumentor.Core.Helpers
         /// </summary>
         /// <param name="externalarguments"></param>
         /// <param name="args"></param>
+        /// <param name="rootpath"></param>
         /// <returns></returns>
         public static string GetOutputPath(List<string> externalarguments, string[] args, string rootpath)
         {
@@ -204,7 +205,7 @@ namespace xyDocumentor.Core.Helpers
         /// Output the commands for this tool into the console
         /// </summary>
         /// <returns></returns>
-        private static async Task<string> OutputCommands()
+        private static Task<string> OutputCommands()
         {
             // Set the string for the ouputing the commands
             string commands =
@@ -224,7 +225,7 @@ namespace xyDocumentor.Core.Helpers
                 Console.Out.Flush();
             }
 
-            return commands;
+            return Task.FromResult(commands);
         }
 
 

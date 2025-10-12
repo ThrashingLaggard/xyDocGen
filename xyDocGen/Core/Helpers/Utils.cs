@@ -11,11 +11,19 @@ using System.Threading.Tasks;
 using xyDocumentor.Core.Docs;
 using xyDocumentor.Core.Renderer;
 using xyToolz.Filesystem;
+using xyToolz.Helper.Logging;
+using xyToolz.Logging.Helper;
 
 namespace xyDocumentor.Core.Helpers
 {
+    /// <summary>
+    /// Little helpers in the fight for better oversight
+    /// </summary>
     public static class Utils
     {
+        // Fallback string
+        private const string NO_XML_SUMMARY_FALLBACK = "(No XML-Summary)";
+        private readonly static xyMessageFactory xyMsgFactory = new();
         /// <summary>
         /// Flattens all attributes of a type/member into a simple list of names
         /// </summary>
@@ -23,8 +31,22 @@ namespace xyDocumentor.Core.Helpers
         /// <returns></returns>
         public static IEnumerable<string> FlattenAttributes(SyntaxList<AttributeListSyntax> listedAttributesFromMember_)
         {
+            // Refactored: Use SelectMany and Select for concise flattening
+            return listedAttributesFromMember_
+                .SelectMany(list => list.Attributes)
+                .Select(attribute => attribute.Name.ToString());
+        }
+
+        /// <summary>
+        /// Does almost the same as the normal version but with more variables and two  foreaches instead of selects: 
+        /// Flattens all attributes of a type/member into a simple list of names
+        /// </summary>
+        /// <param name="listedAttributesFromMember_"></param>
+        /// <returns></returns>
+        public static IEnumerable<string> FlattenAttributesDebug(SyntaxList<AttributeListSyntax> listedAttributesFromMember_)
+        {
             // Store the results to return them for later use
-            List<string> lst_Results = new();
+            List<string> listedResults = new();
 
             // For every SyntaxNode (here: List of Attributes) in the List
             foreach (AttributeListSyntax als_ListOfAttributes in listedAttributesFromMember_)
@@ -34,37 +56,31 @@ namespace xyDocumentor.Core.Helpers
                 {
                     // Read the name and add its string representation to the list
                     NameSyntax ns_AttributeName = as_Attribute.Name;
-                    string s_AttributeString = ns_AttributeName.ToString();
-                    lst_Results.Add(s_AttributeString);
+                    string attributeString = ns_AttributeName.ToString();
+                    listedResults.Add(attributeString);
                 }
             }
-            return lst_Results;
+            return listedResults;
         }
 
         /// <summary>
         /// Extracts base types and interfaces
         /// </summary>
         /// <param name="baseList_"></param>
-        /// <returns></returns>
-        public static List<string> ExtractBaseTypes(BaseListSyntax baseList_)
+        /// <returns>
+        /// IEnumerable filled with strings from the baseList
+        /// Empty IEnumerable if parameter is not filled or invalid
+        /// </returns>
+        public static IEnumerable<string> ExtractBaseTypes(BaseListSyntax baseList_)
         {
-            // Storage for returning the results
-            List<string> lst_BaseTypes = [];
-
             // Checks for an invalid parameter
             if (baseList_ is null || baseList_.Span.IsEmpty)
             {
-                // log invalid parameter here
-                return lst_BaseTypes;
+                return Enumerable.Empty<string>();
             }
 
-            // For every type in the externally provided list
-            foreach (BaseTypeSyntax type in baseList_.Types)
-            {
-                // Add its String representation
-                lst_BaseTypes.Add(type.Type.ToString());
-            }
-            return lst_BaseTypes;
+            // Project every type in the externally provided list into a string 
+            return baseList_.Types.Select(type => type.Type.ToString());
         }
 
         /// <summary>
@@ -75,90 +91,86 @@ namespace xyDocumentor.Core.Helpers
             // Read the trivia syntax element from the target node
             DocumentationCommentTriviaSyntax trivia = syn_Node_.GetLeadingTrivia().Select(t => t.GetStructure()).OfType<DocumentationCommentTriviaSyntax>().FirstOrDefault();
 
-            if (trivia != null)
+            if (trivia == null) goto Fallback;
+            
+            // Read the content from the XmlSummary section
+            XmlElementSyntax xes_XmlSummary = trivia.Content.OfType<XmlElementSyntax>().FirstOrDefault(x => x.StartTag.Name.LocalName.Text.Equals("summary",System.StringComparison.OrdinalIgnoreCase));
+
+            if (xes_XmlSummary == null) goto Fallback;
+            
+            // For consistent String handling
+            StringBuilder sb_SummaryBuilder = new();
+
+            // For every item in the content list
+            foreach (XmlNodeSyntax content in xes_XmlSummary.Content)
             {
-                // Read the content from the XmlSummary section
-                XmlElementSyntax xesXmlSummary = trivia.Content.OfType<XmlElementSyntax>().FirstOrDefault(x => x.StartTag.Name.LocalName.Text == "summary");
-
-                if (xesXmlSummary != null)
+                // Check if the content is an XML text token, which holds the actual text.
+                if (content is XmlTextSyntax textNode)
                 {
-                    // For consistent String handling
-                    StringBuilder sb_SummaryBuilder = new();
-
-                    // For every item in the content list
-                    foreach (XmlNodeSyntax content in xesXmlSummary.Content)
+                    // Append the raw text from the token, which does not contain the "///" characters.
+                    foreach (var token in textNode.TextTokens)
                     {
-                        // Check if the content is an XML text token, which holds the actual text.
-                        if (content is XmlTextSyntax textNode)
-                        {
-                            // Append the raw text from the token, which does not contain the "///" characters.
-                            sb_SummaryBuilder.Append(textNode.TextTokens.FirstOrDefault().ValueText);
-                        }
-                        else
-                        {
-                            // For other elements like <see>, just append the raw string and let CleanDoc handle it.
-                            sb_SummaryBuilder.Append(content.ToString());
-                        }
-                    }
-
-                    // If theres something in the buffer
-                    if (sb_SummaryBuilder.Length > 0)
-                    {
-
-                        // Write the string from the builder
-                        string summary = sb_SummaryBuilder.ToString();
-
-                        // Remove xml tags and other unwanted bullshit
-                        if (CleanDoc(summary) is string txt)
-                        {
-                            // Remove leading and trailing whitespaces
-                            string s_TrimmedTxt = txt.Trim();
-                        }
+                        sb_SummaryBuilder.Append(token.ValueText);
                     }
                 }
+                else
+                {
+                    sb_SummaryBuilder.Append(content.ToString());
+                }
             }
-            // else
+
+            // If theres something in the buffer
+            if (!(sb_SummaryBuilder.Length > 0))
             {
-                return "(No XML-Summary)";
+                goto Fallback;
             }
+            else 
+            { 
+                // Write the string from the builder
+                string summary = sb_SummaryBuilder.ToString();
+
+                // Remove xml tags and other unwanted bullshit
+                return CleanDoc(summary);
+            }
+
+            Fallback:
+            return NO_XML_SUMMARY_FALLBACK;
         }
+
+
+        // Top-Level: static readonly Regex
+        private static readonly Regex TagRemovalRegex = new Regex("<.*?>", RegexOptions.Compiled);
+
 
         /// <summary>
         /// Remove XML Tags from the target and decode it into a String
         /// </summary>
-        /// <param name="raw_"></param>
+        /// <param name="rawXmlString_"></param>
         /// <returns></returns>
-        public static string CleanDoc(string raw_)
+        public static string CleanDoc(string rawXmlString_)
         {
             // Remove html elements
-            string s_CleanedResult = raw_.Replace("<para>", "\n").Replace("</para>", "\n");
+            string cleanedResult = rawXmlString_.Replace("<para>", "\n").Replace("</para>", "\n");
 
             // Remove any remaining tags
-            s_CleanedResult = Regex.Replace(s_CleanedResult, "<.*?>", string.Empty);
+            cleanedResult = TagRemovalRegex.Replace(cleanedResult, string.Empty);
 
             // Decode HTML entities
-            s_CleanedResult = WebUtility.HtmlDecode(s_CleanedResult);
+            cleanedResult = WebUtility.HtmlDecode(cleanedResult);
 
             // Remove leading and tailing whitespaces
-            s_CleanedResult.Trim();
+            cleanedResult = cleanedResult.Trim();
 
-            return s_CleanedResult;
+            return cleanedResult;
         }
 
         /// <summary>
-        /// Check if a member has public-like visibility
+        /// Check if the given SyntaxToken is either: treat "public" and "protected" as "public-like"
         /// </summary>
-        /// <param name="stl_Modifiers_"></param>
+        /// <param name="listedModifiers_"></param>
         /// <returns></returns>
-        public static bool HasPublicLike(SyntaxTokenList stl_Modifiers_)
-        {
-            // Check if the given SyntaxToken is either: treat "public" and "protected" as "public-like"
-            if (stl_Modifiers_.Any(m => m.IsKind(SyntaxKind.PublicKeyword))) return true;
-            if (stl_Modifiers_.Any(m => m.IsKind(SyntaxKind.ProtectedKeyword))) return true;
-
-            // default is private => false
-            return false;
-        }
+        public static bool HasPublicLike(SyntaxTokenList listedModifiers_) =>(listedModifiers_.Any(m => m.IsKind(SyntaxKind.PublicKeyword) || m.IsKind(SyntaxKind.ProtectedKeyword)));
+        
 
         /// <summary>
         /// Creates a MemberDoc from a Roslyn MemberDeclarationSyntax instance
@@ -168,7 +180,7 @@ namespace xyDocumentor.Core.Helpers
         public static MemberDoc CreateMemberDoc(MemberDeclarationSyntax mds_Member_)
         {
             // Fill MemberDoc with the data of the given member
-            MemberDoc doc = new()
+            MemberDoc md_Member = new()
             {
                 // What kind of member is this?
                 Kind = mds_Member_.Kind().ToString().Replace("Declaration", "").ToLower(),
@@ -179,7 +191,7 @@ namespace xyDocumentor.Core.Helpers
                 // Read the summary from the xml comment
                 Summary = ExtractXmlSummaryFromSyntaxNode(mds_Member_)
             };
-            return doc;
+            return md_Member;
         }
 
         /// <summary>
@@ -189,36 +201,50 @@ namespace xyDocumentor.Core.Helpers
         /// <returns>string s_Signature = "depends on the type of member declaration"</returns>
         private static string ExtractSignature(MemberDeclarationSyntax mds_Member_)
         {
+
+            // Get modifiers for use in signatures
+            string modifiers = string.Join(" ", mds_Member_.Modifiers.Select(m => m.Text));
+
+            // Add a trailing space only if there are modifiers
+            modifiers = string.IsNullOrWhiteSpace(modifiers) ? "" : $"{modifiers} ";
+
             switch (mds_Member_)
             {
                 case MethodDeclarationSyntax m:
                     {
-                        string s_MethodString = $"{m.Identifier}{m.TypeParameterList}{m.ParameterList}";
+                        // Including return type and modifiers for a complete signature.
+                        string s_MethodString = $"{modifiers}{m.ReturnType} {m.Identifier}{m.TypeParameterList}{m.ParameterList}";
                         return s_MethodString;
                     }
                 case PropertyDeclarationSyntax p:
                     {
-                        string s_PropertyString = $"{p.Type} {p.Identifier} {{ ... }}";
+                        // Including modifiers
+                        string s_PropertyString = $"{modifiers}{p.Type} {p.Identifier} {{ ... }}";
                         return s_PropertyString;
                     }
                 case FieldDeclarationSyntax f:
                     {
-                        string s_FieldString = string.Join(", ", f.Declaration.Variables.Select(v => $"{f.Declaration.Type} {v.Identifier}"));
-                        return s_FieldString;
+                        // Handling multiple declarators and including modifiers.
+                        string typeName = f.Declaration.Type.ToString();
+                        string variableNames = string.Join(", ", f.Declaration.Variables.Select(v => v.Identifier.Text));
+                        return $"{modifiers}{typeName} {variableNames}";
+
                     }
                 case EventDeclarationSyntax e:
                     {
-                        string s_EventString = $"event {e.Type} {e.Identifier}";
+                        // EventDeclarationSyntax is for custom events (add/remove accessors)
+                        string s_EventString = $"{modifiers}event {e.Type} {e.Identifier}";
                         return s_EventString;
                     }
                 case EventFieldDeclarationSyntax ef:
                     {
-                        string s_EventFieldString = string.Join(", ", ef.Declaration.Variables.Select(v => $"event {ef.Declaration.Type} {v.Identifier}"));
-                        return s_EventFieldString;
+                        // EventFieldDeclarationSyntax is for field-like events
+                        return $"{modifiers}event {ef.Declaration.Type} {string.Join(", ", ef.Declaration.Variables.Select(v => v.Identifier.Text))}";
                     }
                 case ConstructorDeclarationSyntax c:
                     {
-                        string s_ConstructorString = $"{c.Identifier}{c.ParameterList}";
+                        // Include modifiers for a complete signature.
+                        string s_ConstructorString = $"{modifiers}{c.Identifier}{c.ParameterList}";
                         return s_ConstructorString;
                     }
                 default:
@@ -234,53 +260,62 @@ namespace xyDocumentor.Core.Helpers
         /// Writes each TypeDoc to a file, grouped by namespace, in the requested format.
         /// Supports JSON, HTML, PDF, Markdown.
         /// </summary>
-        public static async Task<bool> WriteDataToFilesOrderedByNamespace(IEnumerable<TypeDoc> alltypes, string outpath, string format)
+        public static async Task<bool> WriteDataToFilesOrderedByNamespace(IEnumerable<TypeDoc> listedAllTypes_, string outPath_, string format_)
         {
             string content;
-            bool isWritten = false;
-            string cleanedNamespace = "";
+            bool isWrittenCurrent = false;
+            bool isWrittenAll = true;
+            string cleanedNamespace;
+
+            string lowerFormat = format_.ToLowerInvariant();
 
             // Iterating through the list 
-            foreach (TypeDoc tD in alltypes)
+            foreach (TypeDoc td_TypeInList in listedAllTypes_)
             {
                 // Ensuring there is a value even if there is no namespace and cleaning an existing one's name
-                cleanedNamespace = tD.Namespace is not null ?           tD.Namespace.Replace('<', '_').Replace('>', '_')      :        "_";
-            
+                cleanedNamespace = td_TypeInList.Namespace is not null ? td_TypeInList.Namespace.Replace('<', '_').Replace('>', '_') : "_";
+
                 // Creating a folder for each namespace
-                string namespaceFolder = Path.Combine(outpath, cleanedNamespace);
+                string namespaceFolder = Path.Combine(outPath_, cleanedNamespace);
                 Directory.CreateDirectory(namespaceFolder);
 
-                string fileName = Path.Combine(namespaceFolder, tD.DisplayName.Replace(' ', '_'));
+                string cleanedDisplayName = td_TypeInList.DisplayName.Replace(' ', '_').Replace('<', '_').Replace('>', '_');
+
+                string fileName = Path.Combine(namespaceFolder, cleanedDisplayName);
 
                 // Choosing the format and saving converted data to the target file
-                switch (format)
+                switch (lowerFormat)
                 {
                     case "json":
                         fileName += ".json";
-                        content = JsonRenderer.Render(tD);
-                        isWritten = await xyFiles.SaveToFile(content, fileName);
+                        content = JsonRenderer.Render(td_TypeInList);
+                        isWrittenCurrent = await xyFiles.SaveToFile(content, fileName);
                         break;
 
                     case "html":
                         fileName += ".html";
-                        content = HtmlRenderer.Render(tD, cssPath: null);
-                        isWritten = await xyFiles.SaveToFile(content, fileName);
+                        content = HtmlRenderer.Render(td_TypeInList, cssPath: null);
+                        isWrittenCurrent = await xyFiles.SaveToFile(content, fileName);
                         break;
 
                     case "pdf":
                         fileName += ".pdf";
-                        PdfRenderer.RenderToFile(tD, fileName);
-                        isWritten = true;
+                        PdfRenderer.RenderToFile(td_TypeInList, fileName);
+                        isWrittenCurrent = true;
                         break;
 
                     default: // Markdown
                         fileName += ".md";
-                        content = MarkdownRenderer.Render(tD);
-                        isWritten = await xyFiles.SaveToFile(content, fileName);
+                        content = MarkdownRenderer.Render(td_TypeInList);
+                        isWrittenCurrent = await xyFiles.SaveToFile(content, fileName);
                         break;
                 }
+                if(isWrittenCurrent is false)
+                {
+                    isWrittenAll = isWrittenCurrent;
+                }
             }
-            return isWritten;
+            return isWrittenAll;
         }
 
 
@@ -292,7 +327,5 @@ namespace xyDocumentor.Core.Helpers
             var parts = path.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
             return parts.Any(p => excludeParts.Contains(p));
         }
-
-
     }
 }

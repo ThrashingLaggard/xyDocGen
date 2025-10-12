@@ -34,10 +34,10 @@ namespace xyDocumentor.Core.Extractors
         /// <param name="namespace_"></param>
         /// <param name="file_"></param>
         /// <returns> A List of TypeDocs filled with all members in the chosen scope</returns>
-        public List<TypeDoc> ProcessMembers(SyntaxList<MemberDeclarationSyntax> listedMembers_, string? namespace_, string file_)
+        public IList<TypeDoc> ProcessMembers(SyntaxList<MemberDeclarationSyntax> listedMembers_, string? namespace_, string file_)
         {
             // Used to store the values for return
-            List<TypeDoc> ListedTypesInFile = [];
+            IList<TypeDoc> listedMembers = [];
 
             // For every member declaration:  Call the HandleType() Method with the according parameter
             foreach (MemberDeclarationSyntax memberDeclaration in listedMembers_)
@@ -45,23 +45,23 @@ namespace xyDocumentor.Core.Extractors
                 switch (memberDeclaration)
                 {
                     case ClassDeclarationSyntax __Class:
-                        ListedTypesInFile.Add(HandleType(__Class, namespace_, file_));
+                        listedMembers.Add(HandleType(__Class, namespace_, file_));
                         break;
                     case StructDeclarationSyntax __Struct:
-                        ListedTypesInFile.Add(HandleType(__Struct, namespace_, file_));
+                        listedMembers.Add(HandleType(__Struct, namespace_, file_));
                         break;
                     case InterfaceDeclarationSyntax __Interface:
-                        ListedTypesInFile.Add(HandleType(__Interface, namespace_, file_));
+                        listedMembers.Add(HandleType(__Interface, namespace_, file_));
                         break;
                     case RecordDeclarationSyntax __Record:
-                        ListedTypesInFile.Add(HandleType(__Record, namespace_, file_));
+                        listedMembers.Add(HandleType(__Record, namespace_, file_));
                         break;
                     case EnumDeclarationSyntax __Enum:
-                        ListedTypesInFile.Add(HandleEnum(__Enum, namespace_, file_));
+                        listedMembers.Add(HandleEnum(__Enum, namespace_, file_));
                         break;
                 }
             }
-            return ListedTypesInFile;
+            return listedMembers;
         }
 
         /// <summary>
