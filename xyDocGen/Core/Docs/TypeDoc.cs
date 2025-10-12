@@ -14,7 +14,7 @@ namespace xyDocumentor.Core.Docs
         public string Name { get; init; } = string.Empty;
 
         /// <summary> Types within  </summary>
-        public List<TypeDoc> NestedTypes { get; set; }
+        public List<TypeDoc> NestedTypes { get; set; } = new();
 
         /// <summary>Namespace the type belongs to, "<global>" if none</summary>
         public string Namespace { get; init; } = string.Empty;

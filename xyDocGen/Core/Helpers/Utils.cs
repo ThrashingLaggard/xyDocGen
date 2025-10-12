@@ -30,13 +30,14 @@ namespace xyDocumentor.Core.Helpers
         /// </summary>
         /// <param name="listedAttributesFromMember_"> List of SyntaxNodes</param>
         /// <returns></returns>
-        public static IEnumerable<string> FlattenAttributes(SyntaxList<AttributeListSyntax> listedAttributesFromMember_)
-        {
-            // Refactored: Use SelectMany and Select for concise flattening
-            return listedAttributesFromMember_
-                .SelectMany(list => list.Attributes)
-                .Select(attribute => attribute.Name.ToString());
-        }
+        //public static IEnumerable<string> FlattenAttributes(SyntaxList<AttributeListSyntax> listedAttributesFromMember_)
+        //{
+        //    // Refactored: Use SelectMany and Select for concise flattening
+        //    return listedAttributesFromMember_
+        //        .SelectMany(list => list.Attributes)
+        //        .Select(attribute => attribute.Name.ToString())
+        //        .ToList();
+        //}
 
         /// <summary>
         /// Does almost the same as the normal version but with more variables and two  foreaches instead of selects: 
@@ -44,7 +45,7 @@ namespace xyDocumentor.Core.Helpers
         /// </summary>
         /// <param name="listedAttributesFromMember_"></param>
         /// <returns></returns>
-        public static IEnumerable<string> FlattenAttributesDebug(SyntaxList<AttributeListSyntax> listedAttributesFromMember_)
+        public static IEnumerable<string> FlattenAttributes(SyntaxList<AttributeListSyntax> listedAttributesFromMember_)
         {
             // Store the results to return them for later use
             List<string> listedResults = new();
@@ -195,6 +196,7 @@ namespace xyDocumentor.Core.Helpers
                 Summary = ExtractXmlSummaryFromSyntaxNode(mds_Member_),
 
                 Modifiers = modifiers,
+                Attributes = Utils.FlattenAttributes(mds_Member_.AttributeLists).ToList(),
 
                 Remarks = ExtractXmlRemarksFromSyntaxNode(mds_Member_),
 

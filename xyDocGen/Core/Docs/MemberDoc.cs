@@ -9,6 +9,8 @@ namespace xyDocumentor.Core.Docs
     {
         /// <summary> Store usefull information in here </summary>
         public string Description { get; set; }
+        /// <summary>A list of attributes applied to the member (e.g., "Obsolete", "Test")</summary>
+        public IList<string> Attributes { get; init; } = new List<string>();
 
         /// <summary>Kind of member: "field", "property", "method", "ctor", "event", "enum-member"</summary>
         public string Kind { get; init; } = string.Empty;

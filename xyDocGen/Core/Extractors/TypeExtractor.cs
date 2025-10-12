@@ -103,7 +103,7 @@ namespace xyDocumentor.Core.Extractors
                 BaseTypes = Utils.ExtractBaseTypes(tds_TypeNode_.BaseList).ToList(),
                 Summary = Utils.ExtractXmlSummaryFromSyntaxNode(tds_TypeNode_),
                 FilePath = filePath_,
-                Parent = parentType_?.Name!
+                Parent = parentType_?.Name ?? string.Empty
             };
 
             // For every member in the type: Create a typedoc and add them to the corresponding list
@@ -232,7 +232,8 @@ namespace xyDocumentor.Core.Extractors
                     Kind = "enum-member",
                     Signature = member.Identifier.Text + (member.EqualsValue != null ? $" = {member.EqualsValue.Value}" : string.Empty),
                     Summary = Utils.ExtractXmlSummaryFromSyntaxNode(member),
-                    Remarks = Utils.ExtractXmlRemarksFromSyntaxNode(member)
+                    Remarks = Utils.ExtractXmlRemarksFromSyntaxNode(member),
+                    Attributes = Utils.FlattenAttributes(member.AttributeLists).ToList() 
                 });
             }
 
@@ -338,8 +339,8 @@ namespace xyDocumentor.Core.Extractors
                     Signature = signature_,
                     Modifiers = mds_Member_.Modifiers.ToString().Trim(),
                     Summary = Utils.ExtractXmlSummaryFromSyntaxNode(mds_Member_),
-                    Remarks = Utils.ExtractXmlRemarksFromSyntaxNode(mds_Member_)
-
+                    Remarks = Utils.ExtractXmlRemarksFromSyntaxNode(mds_Member_),
+                     Attributes = Utils.FlattenAttributes(mds_Member_.AttributeLists).ToList()
                 };
                 return md_Member;
             }
