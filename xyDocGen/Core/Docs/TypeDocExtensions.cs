@@ -92,6 +92,7 @@ namespace xyDocumentor.Core.Docs
             //}
 
             // Combine all direct members using LINQ Concat, then yield them all.
+            // Great for as long as i dont need specific changes 
             foreach (var member in td_CallingType_.Fields
                 .Concat(td_CallingType_.Properties)
                 .Concat(td_CallingType_.Methods)

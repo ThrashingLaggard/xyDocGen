@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -179,6 +180,8 @@ namespace xyDocumentor.Core.Helpers
         /// <returns> A MemberDoc with the combined data of a single member of [...]</returns>
         public static MemberDoc CreateMemberDoc(MemberDeclarationSyntax mds_Member_)
         {
+            string modifiers = string.Join(" ", mds_Member_.Modifiers.Select(m => m.Text));
+
             // Fill MemberDoc with the data of the given member
             MemberDoc md_Member = new()
             {
@@ -189,9 +192,180 @@ namespace xyDocumentor.Core.Helpers
                 Signature = ExtractSignature(mds_Member_),
 
                 // Read the summary from the xml comment
-                Summary = ExtractXmlSummaryFromSyntaxNode(mds_Member_)
+                Summary = ExtractXmlSummaryFromSyntaxNode(mds_Member_),
+
+                Modifiers = modifiers,
+
+                Remarks = ExtractXmlRemarksFromSyntaxNode(mds_Member_),
+
+                ReturnSummary = ExtractXmlReturnSummary(mds_Member_), // Nutzt den existierenden Helper
+
+                ReturnType = ExtractReturnType(mds_Member_),
+                Parameters = ExtractParameterDocs(mds_Member_),
+
+      
+                GenericConstraints = ExtractGenericConstraints(mds_Member_),
+                TypeParameterSummaries = ExtractXmlTypeParameterSummaries(mds_Member_)
             };
             return md_Member;
+        }
+
+        // <summary>
+        /// Extracts documentation for generic type parameters from the XML &lt;typeparam&gt; tags.
+        /// </summary>
+        private static IDictionary<string, string> ExtractXmlTypeParameterSummaries(MemberDeclarationSyntax parentNode)
+        {
+            var summaries = new Dictionary<string, string>();
+
+            // 1. Roslyn-Kommentarstruktur abrufen.
+            DocumentationCommentTriviaSyntax xmlComment = parentNode.GetLeadingTrivia()
+                                                       .Select(t => t.GetStructure())
+                                                       .OfType<DocumentationCommentTriviaSyntax>()
+                                                       .FirstOrDefault();
+
+            if (xmlComment == null)
+                return summaries;
+
+            // 2. Nach dem <typeparam>-Tag filtern.
+            IEnumerable<XmlEmptyElementSyntax> typeparamElements = xmlComment.Content.OfType<XmlEmptyElementSyntax>()
+                                                                .Where(e => e.Name.ToString() == "typeparam");
+
+            // NOTE: <typeparam> wird oft als XmlEmptyElementSyntax dargestellt (selbstschließend), 
+            // ist aber in neueren Versionen oder bei Inhalt auch XmlElementSyntax.
+            // Wir fangen hier beide ab, fokussieren aber auf den Identifier-Teil.
+
+            // *Für XmlElementSyntax (wenn Inhalt vorhanden)*
+            IEnumerable<XmlElementSyntax> typeparamContentElements = xmlComment.Content.OfType<XmlElementSyntax>()
+                                                                .Where(e => e.StartTag.Name.ToString() == "typeparam");
+
+            // Zusammenführen und Verarbeiten (wir gehen davon aus, dass der Name immer als Attribut 'name' drin ist)
+
+            // A) Verarbeitung der XmlEmptyElementSyntax (<typeparam name="T"/>)
+            foreach (XmlEmptyElementSyntax typeparamElement in typeparamElements)
+            {
+                XmlNameAttributeSyntax nameAttribute = typeparamElement.Attributes.OfType<XmlNameAttributeSyntax>()
+                                                                       .FirstOrDefault(a => a.Name.LocalName.Text == "name");
+
+                if (nameAttribute != null)
+                {
+                    string typeParamName = nameAttribute.Identifier.ToString().Trim();
+                    // Inhalt ist leer für selbstschließendes Tag, daher muss der Inhalt 
+                    // direkt nach dem Attribut im Text-Trivia gesucht werden. (Komplex)
+                    // Für's Erste: Wir setzen den Summary auf leer, wenn es ein EmptyElement ist.
+                    summaries[typeParamName] = string.Empty;
+                }
+            }
+
+            // B) Verarbeitung der XmlElementSyntax (<typeparam name="T">Description</typeparam>)
+            foreach (XmlElementSyntax typeparamElement in typeparamContentElements)
+            {
+                XmlNameAttributeSyntax nameAttribute = typeparamElement.StartTag.Attributes.OfType<XmlNameAttributeSyntax>()
+                                                                       .FirstOrDefault(a => a.Name.LocalName.Text == "name");
+
+                if (nameAttribute == null)
+                    continue;
+
+                string typeParamName = nameAttribute.Identifier.ToString().Trim();
+
+                // Den Inhalt extrahieren und bereinigen
+                string content = GetTextFromXmlContent(typeparamElement.Content);
+
+                summaries[typeParamName] = content;
+            }
+
+            return summaries;
+        }
+
+        /// <summary>
+        /// Extracts constraints for generic methods/types (e.g., 'where T : class, new()').
+        /// </summary>
+        private static IList<string> ExtractGenericConstraints(MemberDeclarationSyntax memberNode)
+        {
+            var constraints = new List<string>();
+
+            // Constraints sind nur bei MethodDeclarationSyntax oder TypeDeclarationSyntax vorhanden.
+            // Wir prüfen hier nur Methoden, da dies der häufigste Member-Typ ist, der generisch sein kann.
+            if (memberNode is MethodDeclarationSyntax methodNode)
+            {
+                if (methodNode.ConstraintClauses.Any())
+                {
+                    // Jeder ConstraintClauseSyntax repräsentiert eine volle "where"-Klausel.
+                    foreach (var clause in methodNode.ConstraintClauses)
+                    {
+                        // Wir verwenden ToFullString(), um die vollständige Klausel zu erhalten (z.B. "where T : struct")
+                        // und trimmen sie, um unnötige Leerzeichen zu entfernen.
+                        constraints.Add(clause.ToFullString().Trim());
+                    }
+                }
+            }
+            // TODO: Fügen Sie TypeDeclarationSyntax (Class/Struct) hinzu, falls MemberDoc auch für diese verwendet wird.
+            // Beispiel: else if (memberNode is TypeDeclarationSyntax typeNode) { ... }
+
+            return constraints;
+        }
+
+        /// <summary>
+        /// Extracts detailed parameter documentation by combining Roslyn's parameter structure 
+        /// with the extracted XML documentation summaries.
+        /// </summary>
+        internal static IList<ParameterDoc> ExtractParameterDocs(MemberDeclarationSyntax memberNode)
+        {
+            var paramDocs = new List<ParameterDoc>();
+
+            // 1. Hole die XML-Zusammenfassungen für alle Parameter
+            IDictionary<string, string> xmlSummaries = ExtractXmlParamSummaries(memberNode);
+
+            ParameterListSyntax parameterList = null;
+
+            // 2. Finde die ParameterList basierend auf dem Typ des Members
+            if (memberNode is MethodDeclarationSyntax m)
+                parameterList = m.ParameterList;
+            else if (memberNode is ConstructorDeclarationSyntax c)
+                parameterList = c.ParameterList;
+            else if (memberNode is DelegateDeclarationSyntax d)
+                parameterList = d.ParameterList;
+
+            if (parameterList == null)
+                return paramDocs;
+
+            // 3. Durchlaufe die Roslyn-Parameter und erstelle ParameterDoc-Objekte
+            foreach (var roslynParam in parameterList.Parameters)
+            {
+                // Achtung: SyntaxToken hat .Text, was meistens robuster ist als .ValueText
+                string paramName = roslynParam.Identifier.Text;
+                string paramType = roslynParam.Type?.ToString() ?? "var"; // Sicherstellen, dass Type existiert
+
+                // Versuche, die Beschreibung aus der XML-Dokumentation zu holen
+                xmlSummaries.TryGetValue(paramName, out string paramSummary);
+
+                // Erstelle das ParameterDoc-Objekt
+                paramDocs.Add(new ParameterDoc
+                {
+                    Name = paramName,
+                    Type = paramType,
+                    Summary = paramSummary ?? string.Empty,
+                    IsOptional = roslynParam.Default != null
+                });
+            }
+
+            return paramDocs;
+        }
+
+        /// <summary>
+        /// Extracts the return type for methods, properties, and field-like events.
+        /// </summary>
+        private static string ExtractReturnType(MemberDeclarationSyntax mds_memberNode_)
+        {
+            return mds_memberNode_ switch
+            {
+                MethodDeclarationSyntax m => m.ReturnType.ToString(),
+                PropertyDeclarationSyntax p => p.Type.ToString(),
+                EventDeclarationSyntax e => e.Type.ToString(), // Custom events
+                EventFieldDeclarationSyntax ef => ef.Declaration.Type.ToString(), // Field-like events
+                FieldDeclarationSyntax f => f.Declaration.Type.ToString(),
+                DelegateDeclarationSyntax d => d.ReturnType.ToString(),
+                _ => string.Empty // Keine Rückgabetypen für Konstruktoren, Klassen etc.
+            };
         }
 
         /// <summary>
@@ -326,6 +500,145 @@ namespace xyDocumentor.Core.Helpers
         {
             var parts = path.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
             return parts.Any(p => excludeParts.Contains(p));
+        }
+
+
+        /// <summary>
+        /// Extracts the content of the &lt;remarks&gt; XML documentation tag from a given member declaration.
+        /// </summary>
+        /// <param name="mds_Member_">The MemberDeclarationSyntax node to inspect.</param>
+        /// <returns>The cleaned content of the remarks tag, or an empty string.</returns>
+        internal static string ExtractXmlRemarksFromSyntaxNode(MemberDeclarationSyntax mds_Member_)
+        {
+            return ExtractXmlTagContent(mds_Member_, "remarks");
+        }
+
+        /// <summary>
+        /// Extracts the content of the &lt;returns&gt; XML documentation tag.
+        /// </summary>
+        /// <param name="memberNode">The member node (Method, Property, Delegate) to inspect.</param>
+        /// <returns>The cleaned content of the returns tag, or an empty string.</returns>
+        internal static string ExtractXmlReturnSummary(MemberDeclarationSyntax memberNode)
+        {
+            // This single implementation covers methods, properties, and delegates.
+            return ExtractXmlTagContent(memberNode, "returns");
+        }
+
+        // Overloads for consistency with the original TypeExtractor structure
+        internal static string ExtractXmlReturnSummary(MethodDeclarationSyntax methodNode) => ExtractXmlReturnSummary((MemberDeclarationSyntax)methodNode);
+        internal static string ExtractXmlReturnSummary(PropertyDeclarationSyntax propertyNode) => ExtractXmlReturnSummary((MemberDeclarationSyntax)propertyNode);
+        internal static string ExtractXmlReturnSummary(DelegateDeclarationSyntax delegateNode) => ExtractXmlReturnSummary((MemberDeclarationSyntax)delegateNode);
+
+        /// <summary>
+        /// Extracts all parameter names and their corresponding descriptions from the &lt;param&gt; XML tags.
+        /// </summary>
+        /// <param name="parentNode">The MemberDeclarationSyntax (Method or Constructor) containing the parameters.</param>
+        /// <returns>A dictionary where the key is the parameter name and the value is its summary.</returns>
+        internal static IDictionary<string, string> ExtractXmlParamSummaries(MemberDeclarationSyntax parentNode)
+        {
+            var summaries = new Dictionary<string, string>();
+
+            // 1. Retrieve the XML documentation comment structure (if it exists) from the leading trivia.
+            DocumentationCommentTriviaSyntax xmlComment = parentNode.GetLeadingTrivia()
+                                       .Select(t => t.GetStructure())
+                                       .OfType<DocumentationCommentTriviaSyntax>()
+                                       .FirstOrDefault();
+
+            if (xmlComment == null)
+                return summaries;
+
+            // 2. Filter the comment content for <param> tags, which are represented as XmlElementSyntax.
+            IEnumerable<XmlElementSyntax> paramElements = xmlComment.Content.OfType<XmlElementSyntax>()
+                                                .Where(e => e.StartTag.Name.ToString() == "param");
+
+            foreach (XmlElementSyntax paramElement in paramElements)
+            {
+                // 3. Extract the 'name' attribute from the start tag to get the parameter identifier.
+                XmlNameAttributeSyntax nameAttribute = paramElement.StartTag.Attributes.OfType<XmlNameAttributeSyntax>()
+                                                .FirstOrDefault(a => a.Name.LocalName.Text == "name");
+
+                if (nameAttribute == null)
+                    continue;
+
+                string paramName = nameAttribute.Identifier.ToString().Trim();
+
+                // 4. Extract and clean the content of the parameter tag.
+                string content = GetTextFromXmlContent(paramElement.Content);
+
+                summaries[paramName] = content;
+            }
+
+            return summaries;
+        }
+
+
+        // =========================================================================
+        // PRIVATE CORE LOGIC METHODS
+        // =========================================================================
+
+        /// <summary>
+        /// Core method to extract the content of a specific XML documentation tag from a syntax node.
+        /// </summary>
+        /// <param name="node">The SyntaxNode that precedes the documentation comment.</param>
+        /// <param name="tagName">The name of the tag to extract ("summary", "returns", "remarks", etc.).</param>
+        /// <returns>The cleaned content of the tag, or an empty string.</returns>
+        private static string ExtractXmlTagContent(SyntaxNode node, string tagName)
+        {
+            // 1. Get the DocumentationCommentTriviaSyntax structure from the node's leading trivia.
+            var xmlComment = node.GetLeadingTrivia()
+                                 .Select(t => t.GetStructure())
+                                 .OfType<DocumentationCommentTriviaSyntax>()
+                                 .FirstOrDefault();
+
+            if (xmlComment == null)
+                return string.Empty;
+
+            // 2. Find the specific tag element (e.g., <summary>...</summary>).
+            var tagElement = xmlComment.Content.OfType<XmlElementSyntax>()
+                                             .FirstOrDefault(e => e.StartTag.Name.ToString() == tagName);
+
+            if (tagElement == null)
+            {
+                // Fallback: Check for self-closing tags like <summary/> (represented as XmlEmptyElementSyntax)
+                var emptyTag = xmlComment.Content.OfType<XmlEmptyElementSyntax>()
+                                                .FirstOrDefault(e => e.Name.ToString() == tagName);
+
+                if (emptyTag != null)
+                    return string.Empty; // Content is empty for self-closing tags
+
+                return string.Empty;
+            }
+
+            // 3. Extract and clean the content within the tag.
+            return GetTextFromXmlContent(tagElement.Content);
+        }
+
+        /// <summary>
+        /// Extracts and cleans the raw text content from a SyntaxList of XML-related nodes.
+        /// This is crucial for removing Roslyn-specific trivia like the '/// ' prefix and excessive whitespace.
+        /// </summary>
+        /// <param name="content">The content nodes (e.g., TextTrivia, Cref, CData) within an XML element.</param>
+        /// <returns>The cleaned, normalized text content.</returns>
+        private static string GetTextFromXmlContent(SyntaxList<XmlNodeSyntax> content)
+        {
+            if (!content.Any())
+                return string.Empty;
+
+            // Concatenate all content nodes to get the full raw string, including trivia/markers.
+            string text = string.Concat(content.Select(n => n.ToFullString()));
+
+            // Text Cleaning Process:
+            string cleanedText = string.Join(" ",
+                                    text.Split('\n') // Split the content by newline
+                                        .Select(line => line.TrimStart()) // Trim leading whitespace from each line
+                                        .Select(line => line.TrimStart('/', '*')) // Remove '///' or '**' at the start of documentation lines
+                                        .Select(line => line.Trim())) // Trim remaining whitespace
+                                        .Trim(); // Final trim of the whole block
+
+            // Replace multiple spaces with a single space to normalize formatting (e.g., for multi-line summaries).
+            cleanedText = Regex.Replace(cleanedText, @"\s+", " ");
+
+            return cleanedText;
         }
     }
 }

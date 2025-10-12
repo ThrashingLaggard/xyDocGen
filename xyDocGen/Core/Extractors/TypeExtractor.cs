@@ -8,6 +8,7 @@ using xyDocumentor.Core.Docs;
 using xyDocumentor.Core.Helpers;
 using xyToolz.Filesystem;
 
+
 namespace xyDocumentor.Core.Extractors
 {
     /// <summary>
@@ -28,6 +29,263 @@ namespace xyDocumentor.Core.Extractors
         }
 
         /// <summary>
+        /// Extrahiert Parameterdetails und deren XML-Dokumentation.
+        /// </summary>
+        private static IList<ParameterDoc> ExtractParameters(ParameterListSyntax parameterList, MemberDeclarationSyntax parentNode)
+        {
+            IList<ParameterDoc> parameters = [];
+
+            // XML-Doku für die Parameter (einmal für die gesamte Methode/den Ctor extrahieren)
+            IDictionary<string, string> paramSummaries = Utils.ExtractXmlParamSummaries(parentNode);
+
+            foreach (ParameterSyntax param in parameterList.Parameters)
+            {
+                // Default-Wert extrahieren
+                string? defaultValue = param.Default?.Value?.ToString();
+
+                // Modifikatoren (ref, out, in, params)
+                string modifiers = param.Modifiers.ToString().Trim();
+
+                // Summary aus dem vorher extrahierten Dictionary abrufen
+                paramSummaries.TryGetValue(param.Identifier.Text, out string? summary);
+
+                parameters.Add(new ParameterDoc
+                {
+                    Name = param.Identifier.Text,
+                    Type = param.Type?.ToString() ?? "var",
+                    Modifiers = modifiers,
+                    Summary = summary ?? string.Empty,
+                    DefaultValue = defaultValue
+                });
+            }
+            return parameters;
+        }
+
+        /// <summary>
+        /// Handles class/struct/interface/record extraction, including members and nested types by creating the corresponding TypeDocs and MemberDocs
+        /// </summary>
+        /// <param name="tds_TypeNode_"></param>
+        /// <param name="namespace_"></param>
+        /// <param name="filePath_"></param>
+        /// <param name="parentType_"></param>
+        /// <returns></returns>
+        public TypeDoc? HandleType(TypeDeclarationSyntax tds_TypeNode_, string? namespace_, string filePath_, TypeDoc? parentType_ = null)
+        {
+            // Store in here for better readability
+            string modifiers = tds_TypeNode_.Modifiers.ToString();
+
+            // Is the type public?
+            bool isPublic = modifiers.Contains("public");
+
+            // If not and therefore not to be processed return null
+            if (!_includeNonPublic && !HasPublicLike(tds_TypeNode_.Modifiers))
+            {
+                return null;
+            }
+
+            // Fill in all the needed data
+            TypeDoc td_Result = new()
+            {
+                Kind = tds_TypeNode_.Keyword.ValueText,
+                Name = tds_TypeNode_.Identifier.Text + (tds_TypeNode_.TypeParameterList?.ToString() ?? string.Empty),
+                Namespace = namespace_ ?? "Global   (Default)",
+                Modifiers = modifiers.Trim(),
+                Attributes = (List<string>)Utils.FlattenAttributes(tds_TypeNode_.AttributeLists),
+                BaseTypes = (List<string>)Utils.ExtractBaseTypes(tds_TypeNode_.BaseList),
+                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(tds_TypeNode_),
+                FilePath = filePath_,
+                Parent = parentType_?.Name!
+            };
+
+            // For every member in the type: Create a typedoc and add them to the corresponding list
+            foreach (MemberDeclarationSyntax member in tds_TypeNode_.Members)
+            {
+                MemberDoc? md_Member = null;
+                TypeDoc? td_NestedType = null;
+
+                switch (member)
+                {
+                    case ConstructorDeclarationSyntax ctorNode:
+                        md_Member = TryCreateMemberDoc(ctorNode, "ctor", ctorNode.Identifier.Text + ctorNode.ParameterList.ToString());
+                        if (md_Member != null)
+                        {
+                            // PARAMETER EXTRACTION
+                            md_Member = md_Member with 
+                            { 
+                                Parameters = ExtractParameters(ctorNode.ParameterList, ctorNode),
+                            };
+                            td_Result.Constructors.Add(md_Member);
+                        }
+                        break;
+                    case MethodDeclarationSyntax methodNode:
+                        md_Member = TryCreateMemberDoc(methodNode, "method", $"{methodNode.ReturnType} {methodNode.Identifier}{methodNode.TypeParameterList}{methodNode.ParameterList}");
+                        if (md_Member != null)
+                        {
+
+                            md_Member = md_Member with
+                            {
+                                ReturnType = methodNode.ReturnType.ToString(),
+                                Parameters = ExtractParameters(methodNode.ParameterList, methodNode),
+                                ReturnSummary = Utils.ExtractXmlReturnSummary(methodNode),
+                            };
+                            td_Result.Methods.Add(md_Member);
+                        }
+                        break;
+                    case PropertyDeclarationSyntax propertyNode:
+                        md_Member = TryCreateMemberDoc(propertyNode, "property", $"{propertyNode.Type} {propertyNode.Identifier}{propertyNode.AccessorList}");
+                        if (md_Member != null)
+                        {
+                            md_Member = md_Member with
+                            {
+                                ReturnType = propertyNode.Type.ToString(),
+                                ReturnSummary = Utils.ExtractXmlReturnSummary(propertyNode)
+                            };
+                            td_Result.Properties.Add(md_Member);
+                        }
+                        break;
+                    case EventDeclarationSyntax eventNode:
+                        md_Member = TryCreateMemberDoc(eventNode, "event", $"event {eventNode.Type} {eventNode.Identifier}");
+                        if (md_Member != null) 
+                        {
+                            //Remarks = Utils.ExtractXmlRemarksFromSyntaxNode(eventNode);
+                            td_Result.Events.Add(md_Member);
+                        }
+                        break;
+                    case EventFieldDeclarationSyntax eventFieldNode:
+                        // Hinweis: Der Kind-Type sollte "event" sein, nicht "event-field"
+                        string eventFieldSignature = $"event {eventFieldNode.Declaration.Type} {string.Join(", ", eventFieldNode.Declaration.Variables.Select(v => v.Identifier.Text))}";
+                        md_Member = TryCreateMemberDoc(eventFieldNode, "event", eventFieldSignature);
+                        if (md_Member != null) td_Result.Events.Add(md_Member);
+                        break;
+                    case FieldDeclarationSyntax fieldNode:
+                        string fieldSignature = $"{fieldNode.Declaration.Type} {string.Join(", ", fieldNode.Declaration.Variables.Select(v => v.Identifier.Text))}";
+                        md_Member = TryCreateMemberDoc(fieldNode, "field", fieldSignature);
+                        // FELDTYP EXTRAKTION
+                        if (md_Member != null)
+                        {
+                            md_Member = md_Member with
+                            {
+                                ReturnType = fieldNode.Declaration.Type.ToString() 
+                            };
+                            td_Result.Fields.Add(md_Member);
+                        }
+                        break;
+                    case TypeDeclarationSyntax nestedTypeNode:
+                        td_NestedType = HandleType(nestedTypeNode, namespace_, filePath_, parentType_: td_Result);
+                        if (td_NestedType != null) td_Result.NestedTypes.Add(td_NestedType);
+                        break;
+                    case EnumDeclarationSyntax nestedEnumNode:
+                        td_NestedType = HandleEnum(nestedEnumNode, namespace_, filePath_, parentType_: td_Result); // Parent-Übergabe hinzugefügt
+                        if (td_NestedType != null) td_Result.NestedTypes.Add(td_NestedType);
+                        break;
+                }
+            }
+            return td_Result;
+        }
+
+        /// <summary>
+        /// Handles enums and their members by creating corresponding TypeDocs and MemberDocs
+        /// </summary>
+        /// <param name="enumDeclaration_"></param>
+        /// <param name="namespace_"></param> 
+        /// <param name="filePath_"></param>
+        /// <returns></returns>
+        private TypeDoc? HandleEnum(EnumDeclarationSyntax enumDeclaration_, string? namespace_, string filePath_, TypeDoc? parentType_ = null)
+        {
+            // If its not public and thus not to be included return NULL
+            if (!_includeNonPublic && !HasPublicLike(enumDeclaration_.Modifiers))
+            {
+                return null;
+            }
+
+            // Store the declaration modifiers for better readability
+            string modifiers = enumDeclaration_.Modifiers.ToString();
+
+            // Fill in all the needed data
+            TypeDoc td_Result = new()
+            {
+                Kind = "enum",
+                Name = enumDeclaration_.Identifier.Text,
+                Namespace = namespace_ ?? "Global   (Default)",
+                Modifiers = modifiers.Trim(),
+                Attributes = (List<string>)Utils.FlattenAttributes(enumDeclaration_.AttributeLists),
+                BaseTypes = new List<string>(),
+                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(enumDeclaration_),
+                FilePath = filePath_,
+                Parent = parentType_?.Name ?? string.Empty,
+            };
+
+            // For every member of the Enum: add the corresponding MemberDoc
+            foreach (EnumMemberDeclarationSyntax member in enumDeclaration_.Members)
+            {
+                td_Result.Fields.Add(new MemberDoc
+                {
+                    Kind = "enum-member",
+                    Signature = member.Identifier.Text + (member.EqualsValue != null ? $" = {member.EqualsValue.Value}" : string.Empty),
+                    Summary = Utils.ExtractXmlSummaryFromSyntaxNode(member),
+                    Remarks = Utils.ExtractXmlRemarksFromSyntaxNode(member)
+                });
+            }
+
+            // Return the filled result
+            return td_Result;
+        }
+
+        /// <summary>
+        ///  Handles delegate declarations.
+        /// </summary>
+        /// <param name="delegateNode"></param>
+        /// <param name="namespaceName"></param>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        private TypeDoc? HandleDelegate(DelegateDeclarationSyntax delegateNode, string? namespaceName, string filePath)
+        {
+            // Konsistente Sichtbarkeitsprüfung
+            if (!_includeNonPublic && !HasPublicLike(delegateNode.Modifiers))
+            {
+                return null;
+            }
+
+            string modifiers = delegateNode.Modifiers.ToString();
+
+            // Die Signatur eines Delegates ist im Prinzip der Rückgabetyp, der Name und die Parameter.
+            string signature = $"{delegateNode.ReturnType} {delegateNode.Identifier}{delegateNode.TypeParameterList}{delegateNode.ParameterList}";
+
+            IList<ParameterDoc> delegateParameters = ExtractParameters(delegateNode.ParameterList, delegateNode);
+            string returnType = delegateNode.ReturnType.ToString();
+            string returnSummary = Utils.ExtractXmlReturnSummary(delegateNode);
+
+
+            TypeDoc td_Delegate = new TypeDoc
+            {
+                Kind = "delegate",
+                Name = delegateNode.Identifier.Text + (delegateNode.TypeParameterList?.ToString() ?? string.Empty),
+                Namespace = namespaceName ?? "Global (Default)",
+                Modifiers = modifiers.Trim(),
+                Attributes = (List<string>)Utils.FlattenAttributes(delegateNode.AttributeLists),
+                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(delegateNode),
+                FilePath = filePath,
+                BaseTypes = new List<string> { signature }
+               
+            };
+
+            // Hinzufügen des "Invoke"-Members für die Dokumentation
+            td_Delegate.Methods.Add(new MemberDoc
+            {
+                Kind = "invoke", // Spezial-Kind für Delegate-Aufruf
+                Signature = signature,
+                Modifiers = modifiers.Trim(),
+                Summary = td_Delegate.Summary, // Wiederverwendung der Summary
+                Remarks = Utils.ExtractXmlRemarksFromSyntaxNode(delegateNode),
+                Parameters = delegateParameters,
+                ReturnType = returnType,
+                ReturnSummary = returnSummary
+            });
+
+            return td_Delegate;
+        }
+
+        /// <summary>
         /// Process all members in a namespace or global scope 
         /// </summary>
         /// <param name="listedMembers_"></param>
@@ -42,194 +300,42 @@ namespace xyDocumentor.Core.Extractors
             // For every member declaration:  Call the HandleType() Method with the according parameter
             foreach (MemberDeclarationSyntax memberDeclaration in listedMembers_)
             {
-                switch (memberDeclaration)
+                TypeDoc? extractedType = memberDeclaration switch
                 {
-                    case ClassDeclarationSyntax __Class:
-                        listedMembers.Add(HandleType(__Class, namespace_, file_));
-                        break;
-                    case StructDeclarationSyntax __Struct:
-                        listedMembers.Add(HandleType(__Struct, namespace_, file_));
-                        break;
-                    case InterfaceDeclarationSyntax __Interface:
-                        listedMembers.Add(HandleType(__Interface, namespace_, file_));
-                        break;
-                    case RecordDeclarationSyntax __Record:
-                        listedMembers.Add(HandleType(__Record, namespace_, file_));
-                        break;
-                    case EnumDeclarationSyntax __Enum:
-                        listedMembers.Add(HandleEnum(__Enum, namespace_, file_));
-                        break;
+                    TypeDeclarationSyntax tds_TypeNode => HandleType(tds_TypeNode, namespace_, file_),
+                    EnumDeclarationSyntax eds_EnumNode => HandleEnum(eds_EnumNode, namespace_, file_),
+                    DelegateDeclarationSyntax dds_DelegateNode => HandleDelegate(dds_DelegateNode, namespace_, file_),
+                    _ =>null // Discards every other kind for now
+                };
+                if (extractedType is not null) 
+                {
+                    listedMembers.Add(extractedType);
                 }
             }
             return listedMembers;
         }
-
-        /// <summary>
-        /// Handles class/struct/interface/record extraction, including members and nested types by creating the corresponding TypeDocs and MemberDocs
-        /// </summary>
-        /// <param name="type_"></param>
-        /// <param name="namespace_"></param>
-        /// <param name="filePath_"></param>
-        /// <param name="parentType_"></param>
-        /// <returns></returns>
-        public TypeDoc HandleType(TypeDeclarationSyntax type_, string? namespace_, string filePath_, TypeDoc? parentType_ = null)
+        
+        private MemberDoc? TryCreateMemberDoc(MemberDeclarationSyntax mds_Member_, string kind_, string signature_)
         {
-            // Store in here for better readability
-            string modifiers = type_.Modifiers.ToString();
-
-            // Is the type public?
-            bool isPublic = modifiers.Contains("public");
-
-            // If not and therefore not to be processed return null
-            if (!_includeNonPublic && !isPublic) return null!;
-
-            // Fill in all the needed data
-            TypeDoc td_Result = new()
+            if (!_includeNonPublic && !HasPublicLike(mds_Member_.Modifiers)) 
             {
-                Kind = type_.Keyword.ValueText,
-                Name = type_.Identifier.Text + (type_.TypeParameterList?.ToString() ?? string.Empty),
-                Namespace = namespace_ ?? "<global>",
-                Modifiers = modifiers.Trim(),
-                Attributes = (List<string>)Utils.FlattenAttributes(type_.AttributeLists),
-                BaseTypes = (List<string>)Utils.ExtractBaseTypes(type_.BaseList),
-                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(type_),
-                FilePath = filePath_,
-                Parent = parentType_?.Name!
-            };
-
-            // For every member in the type: Create a typedoc and add them to the corresponding list
-            foreach (MemberDeclarationSyntax member in type_.Members)
-            {
-                switch (member)
-                {
-                    case ConstructorDeclarationSyntax __Constructor:
-                        if (_includeNonPublic || Utils.HasPublicLike(__Constructor.Modifiers))
-                            td_Result.Constructors.Add(new MemberDoc
-                            {
-                                Kind = "ctor",
-                                Signature = __Constructor.Identifier.Text + __Constructor.ParameterList.ToString(),
-                                Modifiers = __Constructor.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(__Constructor)
-                            });
-                        break;
-                    case MethodDeclarationSyntax __Mehtod:
-                        if (_includeNonPublic || Utils.HasPublicLike(__Mehtod.Modifiers))
-                            td_Result.Methods.Add(new MemberDoc
-                            {
-                                Kind = "method",
-                                Signature = $"{__Mehtod.ReturnType} {__Mehtod.Identifier}{__Mehtod.TypeParameterList}{__Mehtod.ParameterList}",
-                                Modifiers = __Mehtod.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(__Mehtod)
-                            });
-                        break;
-                    case PropertyDeclarationSyntax __Property:
-                        if (_includeNonPublic || Utils.HasPublicLike(__Property.Modifiers))
-                            td_Result.Properties.Add(new MemberDoc
-                            {
-                                Kind = "property",
-                                Signature = $"{__Property.Type} {__Property.Identifier}{__Property.AccessorList}",
-                                Modifiers = __Property.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(__Property)
-                            });
-                        break;
-                    case EventDeclarationSyntax __Event:
-                        if (_includeNonPublic || Utils.HasPublicLike(__Event.Modifiers))
-                            td_Result.Events.Add(new MemberDoc
-                            {
-                                Kind = "event",
-                                Signature = $"event {__Event.Type} {__Event.Identifier}",
-                                Modifiers = __Event.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(__Event)
-                            });
-                        break;
-                    case EventFieldDeclarationSyntax __EventField:
-                        if (_includeNonPublic || Utils.HasPublicLike(__EventField.Modifiers))
-                            td_Result.Events.Add(new MemberDoc
-                            {
-                                Kind = "event",
-                                Signature = $"event {__EventField.Declaration.Type} {string.Join(", ", __EventField.Declaration.Variables.Select(v => v.Identifier.Text))}",
-                                Modifiers = __EventField.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(__EventField)
-                            });
-                        break;
-                    case FieldDeclarationSyntax __Field:
-                        if (_includeNonPublic || Utils.HasPublicLike(__Field.Modifiers))
-                            td_Result.Fields.Add(new MemberDoc
-                            {
-                                Kind = "field",
-                                Signature = $"{__Field.Declaration.Type} {string.Join(", ", __Field.Declaration.Variables.Select(v => v.Identifier.Text))}",
-                                Modifiers = __Field.Modifiers.ToString().Trim(),
-                                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(__Field)
-                            });
-                        break;
-                    case ClassDeclarationSyntax __Class:
-                    case StructDeclarationSyntax __Struct:
-                    case InterfaceDeclarationSyntax __Interface:
-                    case RecordDeclarationSyntax __Record:
-                        if (_includeNonPublic || Utils.HasPublicLike(((TypeDeclarationSyntax)member).Modifiers))
-                        {
-                            td_Result.NestedTypes.Add(HandleType((TypeDeclarationSyntax)member, namespace_, filePath_, parentType_: td_Result));
-                        }
-                        break;
-                    case EnumDeclarationSyntax nen:
-                        if (_includeNonPublic || Utils.HasPublicLike(nen.Modifiers))
-                        {
-                            td_Result.NestedTypes.Add(HandleEnum(nen, namespace_, filePath_));
-                        }
-                        break;
-                }
+                return null;
             }
-            return td_Result;
-        }
-
-        /// <summary>
-        /// Handles enums and their members by creating corresponding TypeDocs and MemberDocs
-        /// </summary>
-        /// <param name="enumDeclaration_"></param>
-        /// <param name="namespace_"></param>
-        /// <param name="filePath_"></param>
-        /// <returns></returns>
-        private TypeDoc HandleEnum(EnumDeclarationSyntax enumDeclaration_, string? namespace_, string filePath_)
-        {
-            // Store the declaration modifiers for better readability
-            string modifiers = enumDeclaration_.Modifiers.ToString();
-
-            // Is the Enum public?
-            bool isPublic = modifiers.Contains("public");
-
-            // If its not public and thus not to be included return NULL
-            if (!_includeNonPublic && !isPublic)
-                return null!;
-            //Else
-
-            // Fill in all the needed data
-            TypeDoc td_Result = new()
+            else
             {
-                Kind = "enum",
-                Name = enumDeclaration_.Identifier.Text,
-                Namespace = namespace_ ?? "<global>",
-                Modifiers = modifiers.Trim(),
-                Attributes = (List<string>)Utils.FlattenAttributes(enumDeclaration_.AttributeLists),
-                BaseTypes = new List<string>(),
-                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(enumDeclaration_),
-                FilePath = filePath_
-            };
-
-            // For every member of the Enum: add the corresponding MemberDoc
-            foreach (EnumMemberDeclarationSyntax member in enumDeclaration_.Members)
-            {
-                td_Result.Fields.Add(new MemberDoc
+                MemberDoc md_Member = new()
                 {
-                    Kind = "enum-member",
-                    Signature = member.Identifier.Text + (member.EqualsValue != null ? $" = {member.EqualsValue.Value}" : string.Empty),
-                    Summary = Utils.ExtractXmlSummaryFromSyntaxNode(member)
-                });
+                    Kind = kind_,
+                    Signature = signature_,
+                    Modifiers = mds_Member_.Modifiers.ToString().Trim(),
+                    Summary = Utils.ExtractXmlSummaryFromSyntaxNode(mds_Member_),
+                    Remarks = Utils.ExtractXmlRemarksFromSyntaxNode(mds_Member_)
+
+                };
+                return md_Member;
             }
-
-            // Return the filled result
-            return td_Result;
         }
-
+        
         /// <summary>
         /// Checks if a member is public/protected/internal
         /// 
