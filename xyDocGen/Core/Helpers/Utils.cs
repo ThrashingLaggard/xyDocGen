@@ -279,50 +279,50 @@ namespace xyDocumentor.Core.Helpers
         /// <summary>
         /// Extracts constraints for generic methods/types (e.g., 'where T : class, new()').
         /// </summary>
-        private static IList<string> ExtractGenericConstraints(MemberDeclarationSyntax memberNode)
+        private static IList<string> ExtractGenericConstraints(MemberDeclarationSyntax mds_MemberNode_)
         {
-            var constraints = new List<string>();
+            List<string> listedConstraints = [];
 
             // Constraints sind nur bei MethodDeclarationSyntax oder TypeDeclarationSyntax vorhanden.
             // Wir prüfen hier nur Methoden, da dies der häufigste Member-Typ ist, der generisch sein kann.
-            if (memberNode is MethodDeclarationSyntax methodNode)
+            if (mds_MemberNode_ is MethodDeclarationSyntax methodNode)
             {
                 if (methodNode.ConstraintClauses.Any())
                 {
                     // Jeder ConstraintClauseSyntax repräsentiert eine volle "where"-Klausel.
-                    foreach (var clause in methodNode.ConstraintClauses)
+                    foreach (TypeParameterConstraintClauseSyntax tpcc_Clause in methodNode.ConstraintClauses)
                     {
                         // Wir verwenden ToFullString(), um die vollständige Klausel zu erhalten (z.B. "where T : struct")
                         // und trimmen sie, um unnötige Leerzeichen zu entfernen.
-                        constraints.Add(clause.ToFullString().Trim());
+                        listedConstraints.Add(tpcc_Clause.ToFullString().Trim());
                     }
                 }
             }
             // TODO: Fügen Sie TypeDeclarationSyntax (Class/Struct) hinzu, falls MemberDoc auch für diese verwendet wird.
             // Beispiel: else if (memberNode is TypeDeclarationSyntax typeNode) { ... }
 
-            return constraints;
+            return listedConstraints;
         }
 
         /// <summary>
         /// Extracts detailed parameter documentation by combining Roslyn's parameter structure 
         /// with the extracted XML documentation summaries.
         /// </summary>
-        internal static IList<ParameterDoc> ExtractParameterDocs(MemberDeclarationSyntax memberNode)
+        internal static IList<ParameterDoc> ExtractParameterDocs(MemberDeclarationSyntax mds_MemberNode_)
         {
-            var paramDocs = new List<ParameterDoc>();
+            List<ParameterDoc> paramDocs = [];
 
             // 1. Hole die XML-Zusammenfassungen für alle Parameter
-            IDictionary<string, string> xmlSummaries = ExtractXmlParamSummaries(memberNode);
+            IDictionary<string, string> xmlSummaries = ExtractXmlParamSummaries(mds_MemberNode_);
 
             ParameterListSyntax parameterList = null;
 
             // 2. Finde die ParameterList basierend auf dem Typ des Members
-            if (memberNode is MethodDeclarationSyntax m)
+            if (mds_MemberNode_ is MethodDeclarationSyntax m)
                 parameterList = m.ParameterList;
-            else if (memberNode is ConstructorDeclarationSyntax c)
+            else if (mds_MemberNode_ is ConstructorDeclarationSyntax c)
                 parameterList = c.ParameterList;
-            else if (memberNode is DelegateDeclarationSyntax d)
+            else if (mds_MemberNode_ is DelegateDeclarationSyntax d)
                 parameterList = d.ParameterList;
 
             if (parameterList == null)
@@ -342,7 +342,7 @@ namespace xyDocumentor.Core.Helpers
                 paramDocs.Add(new ParameterDoc
                 {
                     Name = paramName,
-                    Type = paramType,
+                    TypeDisplayName = paramType,
                     Summary = paramSummary ?? string.Empty,
                     IsOptional = roslynParam.Default != null
                 });

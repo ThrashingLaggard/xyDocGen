@@ -44,7 +44,7 @@ namespace xyDocumentor.Core.Extractors
                 string? defaultValue = param.Default?.Value?.ToString();
 
                 // Modifikatoren (ref, out, in, params)
-                string modifiers = param.Modifiers.ToString().Trim();
+                HashSet<string> modifiers = [.. param.Modifiers.Select(x => x.ToString())];
 
                 // Summary aus dem vorher extrahierten Dictionary abrufen
                 paramSummaries.TryGetValue(param.Identifier.Text, out string? summary);
@@ -52,10 +52,10 @@ namespace xyDocumentor.Core.Extractors
                 parameters.Add(new ParameterDoc
                 {
                     Name = param.Identifier.Text,
-                    Type = param.Type?.ToString() ?? "var",
+                    TypeDisplayName = param.Type?.ToString() ?? "var",
                     Modifiers = modifiers,
                     Summary = summary ?? string.Empty,
-                    DefaultValue = defaultValue
+                    DefaultValueExpression= defaultValue
                 });
             }
             return parameters;
