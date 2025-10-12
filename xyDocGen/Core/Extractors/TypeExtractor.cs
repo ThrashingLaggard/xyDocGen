@@ -34,28 +34,37 @@ namespace xyDocumentor.Core.Extractors
         private static IList<ParameterDoc> ExtractParameters(ParameterListSyntax parameterList, MemberDeclarationSyntax parentNode)
         {
             IList<ParameterDoc> parameters = [];
-
-            // XML-Doku für die Parameter (einmal für die gesamte Methode/den Ctor extrahieren)
             IDictionary<string, string> paramSummaries = Utils.ExtractXmlParamSummaries(parentNode);
 
             foreach (ParameterSyntax param in parameterList.Parameters)
             {
-                // Default-Wert extrahieren
-                string? defaultValue = param.Default?.Value?.ToString();
+                string? defaultValueExpression = param.Default?.Value?.ToString();
 
-                // Modifikatoren (ref, out, in, params)
-                HashSet<string> modifiers = [.. param.Modifiers.Select(x => x.ToString())];
+                // ✅ Modifikatoren als Tokens prüfen
+                bool isRef = param.Modifiers.Any(t => t.IsKind(SyntaxKind.RefKeyword));
+                bool isOut = param.Modifiers.Any(t => t.IsKind(SyntaxKind.OutKeyword));
+                bool isIn = param.Modifiers.Any(t => t.IsKind(SyntaxKind.InKeyword));
+                bool isParams = param.Modifiers.Any(t => t.IsKind(SyntaxKind.ParamsKeyword));
+                // Ref-Readonly muss separat geprüft werden, falls es in der Helpers-Klasse fehlt
+                bool isRefReadonly = param.Modifiers.Any(t => t.IsKind(SyntaxKind.RefKeyword))
+                                    && param.Modifiers.Any(t => t.IsKind(SyntaxKind.ReadOnlyKeyword));
 
-                // Summary aus dem vorher extrahierten Dictionary abrufen
                 paramSummaries.TryGetValue(param.Identifier.Text, out string? summary);
 
                 parameters.Add(new ParameterDoc
                 {
                     Name = param.Identifier.Text,
                     TypeDisplayName = param.Type?.ToString() ?? "var",
-                    Modifiers = modifiers,
                     Summary = summary ?? string.Empty,
-                    DefaultValueExpression= defaultValue
+                    DefaultValueExpression = defaultValueExpression,
+                    IsOptional = defaultValueExpression is not null, // Ableitung aus DefaultValueExpression
+
+                    // ✅ Zuordnung der Booleschen Flags
+                    IsRef = isRef,
+                    IsOut = isOut,
+                    IsIn = isIn,
+                    IsParams = isParams,
+                    IsRefReadonly = isRefReadonly
                 });
             }
             return parameters;
@@ -90,8 +99,8 @@ namespace xyDocumentor.Core.Extractors
                 Name = tds_TypeNode_.Identifier.Text + (tds_TypeNode_.TypeParameterList?.ToString() ?? string.Empty),
                 Namespace = namespace_ ?? "Global   (Default)",
                 Modifiers = modifiers.Trim(),
-                Attributes = (List<string>)Utils.FlattenAttributes(tds_TypeNode_.AttributeLists),
-                BaseTypes = (List<string>)Utils.ExtractBaseTypes(tds_TypeNode_.BaseList),
+                Attributes = Utils.FlattenAttributes(tds_TypeNode_.AttributeLists).ToList(),
+                BaseTypes = Utils.ExtractBaseTypes(tds_TypeNode_.BaseList).ToList(),
                 Summary = Utils.ExtractXmlSummaryFromSyntaxNode(tds_TypeNode_),
                 FilePath = filePath_,
                 Parent = parentType_?.Name!
@@ -208,7 +217,7 @@ namespace xyDocumentor.Core.Extractors
                 Name = enumDeclaration_.Identifier.Text,
                 Namespace = namespace_ ?? "Global   (Default)",
                 Modifiers = modifiers.Trim(),
-                Attributes = (List<string>)Utils.FlattenAttributes(enumDeclaration_.AttributeLists),
+                Attributes = Utils.FlattenAttributes(enumDeclaration_.AttributeLists).ToList(),
                 BaseTypes = new List<string>(),
                 Summary = Utils.ExtractXmlSummaryFromSyntaxNode(enumDeclaration_),
                 FilePath = filePath_,
@@ -262,7 +271,7 @@ namespace xyDocumentor.Core.Extractors
                 Name = delegateNode.Identifier.Text + (delegateNode.TypeParameterList?.ToString() ?? string.Empty),
                 Namespace = namespaceName ?? "Global (Default)",
                 Modifiers = modifiers.Trim(),
-                Attributes = (List<string>)Utils.FlattenAttributes(delegateNode.AttributeLists),
+                Attributes = Utils.FlattenAttributes(delegateNode.AttributeLists).ToList(),
                 Summary = Utils.ExtractXmlSummaryFromSyntaxNode(delegateNode),
                 FilePath = filePath,
                 BaseTypes = new List<string> { signature }
@@ -363,41 +372,42 @@ namespace xyDocumentor.Core.Extractors
         /// <returns></returns>
         public static async Task<List<TypeDoc>> TryParseDataFromFile(List<string> listedExternalArguments, string[] args, IEnumerable<string> relevantFiles, bool includeNonPublic)
         {
-            // Getting the data from the files
             TypeExtractor extractor = new(includeNonPublic);
-
-            // Storing data from the files
             List<TypeDoc> allTypes = new();
 
-            // Parsing each file to C# and collect them
             foreach (string file in relevantFiles)
             {
-                // Read data
                 string text = await xyFiles.LoadFileAsync(file);
-
-                // Parse to C#
                 SyntaxTree tree = CSharpSyntaxTree.ParseText(text);
+                CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
 
-                // Get the root of the syntax tree
-                CompilationUnitSyntax compilationUnitRoot = tree.GetCompilationUnitRoot();
+                // ✅ KORREKTUR: Alle Top-Level-Mitglieder auf einmal verarbeiten und Namensräume "flach" klopfen
 
-                // Collect the declared namespaces
-                List<BaseNamespaceDeclarationSyntax> namespaceDeclarations = compilationUnitRoot.Members.OfType<BaseNamespaceDeclarationSyntax>().ToList();
+                // Sammeln Sie alle Members, die direkt im globalen Scope liegen oder in einem Namensraum-Block.
+                // Dadurch wird der globale Scope korrekt mit dem Namespace "null" behandelt.
 
-                // Check if there are namespaces
-                if (!namespaceDeclarations.Any())
+                // Zuerst alle Mitglieder verarbeiten, die direkt unter dem Root liegen (Global oder Namespace-Deklaration).
+                foreach (MemberDeclarationSyntax member in root.Members)
                 {
-                    // Processing all members without namespace
-                    allTypes.AddRange(extractor.ProcessMembers(compilationUnitRoot.Members, null, file));
-
-                }
-                else
-                {
-                    // Processing all members within all the "super secret" (sub)namespaces
-                    foreach (BaseNamespaceDeclarationSyntax bNDS in namespaceDeclarations)
+                    switch (member)
                     {
-                        // Collect all members in a namespace
-                        allTypes.AddRange(extractor.ProcessMembers(bNDS.Members, bNDS.Name.ToString(), file));
+                        // Standard-Namespace-Deklaration (Block-Scoped)
+                        case NamespaceDeclarationSyntax namespaceDecl:
+                            // Rekursiver Aufruf für Mitglieder IM Namensraum
+                            allTypes.AddRange(extractor.ProcessMembers(namespaceDecl.Members, namespaceDecl.Name.ToString(), file));
+                            break;
+
+                        // File-Scoped-Namespace-Deklaration (C# 10+)
+                        case FileScopedNamespaceDeclarationSyntax fileNamespaceDecl:
+                            // Rekursiver Aufruf für Mitglieder IM Namensraum
+                            allTypes.AddRange(extractor.ProcessMembers(fileNamespaceDecl.Members, fileNamespaceDecl.Name.ToString(), file));
+                            break;
+
+                        // Alle anderen Mitglieder (Typen, Delegates, Enums im globalen Scope).
+                        // Wir übergeben sie als Liste von 1 an ProcessMembers, um die Logik zu vereinheitlichen.
+                        default:
+                            allTypes.AddRange(extractor.ProcessMembers(SyntaxFactory.List(new[] { member }), null, file));
+                            break;
                     }
                 }
             }

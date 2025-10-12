@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace xyDocumentor.Core.Docs
 {
@@ -11,8 +12,8 @@ namespace xyDocumentor.Core.Docs
         /// <summary>Name of the parameter</summary>
         public string Name { get; init; } = string.Empty;
 
-        /// <summary> Call .ToString() on the parameter and store the result here </summary>
-        public string? Value { get; init; } 
+        /// <summary> Call .ToString() on the parameter and store the result here. NOTE: This field seems redundant with TypeDisplayName and Name for parameter docs. </summary>
+        public string? Value { get; init; }
 
         /// <summary>The full, canonical type name of the parameter (ie., "System.String" or "System.Collections.Generic.List<System.Int32>")</summary>
         public string TypeFullName { get; init; } = string.Empty;
@@ -38,9 +39,6 @@ namespace xyDocumentor.Core.Docs
         /// <summary>Indicates if the parameter is optional and has a default value.</summary>
         public bool IsOptional { get; init; } = false;
 
-         /// <summary> The modifiers for the parameter </summary>
-        public HashSet<string> Modifiers { get; set; } = new();
-        
         /// <summary> The default value expression as a string, if the parameter is optional (e.g., "null", "10", "Color.Red").  Is null if no default value is present. </summary>
         public string? DefaultValueExpression { get; init; }
 
@@ -54,39 +52,50 @@ namespace xyDocumentor.Core.Docs
         public bool IsGenericTypeParam { get; init; } = false;
 
 
+        /// <summary>
+        /// A calculated, space-separated string of modifiers (e.g., "ref readonly in params").
+        /// This property is calculated on read access from the boolean flags.
+        /// </summary>
+        public string ModifiersString => GetModifierString(this);
 
-        private static ParameterDoc SetModifierString(ParameterDoc pd_Parameter_)
+
+        /// <summary>
+        /// Helper function to create a space-separated string of all active modifiers.
+        /// </summary>
+        /// <param name="pd_Parameter_">The parameter record to analyze.</param>
+        /// <returns>A space-separated string of modifiers.</returns>
+        private static string GetModifierString(ParameterDoc pd_Parameter_)
         {
-            ParameterDoc pd_Parameter = pd_Parameter_;
-            if (pd_Parameter_.IsIn)
+            List<string> modifiers = [];
+
+            // Note: Order should usually match the C# language specification.
+            if (pd_Parameter_.IsParams)
             {
-                pd_Parameter.Modifiers.Add( "in,");
-            }
-            if (pd_Parameter_.IsRef)
-            {
-                pd_Parameter.Modifiers.Add("ref,");
+                modifiers.Add("params");
             }
             if (pd_Parameter_.IsRefReadonly)
             {
-                pd_Parameter.Modifiers.Add("ref readonly,");
+                modifiers.Add("ref readonly");
+            }
+            else if (pd_Parameter_.IsRef)
+            {
+                modifiers.Add("ref");
             }
             if (pd_Parameter_.IsOut)
             {
-                pd_Parameter.Modifiers.Add("out,");   
+                modifiers.Add("out");
             }
-            if (pd_Parameter_.IsParams)
+            else if (pd_Parameter_.IsIn) // 'in' is typically used when 'ref readonly' is not available or desired.
             {
-                pd_Parameter.Modifiers.Add("params,");
+                modifiers.Add("in");
             }
-            if (pd_Parameter_.IsOptional)
-            {
-                pd_Parameter.Modifiers.Add("optional,");
-            }
-            if (pd_Parameter_.IsGenericTypeParam)
-            {
-                pd_Parameter.Modifiers.Add("T,");
-            }
-            return pd_Parameter;
+
+            // Optional/Generic Type Param are typically not keywords in the signature itself, but can be added for documentation if needed.
+            // If they are only documentation flags, they are best handled in the renderer.
+            // if (pd_Parameter_.IsOptional) modifiers.Add("optional");
+            // if (pd_Parameter_.IsGenericTypeParam) modifiers.Add("T");
+
+            return string.Join(" ", modifiers);
         }
     }
 }

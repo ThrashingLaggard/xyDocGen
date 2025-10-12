@@ -26,7 +26,7 @@ xydocgen --format [json/pdf/html/md]
 (Another Sample)
 xydocgen --root X://User/TestPrograms/TestRoot--out TestFolder/TestSubFolder 
 
-(Output a list of commands, MUST be the first argument if used (others will then be ignored))
+(Output a list of commands, discard other commands written with it)
 xydocgen --help
 
 

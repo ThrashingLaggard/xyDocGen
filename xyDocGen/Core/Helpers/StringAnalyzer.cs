@@ -15,7 +15,7 @@ namespace xyDocumentor.Core.Helpers
         /// </summary>
         internal static (string, string, string, bool, HashSet<string>) AnalyzeArgs(List<string> externalArguments, string[] args)
         {
-            string rootPath = GetStartingPath(externalArguments, args);
+            string rootPath = GetStartingPath(args);
             string outPath = GetOutputPath(externalArguments, args, rootPath);
             string format = GetFormat(externalArguments, args);
 
@@ -28,10 +28,23 @@ namespace xyDocumentor.Core.Helpers
         /// <summary>
         /// Define the path to start the workflow from
         /// </summary>
-        /// <param name="ExternalArguments"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        public static string GetStartingPath(List<string> ExternalArguments, string[] args) => ExternalArguments.Contains("--root") ? args[Array.IndexOf(args, "--root") + 1] : Directory.GetCurrentDirectory();
+        public static string GetStartingPath(string[] args)
+        {
+            const string flag = "--root";
+            int index = Array.IndexOf(args, flag);
+
+            // Check if the flag exists AND if it's not the last argument (to prevent IndexOutOfRangeException)
+            if (index >= 0 && index + 1 < args.Length)
+            {
+                return args[index + 1];
+            }
+
+            // Default value: current directory
+            var zesz =(Directory.GetParent(Directory.GetCurrentDirectory()).ToString());
+            return zesz;
+        }
 
 
         /// <summary>
@@ -43,21 +56,36 @@ namespace xyDocumentor.Core.Helpers
         /// <returns></returns>
         public static string GetOutputPath(List<string> externalarguments, string[] args, string rootpath)
         {
-            string outPath = "";
-            string folder = "";
-            string subfolder = "";
+            // 1. Check for the single '--out' flag which overrides all other path settings.
+            const string outFlag = "--out";
+            int outIndex = Array.IndexOf(args, outFlag);
+            if (outIndex >= 0 && outIndex + 1 < args.Length)
+            {
+                return args[outIndex + 1];
+            }
 
-            if (externalarguments.Contains("--out"))
+            // 2. Determine default or user-defined segments.
+            string folderName = "docs"; // Default folder name
+            string subfolderName = "api"; // Default subfolder name
+
+            // Check for --folder
+            const string folderFlag = "--folder";
+            int folderIndex = Array.IndexOf(args, folderFlag);
+            if (folderIndex >= 0 && folderIndex + 1 < args.Length)
             {
-                outPath = args[Array.IndexOf(args, "--out") + 1];
+                folderName = args[folderIndex + 1];
             }
-            else
+
+            // Check for --subfolder
+            const string subfolderFlag = "--subfolder";
+            int subfolderIndex = Array.IndexOf(args, subfolderFlag);
+            if (subfolderIndex >= 0 && subfolderIndex + 1 < args.Length)
             {
-                folder = externalarguments.Contains("--folder") ? args[Array.IndexOf(args, "--folder") + 1] : Path.Combine(rootpath, "docs");
-                subfolder = externalarguments.Contains("--subfolder") ? args[Array.IndexOf(args, "--subfolder") + 1] : Path.Combine(rootpath, folder, "api");
-                outPath = subfolder;
+                subfolderName = args[subfolderIndex + 1];
             }
-            return outPath;
+
+            // Combine the final path: rootpath/folderName/subfolderName
+            return Path.Combine(rootpath, folderName, subfolderName);
         }
 
         /// <summary>
@@ -71,7 +99,19 @@ namespace xyDocumentor.Core.Helpers
         /// <param name="ExternalArguments"></param>
         /// <param name="args"></param>
         /// <returns>"..." or default "md"</returns>
-        public static string GetFormat(List<string> ExternalArguments, string[] args) => ExternalArguments.Contains("--format") ? args[Array.IndexOf(args, "--format") + 1].ToLower() : "md";          // default: Markdown!
+        public static string GetFormat(List<string> ExternalArguments, string[] args)
+        {
+            const string flag = "--format";
+            int index = Array.IndexOf(args, flag);
+
+            if (index >= 0 && index + 1 < args.Length)
+            {
+                return args[index + 1].ToLower();
+            }
+
+            return "md"; // Default: Markdown
+        }
+
 
         /// <summary>
         /// Checks how to handle non public data, looks for the --private keyword
@@ -93,10 +133,21 @@ namespace xyDocumentor.Core.Helpers
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
-        public static HashSet<string> GetIgnorableFiles(IList<string> args) => new(// Nice now its readable, lol
-                                                                                                                             SplitString(args.Contains("--exclude") ? args[args.IndexOf("--exclude") + 1] : ".git;bin;obj;node_modules;.vs;TestResults", ';')
-                                                                                                                        );
-                                                                                                                        
+        public static HashSet<string> GetIgnorableFiles(IList<string> args)
+        {
+            // The default list of directories to exclude
+            const string defaultExcludes = ".git;bin;obj;node_modules;.vs;TestResults";
+            const string flag = "--exclude";
+
+            // 1. Determine the argument (Default or CLI value)
+            string arguments = args.Contains(flag)
+                // Check index safety
+                ? (args.IndexOf(flag) + 1 < args.Count ? args[args.IndexOf(flag) + 1] : defaultExcludes)
+                : defaultExcludes;
+
+            // 2. Split and return as HashSet
+            return new HashSet<string>(SplitString(arguments, ';'));
+        }
 
 
         /// <summary>

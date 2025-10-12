@@ -66,12 +66,24 @@ public class Program
             return;    
         }
 
-            (rootPath, outPath, format, includeNonPublic, excludedParts) = StringAnalyzer.AnalyzeArgs(externalArguments, args); 
+            (rootPath, outPath, format, includeNonPublic, excludedParts) = StringAnalyzer.AnalyzeArgs(externalArguments, args);
 
+        if (string.IsNullOrWhiteSpace(rootPath) || string.IsNullOrWhiteSpace(outPath))
+        {
+            xyLog.Log("❌ Error: Source path (`--root`) or output path (`--out`/`--folder`) was not correctly specified or is empty. Please check arguments.");
+            return;
+        }
         // Setting the output path 
         Directory.CreateDirectory(outPath);
 
         IEnumerable<string> files = Directory.EnumerateFiles(rootPath, "*.cs", SearchOption.AllDirectories).Where(p => !Utils.IsExcluded(p, excludedParts));
+
+        if (!files.Any())
+        {
+            xyLog.Log($"⚠️ Warning: No relevant `.cs` files found in path '{rootPath}'. Aborting documentation generation.");
+            return;
+        }
+
         List<TypeDoc> dataFromFiles = await TypeExtractor.TryParseDataFromFile(externalArguments, args, files,includeNonPublic );
         bool isWritten = await Utils.WriteDataToFilesOrderedByNamespace(dataFromFiles, outPath, format);
 
@@ -82,7 +94,7 @@ public class Program
         xyLog.Log(output);
     }
 
-
+     
  
 
 
