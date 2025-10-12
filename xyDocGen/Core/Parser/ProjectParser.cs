@@ -106,26 +106,26 @@ namespace xyDocumentor.Core.Parser
             return allTypes;
         }
 
-        private TypeDoc HandleType(TypeDeclarationSyntax type, string ns, string file, string parentName = null)
+        private TypeDoc HandleType(TypeDeclarationSyntax tds_Type_, string namespace_, string filePath_, string parentName_ = null)
         {
-            var modifiers = type.Modifiers.ToString();
+            var modifiers = tds_Type_.Modifiers.ToString();
             bool isPublic = modifiers.Contains("public");
             if (!_includeNonPublic && !isPublic) return null!;
 
-            var td = new TypeDoc
+            TypeDoc td = new()
             {
-                Kind = type.Keyword.ValueText,
-                Name = type.Identifier.Text + (type.TypeParameterList?.ToString() ?? string.Empty),
-                Namespace = ns ?? "<global>",
+                Kind = tds_Type_.Keyword.ValueText,
+                Name = tds_Type_.Identifier.Text + (tds_Type_.TypeParameterList?.ToString() ?? string.Empty),
+                Namespace = namespace_ ?? "<global>",
                 Modifiers = modifiers.Trim(),
-                Attributes = (List<string>)Utils.FlattenAttributes(type.AttributeLists),
-                BaseTypes = Utils.ExtractBaseTypes(type.BaseList),
-                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(type),
-                FilePath = file,
-                Parent = parentName
+                Attributes = (List<string>)Utils.FlattenAttributes(tds_Type_.AttributeLists),
+                BaseTypes = (List<string>)Utils.ExtractBaseTypes(tds_Type_.BaseList),
+                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(tds_Type_),
+                FilePath = filePath_,
+                Parent = parentName_
             };
 
-            foreach (var mem in type.Members)
+            foreach (MemberDeclarationSyntax mem in tds_Type_.Members)
             {
                 if (!_includeNonPublic && !Utils.HasPublicLike(mem.GetModifiers()))
                     continue;
@@ -137,7 +137,7 @@ namespace xyDocumentor.Core.Parser
                     case InterfaceDeclarationSyntax itf:
                     case RecordDeclarationSyntax rec:
                         // Nested types
-                        td.NestedTypes().Add(HandleType((TypeDeclarationSyntax)mem, ns, file, parentName: td.Name));
+                        td.NestedTypes().Add(HandleType((TypeDeclarationSyntax)mem, namespace_, filePath_, parentName_: td.Name));
                         break;
                     default:
                         td.AddMember(Utils.CreateMemberDoc(mem));
