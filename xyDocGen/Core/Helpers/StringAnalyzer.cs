@@ -50,7 +50,7 @@ namespace xyDocumentor.Core.Helpers
 
 #else
 
-            string projectFolder  = "."
+            string projectFolder = Environment.CurrentDirectory;
 
 
 
