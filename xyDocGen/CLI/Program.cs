@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
@@ -17,6 +18,7 @@ using xyDocumentor.Core.Helpers;
 using xyDocumentor.Core.Renderer;
 using xyToolz.Filesystem;
 using xyToolz.Helper.Logging;
+
 
 /// <summary>
 /// Basic startup class for the project
@@ -55,7 +57,7 @@ public class Program
         string format = "";
         string outPath = "";
         string rootPath = "";
-        bool includeNonPublic = false;
+        bool includeNonPublic = true;
         HashSet<string> excludedParts = [];
         IEnumerable<TypeDoc> flattenedTypes = [];
         List<string> externalArguments = args.ToList();
@@ -84,7 +86,7 @@ public class Program
             return;
         }
 
-        List<TypeDoc> dataFromFiles = await TypeExtractor.TryParseDataFromFile(externalArguments, args, files,includeNonPublic );
+        List<TypeDoc> dataFromFiles = await TypeExtractor.TryParseDataFromFile(externalArguments, args, files, includeNonPublic );
         bool isWritten = await Utils.WriteDataToFilesOrderedByNamespace(dataFromFiles, outPath, format);
 
         flattenedTypes = TypeDocExtensions.FlattenTypes(dataFromFiles);
@@ -94,9 +96,21 @@ public class Program
         xyLog.Log(output);
     }
 
-     
- 
+    /// <summary>
+    /// Ahuhu ma Awawawa
+    /// </summary>
+     private class Awawa()
+    {
 
+    }
+ 
+    /// <summary>
+    /// Awawa 'nd Ahuhu
+    /// </summary>
+    private static class Ahuhu
+    {
+
+    }
 
 
 }

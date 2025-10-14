@@ -3,10 +3,10 @@
 - Baum & Index auf Wunsch direkt in Kosole ausgeben
 - Befehle für output in Dictionary speichern?
 
+- Private Flag reparieren
+- Nested types reparieren
 
-Ändern der Ausgabe Struktur: 
-- Projektbaum und Index direkt sichtbar auf die erste Ordner Ebene verlegen
-- Ausgabe der Befehle mit Erklärungen
+
 
 
 - Format mit als Unterordner hinzufügen.....????

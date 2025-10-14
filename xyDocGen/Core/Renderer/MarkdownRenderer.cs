@@ -184,17 +184,17 @@ namespace xyDocumentor.Core.Renderer
             sb_MarkdownBuilder_.AppendLine($"## {title_}");
             sb_MarkdownBuilder_.AppendLine();
 
-            // Renders the table header for Signature and Description columns.
-            sb_MarkdownBuilder_.AppendLine("| Signature | Description |");
-            sb_MarkdownBuilder_.AppendLine("|-----------|-------------|");
+            //// Renders the table header for Signature and Description columns.
+            //sb_MarkdownBuilder_.AppendLine("|-------------|\n|  Signature  |\n|-------------|\n| Description |\n|-------------|");
+            //sb_MarkdownBuilder_.AppendLine("");
 
-            // Iterates through each member to create a new table row.
-            foreach (var member in listedMembers_)
+            
+            foreach (MemberDoc member in listedMembers_)
             {
                 // Cleans up the summary for display in a single table row by removing newlines.
                 string summary = member.Summary?.Trim().Replace("\r\n", " ").Replace("\n", " ") ?? "XXX";
                 string linkedSignature = FormatSignatureWithLinks(member.Signature, dic_AnchorMap_);
-                sb_MarkdownBuilder_.AppendLine($"| **`{linkedSignature}`** | {summary} |");
+                sb_MarkdownBuilder_.AppendLine($"| **`{linkedSignature}`** |\n| {summary} |");
 
             }
             sb_MarkdownBuilder_.AppendLine();
