@@ -20,7 +20,7 @@ namespace xyDocumentor.Core.Helpers
     /// <summary>
     /// Little helpers in the fight for better oversight
     /// </summary>
-    public static class Utils
+    internal static class Utils
     {
         // Fallback string
         private const string NO_XML_SUMMARY_FALLBACK = "(No XML-Summary)";

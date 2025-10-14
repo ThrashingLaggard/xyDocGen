@@ -19,7 +19,7 @@ namespace xyDocumentor.Core.Helpers
             string outPath = GetOutputPath(externalArguments, args, rootPath);
             string format = GetFormat(externalArguments, args);
 
-            bool isPrivate = GetPublicityHandling(externalArguments);
+            bool isPrivate = IsPrivate(externalArguments);
             HashSet<string> excludedParts = GetIgnorableFiles(args);
             return new(rootPath, outPath, format, !isPrivate, excludedParts);
         }
@@ -136,7 +136,7 @@ namespace xyDocumentor.Core.Helpers
         /// TRUE if "--private" 
         ///           else FALSE
         /// </returns>
-        public static bool GetPublicityHandling(List<string> ExternalArguments) => ExternalArguments.Contains("--private");
+        public static bool IsPrivate(List<string> ExternalArguments) => ExternalArguments.Contains("--private");
 
         /// <summary>
         /// Collects folder names that should be excluded 

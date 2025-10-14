@@ -11,7 +11,7 @@ namespace xyDocumentor.Interfaces
     /// <summary>
     /// Useless for now, since all the renderers are static and thus cant parttake in this luxurious idea
     /// </summary>
-    public interface IDocRenderer
+    internal interface IDocRenderer
     {
         /// <summary>
         /// Render it! Now!
