@@ -41,9 +41,24 @@ namespace xyDocumentor.Core.Helpers
                 return args[index + 1];
             }
 
-            // Default value: current directory
-            var zesz =(Directory.GetParent(Directory.GetCurrentDirectory()).ToString());
-            return zesz;
+#if DEBUG
+
+            DirectoryInfo di_ProjectRoot = Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetCurrentDirectory().ToString()).ToString()).ToString());
+
+            string projectFolder = di_ProjectRoot.ToString();
+           
+
+#else
+
+            string projectFolder  = "."
+
+
+
+#endif
+
+
+
+            return projectFolder;
         }
 
 

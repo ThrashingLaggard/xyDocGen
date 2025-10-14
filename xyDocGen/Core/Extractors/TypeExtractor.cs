@@ -99,7 +99,7 @@ namespace xyDocumentor.Core.Extractors
                 Name = tds_TypeNode_.Identifier.Text + (tds_TypeNode_.TypeParameterList?.ToString() ?? string.Empty),
                 Namespace = namespace_ ?? "Global   (Default)",
                 Modifiers = modifiers.Trim(),
-                Attributes = Utils.FlattenAttributes(tds_TypeNode_.AttributeLists).ToList(),
+                Attributes = Utils.FlattenAttributes(tds_TypeNode_.AttributeLists),
                 BaseTypes = Utils.ExtractBaseTypes(tds_TypeNode_.BaseList).ToList(),
                 Summary = Utils.ExtractXmlSummaryFromSyntaxNode(tds_TypeNode_),
                 FilePath = filePath_,
@@ -217,7 +217,7 @@ namespace xyDocumentor.Core.Extractors
                 Name = enumDeclaration_.Identifier.Text,
                 Namespace = namespace_ ?? "Global   (Default)",
                 Modifiers = modifiers.Trim(),
-                Attributes = Utils.FlattenAttributes(enumDeclaration_.AttributeLists).ToList(),
+                Attributes = Utils.FlattenAttributes(enumDeclaration_.AttributeLists),
                 BaseTypes = new List<string>(),
                 Summary = Utils.ExtractXmlSummaryFromSyntaxNode(enumDeclaration_),
                 FilePath = filePath_,
@@ -233,7 +233,7 @@ namespace xyDocumentor.Core.Extractors
                     Signature = member.Identifier.Text + (member.EqualsValue != null ? $" = {member.EqualsValue.Value}" : string.Empty),
                     Summary = Utils.ExtractXmlSummaryFromSyntaxNode(member),
                     Remarks = Utils.ExtractXmlRemarksFromSyntaxNode(member),
-                    Attributes = Utils.FlattenAttributes(member.AttributeLists).ToList() 
+                    Attributes = Utils.FlattenAttributes(member.AttributeLists) 
                 });
             }
 
@@ -272,7 +272,7 @@ namespace xyDocumentor.Core.Extractors
                 Name = delegateNode.Identifier.Text + (delegateNode.TypeParameterList?.ToString() ?? string.Empty),
                 Namespace = namespaceName ?? "Global (Default)",
                 Modifiers = modifiers.Trim(),
-                Attributes = Utils.FlattenAttributes(delegateNode.AttributeLists).ToList(),
+                Attributes = Utils.FlattenAttributes(delegateNode.AttributeLists),
                 Summary = Utils.ExtractXmlSummaryFromSyntaxNode(delegateNode),
                 FilePath = filePath,
                 BaseTypes = new List<string> { signature }
@@ -340,7 +340,7 @@ namespace xyDocumentor.Core.Extractors
                     Modifiers = mds_Member_.Modifiers.ToString().Trim(),
                     Summary = Utils.ExtractXmlSummaryFromSyntaxNode(mds_Member_),
                     Remarks = Utils.ExtractXmlRemarksFromSyntaxNode(mds_Member_),
-                     Attributes = Utils.FlattenAttributes(mds_Member_.AttributeLists).ToList()
+                     Attributes = Utils.FlattenAttributes(mds_Member_.AttributeLists)
                 };
                 return md_Member;
             }

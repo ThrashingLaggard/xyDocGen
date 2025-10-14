@@ -45,7 +45,7 @@ namespace xyDocumentor.Core.Helpers
         /// </summary>
         /// <param name="listedAttributesFromMember_"></param>
         /// <returns></returns>
-        public static IEnumerable<string> FlattenAttributes(SyntaxList<AttributeListSyntax> listedAttributesFromMember_)
+        public static List<string> FlattenAttributes(SyntaxList<AttributeListSyntax> listedAttributesFromMember_)
         {
             // Store the results to return them for later use
             List<string> listedResults = new();
