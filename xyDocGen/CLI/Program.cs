@@ -68,7 +68,12 @@ public class Program
             return;    
         }
 
-            (rootPath, outPath, format, includeNonPublic, excludedParts) = StringAnalyzer.AnalyzeArgs(externalArguments, args);
+        if (await StringAnalyzer.AskForInformation(externalArguments))
+        {
+            return;
+        }
+
+        (rootPath, outPath, format, includeNonPublic, excludedParts) = StringAnalyzer.AnalyzeArgs(externalArguments, args);
 
         if (string.IsNullOrWhiteSpace(rootPath) || string.IsNullOrWhiteSpace(outPath))
         {

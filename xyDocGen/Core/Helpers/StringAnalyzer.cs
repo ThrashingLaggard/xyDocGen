@@ -264,16 +264,44 @@ namespace xyDocumentor.Core.Helpers
         }
 
 
+        public static async Task<bool> AskForInformation(List<string> externalArguments)
+        {
+            if (externalArguments.Contains("--info"))
+            {
+                string commands = await OutputCommands();
+                return true;
+            }
+            return false;
+        }
+
+        private static Task<string> OutputInformation()
+        {
+            // Set the string for the ouputing the commands
+            string information = "\nInfo for xyDocGen:\nThere are problems with __nested types__ and the __--private flag__ that i'm currently working on";
+
+            // Output asap
+            {
+                Console.WriteLine(information);
+                Console.Out.Flush();
+            }
+
+            return Task.FromResult(information);
+        }
+
+
         /// <summary>
         /// Output the commands for this tool into the console
         /// </summary>
         /// <returns></returns>
         private static Task<string> OutputCommands()
         {
-            // Set the string for the ouputing the commands
+            
             string commands =
                 "xydocgen        ===      Base command\n" +
+        //__________ignoring all other parameters_______________
                 "--help             ===      Output list of commands\n" +
+                "--info              ===       Information regarding current problems, fixes and updates\n"+
+        //_______________________________________________
                 "--private         ===      Add to ignore unpublic components\n" +
                 "--root             ===      Root path, default is 'the current working directory'\n" +
                 "--folder          ===      Target folder, default is 'docs'\n" +

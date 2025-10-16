@@ -3,8 +3,7 @@
 - Baum & Index auf Wunsch direkt in Kosole ausgeben
 - Befehle für output in Dictionary speichern?
 
-- Private Flag reparieren
-- Nested types reparieren
+- Nested types reparieren--- wahrscheinlich im Renderer!
 
 
 
