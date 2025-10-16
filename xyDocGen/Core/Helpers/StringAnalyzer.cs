@@ -41,22 +41,18 @@ namespace xyDocumentor.Core.Helpers
                 return args[index + 1];
             }
 
+// Das ist so ziemlich das intelligenteste, was mir jemals eingefallen ist, lol
 #if DEBUG
-
-            DirectoryInfo di_ProjectRoot = Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetCurrentDirectory().ToString()).ToString()).ToString());
-
-            string projectFolder = di_ProjectRoot.ToString();
+            
+            // Stringeling!
+            string projectFolder = Directory.GetParent(Directory.GetParent(Directory.GetParent(Directory.GetCurrentDirectory().ToString()).ToString()).ToString()).ToString();
            
-
 #else
 
+            // Weirdly once worked as intended in debug mode...
             string projectFolder = Environment.CurrentDirectory;
 
-
-
 #endif
-
-
 
             return projectFolder;
         }
