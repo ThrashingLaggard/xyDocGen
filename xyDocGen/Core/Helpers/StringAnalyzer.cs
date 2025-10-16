@@ -35,7 +35,6 @@ namespace xyDocumentor.Core.Helpers
             const string flag = "--root";
             int index = Array.IndexOf(args, flag);
 
-            // Check if the flag exists AND if it's not the last argument (to prevent IndexOutOfRangeException)
             if (index >= 0 && index + 1 < args.Length)
             {
                 return args[index + 1];
@@ -99,6 +98,7 @@ namespace xyDocumentor.Core.Helpers
             return Path.Combine(rootpath, folderName, subfolderName);
         }
 
+
         /// <summary>
         ///  Determines the output format 
         ///  
@@ -133,6 +133,7 @@ namespace xyDocumentor.Core.Helpers
         ///           else FALSE
         /// </returns>
         public static bool IsPrivate(List<string> ExternalArguments) => ExternalArguments.Contains("--private");
+
 
         /// <summary>
         /// Collects folder names that should be excluded 

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using xyDocumentor.Core.Docs;
 using xyDocumentor.Core.Helpers;
 using xyToolz.Filesystem;
+using xyToolz.Helper.Logging;
 
 
 namespace xyDocumentor.Core.Extractors
@@ -26,6 +27,7 @@ namespace xyDocumentor.Core.Extractors
         public TypeExtractor(bool includeNonPublic_)
         {
             _includeNonPublic = includeNonPublic_;
+            xyLog.Log($"[TypeExtractor] Created instance (Include Non-Public = {_includeNonPublic})");
         }
 
         /// <summary>
@@ -40,12 +42,12 @@ namespace xyDocumentor.Core.Extractors
             {
                 string? defaultValueExpression = param.Default?.Value?.ToString();
 
-                // ✅ Modifikatoren als Tokens prüfen
+                // Mal schauen, was es noch für lustige Keywords gibt
                 bool isRef = param.Modifiers.Any(t => t.IsKind(SyntaxKind.RefKeyword));
                 bool isOut = param.Modifiers.Any(t => t.IsKind(SyntaxKind.OutKeyword));
                 bool isIn = param.Modifiers.Any(t => t.IsKind(SyntaxKind.InKeyword));
                 bool isParams = param.Modifiers.Any(t => t.IsKind(SyntaxKind.ParamsKeyword));
-                // Ref-Readonly muss separat geprüft werden, falls es in der Helpers-Klasse fehlt
+               
                 bool isRefReadonly = param.Modifiers.Any(t => t.IsKind(SyntaxKind.RefKeyword))
                                     && param.Modifiers.Any(t => t.IsKind(SyntaxKind.ReadOnlyKeyword));
 
@@ -57,9 +59,7 @@ namespace xyDocumentor.Core.Extractors
                     TypeDisplayName = param.Type?.ToString() ?? "var",
                     Summary = summary ?? string.Empty,
                     DefaultValueExpression = defaultValueExpression,
-                    IsOptional = defaultValueExpression is not null, // Ableitung aus DefaultValueExpression
-
-                    // ✅ Zuordnung der Booleschen Flags
+                    IsOptional = defaultValueExpression is not null, 
                     IsRef = isRef,
                     IsOut = isOut,
                     IsIn = isIn,
@@ -83,13 +83,18 @@ namespace xyDocumentor.Core.Extractors
             // Store in here for better readability
             string modifiers = tds_TypeNode_.Modifiers.ToString();
 
-            // Is the type public?
-            bool isPublic = modifiers.Contains("public");
-
             // If not and therefore not to be processed return null
-            if (!_includeNonPublic && !HasPublicLike(tds_TypeNode_.Modifiers))
+            if (!_includeNonPublic)
             {
-                return null;
+                // If this is a top-level type (no parent) we strictly enforce HasPublicLike.
+                // If it's a nested type (parentType_ != null), we include it because its parent
+                // has already been accepted and we want nested types to be documented as part of its API.
+                if (parentType_ == null && !HasPublicLike(tds_TypeNode_.Modifiers))
+                {
+                    xyLog.Log($"[TypeExtractor] Skipped non-public top-level type: {tds_TypeNode_.Identifier.Text}");
+                    return null;
+                }
+                // else: nested type -> allow even if not public-like
             }
 
             // Fill in all the needed data
@@ -118,7 +123,6 @@ namespace xyDocumentor.Core.Extractors
                         md_Member = TryCreateMemberDoc(ctorNode, "ctor", ctorNode.Identifier.Text + ctorNode.ParameterList.ToString());
                         if (md_Member != null)
                         {
-                            // PARAMETER EXTRACTION
                             md_Member = md_Member with 
                             { 
                                 Parameters = ExtractParameters(ctorNode.ParameterList, ctorNode),
@@ -198,13 +202,18 @@ namespace xyDocumentor.Core.Extractors
         /// <param name="enumDeclaration_"></param>
         /// <param name="namespace_"></param> 
         /// <param name="filePath_"></param>
+        /// <param name="parentType_"></param>
         /// <returns></returns>
         private TypeDoc? HandleEnum(EnumDeclarationSyntax enumDeclaration_, string? namespace_, string filePath_, TypeDoc? parentType_ = null)
         {
             // If its not public and thus not to be included return NULL
-            if (!_includeNonPublic && !HasPublicLike(enumDeclaration_.Modifiers))
+            if (!_includeNonPublic)
             {
-                return null;
+                if (parentType_ == null && !HasPublicLike(enumDeclaration_.Modifiers))
+                {
+                    xyLog.Log($"[TypeExtractor] Skipped non-public top-level enum: {enumDeclaration_.Identifier.Text}");
+                    return null;
+                }
             }
 
             // Store the declaration modifiers for better readability
@@ -247,14 +256,19 @@ namespace xyDocumentor.Core.Extractors
         /// <param name="delegateNode"></param>
         /// <param name="namespaceName"></param>
         /// <param name="filePath"></param>
+        /// <param name="parentType_"></param>
         /// <returns></returns>
-        private TypeDoc? HandleDelegate(DelegateDeclarationSyntax delegateNode, string? namespaceName, string filePath)
+        private TypeDoc? HandleDelegate(DelegateDeclarationSyntax delegateNode, string? namespaceName, string filePath, TypeDoc? parentType_ = null)
         {
-            // Konsistente Sichtbarkeitsprüfung
-            if (!_includeNonPublic && !HasPublicLike(delegateNode.Modifiers))
+            if (!_includeNonPublic)
             {
-                return null;
+                if (parentType_ == null && !HasPublicLike(delegateNode.Modifiers))
+                {
+                    xyLog.Log($"[TypeExtractor] Skipped non-public top-level delegate: {delegateNode.Identifier.Text}");
+                    return null;
+                }
             }
+
 
             string modifiers = delegateNode.Modifiers.ToString();
 
@@ -307,9 +321,16 @@ namespace xyDocumentor.Core.Extractors
             // Used to store the values for return
             IList<TypeDoc> listedMembers = [];
 
+
             // For every member declaration:  Call the HandleType() Method with the according parameter
             foreach (MemberDeclarationSyntax memberDeclaration in listedMembers_)
             {
+                if (!_includeNonPublic && !HasPublicLike(memberDeclaration.Modifiers))
+                {
+                    xyLog.Log($" Skipped non-public top-level member: {memberDeclaration.Kind()}");
+                    continue;
+                }
+
                 TypeDoc? extractedType = memberDeclaration switch
                 {
                     TypeDeclarationSyntax tds_TypeNode => HandleType(tds_TypeNode, namespace_, file_),
@@ -366,12 +387,10 @@ namespace xyDocumentor.Core.Extractors
         /// Parses all collected .cs files into <see cref="TypeDoc"/> objects.
         /// Uses Roslyn to analyze syntax trees and namespaces.
         /// </summary>
-        /// <param name="listedExternalArguments"></param>
-        /// <param name="args"></param>
         /// <param name="relevantFiles"></param>
         /// <param name="includeNonPublic"></param>
         /// <returns></returns>
-        public static async Task<List<TypeDoc>> TryParseDataFromFile(List<string> listedExternalArguments, string[] args, IEnumerable<string> relevantFiles, bool includeNonPublic)
+        public static async Task<List<TypeDoc>> TryParseDataFromFile( IEnumerable<string> relevantFiles, bool includeNonPublic)
         {
             TypeExtractor extractor = new(includeNonPublic);
             List<TypeDoc> allTypes = new();
@@ -382,12 +401,7 @@ namespace xyDocumentor.Core.Extractors
                 SyntaxTree tree = CSharpSyntaxTree.ParseText(text);
                 CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
 
-                // ✅ KORREKTUR: Alle Top-Level-Mitglieder auf einmal verarbeiten und Namensräume "flach" klopfen
-
-                // Sammeln Sie alle Members, die direkt im globalen Scope liegen oder in einem Namensraum-Block.
-                // Dadurch wird der globale Scope korrekt mit dem Namespace "null" behandelt.
-
-                // Zuerst alle Mitglieder verarbeiten, die direkt unter dem Root liegen (Global oder Namespace-Deklaration).
+           
                 foreach (MemberDeclarationSyntax member in root.Members)
                 {
                     switch (member)
