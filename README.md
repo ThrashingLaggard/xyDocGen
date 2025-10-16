@@ -49,6 +49,10 @@ dotnet list tool [--local/--global]
 dotnet tool update xydocgen [--local/--global]
 
 
+## Problems
+
+-- private and/or nestedTypes are not working properly and im not yet sure why... maybe its the renderer?
+
 
 ## Planned features & improvements
 
