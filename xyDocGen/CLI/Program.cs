@@ -86,7 +86,7 @@ public class Program
             return;
         }
 
-        List<TypeDoc> dataFromFiles = await TypeExtractor.TryParseDataFromFile(files, !includeNonPublic );
+        List<TypeDoc> dataFromFiles = await TypeExtractor.TryParseDataFromFile(files, includeNonPublic );
         bool isWritten = await Utils.WriteDataToFilesOrderedByNamespace(dataFromFiles, outPath, format);
 
         flattenedTypes = TypeDocExtensions.FlattenTypes(dataFromFiles);
