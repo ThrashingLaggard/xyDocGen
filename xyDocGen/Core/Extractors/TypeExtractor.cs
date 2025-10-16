@@ -80,7 +80,7 @@ namespace xyDocumentor.Core.Extractors
         /// <returns></returns>
         public TypeDoc? HandleType(TypeDeclarationSyntax tds_TypeNode_, string? namespace_, string filePath_, TypeDoc? parentType_ = null)
         {
-            // Store in here for better readability
+            // Better readability
             string modifiers = tds_TypeNode_.Modifiers.ToString();
 
             // If not and therefore not to be processed return null
@@ -165,7 +165,6 @@ namespace xyDocumentor.Core.Extractors
                         }
                         break;
                     case EventFieldDeclarationSyntax eventFieldNode:
-                        // Hinweis: Der Kind-Type sollte "event" sein, nicht "event-field"
                         string eventFieldSignature = $"event {eventFieldNode.Declaration.Type} {string.Join(", ", eventFieldNode.Declaration.Variables.Select(v => v.Identifier.Text))}";
                         md_Member = TryCreateMemberDoc(eventFieldNode, "event", eventFieldSignature);
                         if (md_Member != null) td_Result.Events.Add(md_Member);
@@ -173,7 +172,7 @@ namespace xyDocumentor.Core.Extractors
                     case FieldDeclarationSyntax fieldNode:
                         string fieldSignature = $"{fieldNode.Declaration.Type} {string.Join(", ", fieldNode.Declaration.Variables.Select(v => v.Identifier.Text))}";
                         md_Member = TryCreateMemberDoc(fieldNode, "field", fieldSignature);
-                        // FELDTYP EXTRAKTION
+                        
                         if (md_Member != null)
                         {
                             md_Member = md_Member with
