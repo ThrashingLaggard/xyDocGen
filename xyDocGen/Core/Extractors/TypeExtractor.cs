@@ -27,7 +27,7 @@ namespace xyDocumentor.Core.Extractors
         public TypeExtractor(bool includeNonPublic_)
         {
             _includeNonPublic = includeNonPublic_;
-            xyLog.Log($"[TypeExtractor] Created instance (Include Non-Public = {_includeNonPublic})");
+            xyLog.Log($"Created instance (Include Non-Public = {_includeNonPublic})");
         }
 
         /// <summary>
@@ -78,122 +78,114 @@ namespace xyDocumentor.Core.Extractors
         /// <param name="filePath_"></param>
         /// <param name="parentType_"></param>
         /// <returns></returns>
-        public TypeDoc? HandleType(TypeDeclarationSyntax tds_TypeNode_, string? namespace_, string filePath_, TypeDoc? parentType_ = null)
+        public TypeDoc? HandleType(TypeDeclarationSyntax typeNode, string? namespaceName, string filePath, TypeDoc? parentType = null)
         {
-            // Better readability
-            string modifiers = tds_TypeNode_.Modifiers.ToString();
+            // Prüfen, ob wir non-public Types ignorieren
+            if (!_includeNonPublic && parentType == null && !HasPublicLike(typeNode.Modifiers))
+                return null;
 
-            // If not and therefore not to be processed return null
-            if (!_includeNonPublic)
+            TypeDoc typeDoc = new()
             {
-                // If this is a top-level type (no parent) we strictly enforce HasPublicLike.
-                // If it's a nested type (parentType_ != null), we include it because its parent
-                // has already been accepted and we want nested types to be documented as part of its API.
-                if (parentType_ == null && !HasPublicLike(tds_TypeNode_.Modifiers))
-                {
-                    xyLog.Log($"[TypeExtractor] Skipped non-public top-level type: {tds_TypeNode_.Identifier.Text}");
-                    return null;
-                }
-                // else: nested type -> allow even if not public-like
-            }
-
-            // Fill in all the needed data
-            TypeDoc td_Result = new()
-            {
-                Kind = tds_TypeNode_.Keyword.ValueText,
-                Name = tds_TypeNode_.Identifier.Text + (tds_TypeNode_.TypeParameterList?.ToString() ?? string.Empty),
-                Namespace = namespace_ ?? "Global   (Default)",
-                Modifiers = modifiers.Trim(),
-                Attributes = Utils.FlattenAttributes(tds_TypeNode_.AttributeLists),
-                BaseTypes = Utils.ExtractBaseTypes(tds_TypeNode_.BaseList).ToList(),
-                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(tds_TypeNode_),
-                FilePath = filePath_,
-                Parent = parentType_?.Name ?? string.Empty
+                Kind = typeNode.Keyword.ValueText,
+                Name = typeNode.Identifier.Text + (typeNode.TypeParameterList?.ToString() ?? string.Empty),
+                Namespace = namespaceName ?? "Global (Default)",
+                Modifiers = typeNode.Modifiers.ToString().Trim(),
+                Attributes = Utils.FlattenAttributes(typeNode.AttributeLists),
+                BaseTypes = Utils.ExtractBaseTypes(typeNode.BaseList).ToList(),
+                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(typeNode),
+                FilePath = filePath,
+                Parent = parentType?.Name ?? string.Empty
             };
 
-            // For every member in the type: Create a typedoc and add them to the corresponding list
-            foreach (MemberDeclarationSyntax member in tds_TypeNode_.Members)
+            foreach (var member in typeNode.Members)
             {
-                MemberDoc? md_Member = null;
-                TypeDoc? td_NestedType = null;
+                MemberDoc? memberDoc = null;
+                TypeDoc? nestedTypeDoc = null;
 
                 switch (member)
                 {
-                    case ConstructorDeclarationSyntax ctorNode:
-                        md_Member = TryCreateMemberDoc(ctorNode, "ctor", ctorNode.Identifier.Text + ctorNode.ParameterList.ToString());
-                        if (md_Member != null)
-                        {
-                            md_Member = md_Member with 
-                            { 
-                                Parameters = ExtractParameters(ctorNode.ParameterList, ctorNode),
-                            };
-                            td_Result.Constructors.Add(md_Member);
-                        }
+                    case TypeDeclarationSyntax nestedType:
+                        nestedTypeDoc = HandleType(nestedType, namespaceName, filePath, typeDoc);
+                        if (nestedTypeDoc != null) typeDoc.NestedTypes.Add(nestedTypeDoc);
                         break;
-                    case MethodDeclarationSyntax methodNode:
-                        md_Member = TryCreateMemberDoc(methodNode, "method", $"{methodNode.ReturnType} {methodNode.Identifier}{methodNode.TypeParameterList}{methodNode.ParameterList}");
-                        if (md_Member != null)
-                        {
 
-                            md_Member = md_Member with
+                    case EnumDeclarationSyntax nestedEnum:
+                        nestedTypeDoc = HandleEnum(nestedEnum, namespaceName, filePath, typeDoc);
+                        if (nestedTypeDoc != null) typeDoc.NestedTypes.Add(nestedTypeDoc);
+                        break;
+
+                    case DelegateDeclarationSyntax nestedDelegate:
+                        nestedTypeDoc = HandleDelegate(nestedDelegate, namespaceName, filePath, typeDoc);
+                        if (nestedTypeDoc != null) typeDoc.NestedTypes.Add(nestedTypeDoc);
+                        break;
+
+                    case MethodDeclarationSyntax methodNode:
+                        memberDoc = TryCreateMemberDoc(methodNode, "method",
+                            $"{methodNode.ReturnType} {methodNode.Identifier}{methodNode.TypeParameterList}{methodNode.ParameterList}");
+                        if (memberDoc != null)
+                        {
+                            memberDoc = memberDoc with
                             {
                                 ReturnType = methodNode.ReturnType.ToString(),
                                 Parameters = ExtractParameters(methodNode.ParameterList, methodNode),
-                                ReturnSummary = Utils.ExtractXmlReturnSummary(methodNode),
+                                ReturnSummary = Utils.ExtractXmlReturnSummary(methodNode)
                             };
-                            td_Result.Methods.Add(md_Member);
+                            typeDoc.Methods.Add(memberDoc);
                         }
                         break;
-                    case PropertyDeclarationSyntax propertyNode:
-                        md_Member = TryCreateMemberDoc(propertyNode, "property", $"{propertyNode.Type} {propertyNode.Identifier}{propertyNode.AccessorList}");
-                        if (md_Member != null)
+
+                    case ConstructorDeclarationSyntax ctorNode:
+                        memberDoc = TryCreateMemberDoc(ctorNode, "ctor", ctorNode.Identifier.Text + ctorNode.ParameterList);
+                        if (memberDoc != null)
                         {
-                            md_Member = md_Member with
+                            memberDoc = memberDoc with
+                            {
+                                Parameters = ExtractParameters(ctorNode.ParameterList, ctorNode)
+                            };
+                            typeDoc.Constructors.Add(memberDoc);
+                        }
+                        break;
+
+                    case PropertyDeclarationSyntax propertyNode:
+                        memberDoc = TryCreateMemberDoc(propertyNode, "property",
+                            $"{propertyNode.Type} {propertyNode.Identifier}{propertyNode.AccessorList}");
+                        if (memberDoc != null)
+                        {
+                            memberDoc = memberDoc with
                             {
                                 ReturnType = propertyNode.Type.ToString(),
                                 ReturnSummary = Utils.ExtractXmlReturnSummary(propertyNode)
                             };
-                            td_Result.Properties.Add(md_Member);
+                            typeDoc.Properties.Add(memberDoc);
                         }
                         break;
-                    case EventDeclarationSyntax eventNode:
-                        md_Member = TryCreateMemberDoc(eventNode, "event", $"event {eventNode.Type} {eventNode.Identifier}");
-                        if (md_Member != null) 
-                        {
-                            //Remarks = Utils.ExtractXmlRemarksFromSyntaxNode(eventNode);
-                            td_Result.Events.Add(md_Member);
-                        }
-                        break;
-                    case EventFieldDeclarationSyntax eventFieldNode:
-                        string eventFieldSignature = $"event {eventFieldNode.Declaration.Type} {string.Join(", ", eventFieldNode.Declaration.Variables.Select(v => v.Identifier.Text))}";
-                        md_Member = TryCreateMemberDoc(eventFieldNode, "event", eventFieldSignature);
-                        if (md_Member != null) td_Result.Events.Add(md_Member);
-                        break;
+
                     case FieldDeclarationSyntax fieldNode:
-                        string fieldSignature = $"{fieldNode.Declaration.Type} {string.Join(", ", fieldNode.Declaration.Variables.Select(v => v.Identifier.Text))}";
-                        md_Member = TryCreateMemberDoc(fieldNode, "field", fieldSignature);
-                        
-                        if (md_Member != null)
+                        string fieldSig = $"{fieldNode.Declaration.Type} {string.Join(", ", fieldNode.Declaration.Variables.Select(v => v.Identifier.Text))}";
+                        memberDoc = TryCreateMemberDoc(fieldNode, "field", fieldSig);
+                        if (memberDoc != null)
                         {
-                            md_Member = md_Member with
-                            {
-                                ReturnType = fieldNode.Declaration.Type.ToString() 
-                            };
-                            td_Result.Fields.Add(md_Member);
+                            memberDoc = memberDoc with { ReturnType = fieldNode.Declaration.Type.ToString() };
+                            typeDoc.Fields.Add(memberDoc);
                         }
                         break;
-                    case TypeDeclarationSyntax nestedTypeNode:
-                        td_NestedType = HandleType(nestedTypeNode, namespace_, filePath_, parentType_: td_Result);
-                        if (td_NestedType != null) td_Result.NestedTypes.Add(td_NestedType);
+
+                    case EventDeclarationSyntax eventNode:
+                        memberDoc = TryCreateMemberDoc(eventNode, "event", $"event {eventNode.Type} {eventNode.Identifier}");
+                        if (memberDoc != null) typeDoc.Events.Add(memberDoc);
                         break;
-                    case EnumDeclarationSyntax nestedEnumNode:
-                        td_NestedType = HandleEnum(nestedEnumNode, namespace_, filePath_, parentType_: td_Result); // Parent-Übergabe hinzugefügt
-                        if (td_NestedType != null) td_Result.NestedTypes.Add(td_NestedType);
+
+                    case EventFieldDeclarationSyntax eventFieldNode:
+                        string eventSig = $"event {eventFieldNode.Declaration.Type} {string.Join(", ", eventFieldNode.Declaration.Variables.Select(v => v.Identifier.Text))}";
+                        memberDoc = TryCreateMemberDoc(eventFieldNode, "event", eventSig);
+                        if (memberDoc != null) typeDoc.Events.Add(memberDoc);
                         break;
                 }
             }
-            return td_Result;
+
+            return typeDoc;
         }
+
 
         /// <summary>
         /// Handles enums and their members by creating corresponding TypeDocs and MemberDocs

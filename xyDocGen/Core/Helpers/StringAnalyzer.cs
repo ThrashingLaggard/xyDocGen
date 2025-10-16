@@ -60,11 +60,11 @@ namespace xyDocumentor.Core.Helpers
         /// <summary>
         /// Checking the CLI arguments for specific target location, or setting default
         /// </summary>
-        /// <param name="externalarguments"></param>
+        /// <param name="externalArguments"></param>
         /// <param name="args"></param>
         /// <param name="rootpath"></param>
         /// <returns></returns>
-        public static string GetOutputPath(List<string> externalarguments, string[] args, string rootpath)
+        public static string GetOutputPath(List<string> externalArguments, string[] args, string rootpath)
         {
             // 1. Check for the single '--out' flag which overrides all other path settings.
             const string outFlag = "--out";
@@ -107,10 +107,10 @@ namespace xyDocumentor.Core.Helpers
         /// standard is md
         /// 
         /// </summary>
-        /// <param name="ExternalArguments"></param>
+        /// <param name="externalArguments"></param>
         /// <param name="args"></param>
         /// <returns>"..." or default "md"</returns>
-        public static string GetFormat(List<string> ExternalArguments, string[] args)
+        public static string GetFormat(List<string> externalArguments, string[] args)
         {
             const string flag = "--format";
             int index = Array.IndexOf(args, flag);
@@ -127,12 +127,12 @@ namespace xyDocumentor.Core.Helpers
         /// <summary>
         /// Checks how to handle non public data, looks for the --private keyword
         /// </summary>
-        /// <param name="ExternalArguments"></param>
+        /// <param name="externalArguments"></param>
         /// <returns>
         /// TRUE if "--private" 
         ///           else FALSE
         /// </returns>
-        public static bool IsPrivate(List<string> ExternalArguments) => ExternalArguments.Contains("--private");
+        public static bool IsPrivate(List<string> externalArguments) => externalArguments.Contains("--private");
 
 
         /// <summary>
