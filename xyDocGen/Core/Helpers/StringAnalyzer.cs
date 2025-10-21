@@ -263,6 +263,35 @@ namespace xyDocumentor.Core.Helpers
             return false;
         }
 
+        public static async Task<bool> AskForTree(List<string> externalArguments)
+        {
+            if (externalArguments.Contains("--tree"))
+            {
+                // Irgendwie den tree rendern
+                return true;
+            }
+            return false;
+        }
+
+        public static async Task<bool> AskForIndex(List<string> externalArguments)
+        {
+            if (externalArguments.Contains("--index"))
+            {
+                // Irgendwie den index rendern
+                return true;
+            }
+            return false;
+        }
+
+        public static async Task<bool> ShowOnly(List<string> externalArguments)
+        {
+            if (externalArguments.Contains("--show"))
+            {
+                // Ergebnisse nur in der Konsole ausgeben
+                return true;
+            }
+            return false;
+        }
 
         public static async Task<bool> AskForInformation(List<string> externalArguments)
         {

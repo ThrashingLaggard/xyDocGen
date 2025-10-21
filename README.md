@@ -56,6 +56,7 @@ dotnet tool update xydocgen [--local/--global]
   - Adding parameters to output index and/or tree into the console
   - Adding parameters to only output the index or only the tree
   - By using the --info flag output this readme file
+  - Adding a flag to only output the target(s) in the console
 
 + Upgrades 
 - Reading and outputting the remarks
@@ -67,7 +68,7 @@ dotnet tool update xydocgen [--local/--global]
 
 ## Problems
 
-Markdown output is ugly
+PDF Renderer hasnt got the attention it deserves yet
 
 
 # Author

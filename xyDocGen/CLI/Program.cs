@@ -46,6 +46,23 @@ public class Program
         }
     }
 
+    private static async Task<bool> CheckForBreakingKeyWords(List<string> listedArguments_) 
+    {
+        if (await StringAnalyzer.AskForHelp(listedArguments_))
+        {
+            return true;
+        }
+
+        if (await StringAnalyzer.AskForInformation(listedArguments_))
+        {
+            return true;
+        }
+
+
+
+        return false;
+    }
+
     /// <summary>
     ///  Responsible for parsing arguments, collecting source files, 
     /// extracting type information, and writing documentation output.
@@ -63,15 +80,7 @@ public class Program
         List<string> externalArguments = args.ToList();
 
         // If the --help keyword is detected in the parameter, output the list of commands and refrain from anything else
-        if (await StringAnalyzer.AskForHelp(externalArguments))
-        {
-            return;    
-        }
-
-        if (await StringAnalyzer.AskForInformation(externalArguments))
-        {
-            return;
-        }
+        if (await CheckForBreakingKeyWords(externalArguments)) return;
 
         (rootPath, outPath, format, includeNonPublic, excludedParts) = StringAnalyzer.AnalyzeArgs(externalArguments, args);
 
@@ -95,6 +104,8 @@ public class Program
         bool isWritten = await Utils.WriteDataToFilesOrderedByNamespace(dataFromFiles, outPath, format);
 
         flattenedTypes = TypeDocExtensions.FlattenTypes(dataFromFiles);
+
+        // Hier irgendwo die --Tree und --Show Flaggen abfangen!
         await FileTreeRenderer.BuildIndexAndTree(flattenedTypes,format,rootPath,outPath,excludedParts);
 
         string output = $"\n✅ Finished. Types: {flattenedTypes.Count()}, Format: {format}, Output: {outPath}\n";
