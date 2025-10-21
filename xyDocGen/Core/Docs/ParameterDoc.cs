@@ -15,10 +15,10 @@ namespace xyDocumentor.Core.Docs
         /// <summary> Call .ToString() on the parameter and store the result here. NOTE: This field seems redundant with TypeDisplayName and Name for parameter docs. </summary>
         public string? Value { get; init; }
 
-        /// <summary>The full, canonical type name of the parameter (ie., "System.String" or "System.Collections.Generic.List<System.Int32>")</summary>
+        /// <summary>The full, canonical type name of the parameter (ie., "System.String" or "System.Collections.Generic.ListSystem.Int32")</summary>
         public string TypeFullName { get; init; } = string.Empty;
 
-        /// <summary>The display name as it appears in code (ie., "string" or "List<int>")</summary>
+        /// <summary>The display name as it appears in code (ie., "string" or "List(int)")</summary>
         public string TypeDisplayName { get; init; } = string.Empty;
 
         /// <summary>Indicates if the parameter has the "ref" modifier.</summary>

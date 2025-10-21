@@ -52,14 +52,18 @@ dotnet tool update xydocgen [--local/--global]
 
 ## Planned features & improvements
 
-- Reading and outputting the remarks
-- Upgrading the visual result of the outputs
-- Adding parameters to output index and/or tree into the console
-- Format mit als Unterordner hinzufügen..... was sollte das heißen?????
-- Changing the output structure:
-  - Moving the output of index and tree into the first level 
++ Parameters
+  - Adding parameters to output index and/or tree into the console
   - Adding parameters to only output the index or only the tree
   - By using the --info flag output this readme file
+
++ Upgrades 
+- Reading and outputting the remarks
+- Upgrading the visual result of the outputs
+
++ Changing the structure:
+  - Moving the output of index and tree into the first level 
+  - Format mit als Unterordner hinzufügen..... was sollte das heißen?????
 
 ## Problems
 

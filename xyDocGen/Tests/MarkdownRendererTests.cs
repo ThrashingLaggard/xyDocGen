@@ -17,7 +17,7 @@ public class MarkdownRendererTests
     {
         TypeDoc td_TestClass = new TypeDoc { Name = "TestType", Kind = "class" };
 
-        string md = MarkdownRenderer.Render(td_TestClass, level: 2);
+        string md = MarkdownRenderer.Render(td_TestClass, level_: 2);
         Assert.StartsWith("## ", md.TrimStart());
         Assert.Contains("TestClass", md);
     }
