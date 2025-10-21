@@ -21,23 +21,19 @@ namespace xyDocumentor.Core.Docs
 
 
         /// <summary>
-        /// Returns all nested types stored in the mapping.
+        /// Canonical anchor-key used both when building anchor maps and when looking them up.
+        /// Keep this formatting consistent across the codebase.
+        /// Examples:
+        ///   Namespace = "", Name = "Program"     -> "Global (Default).Program"
+        ///   Namespace = "A.B", DisplayName="Outer.Inner" -> "A.B.Outer.Inner"
         /// </summary>
-        /// <param name="CallingTypeDoc_"></param>
-        /// <returns></returns>
-        private static List<TypeDoc> GetNestedList(this TypeDoc CallingTypeDoc_)
+        public static string GetAnchorKey(this TypeDoc t)
         {
-            // If there is no value for the key, return a new empty list.
-            if (!NestedMapping.TryGetValue(CallingTypeDoc_, out List<TypeDoc> list))
-            {
-                list = [];
-                NestedMapping[CallingTypeDoc_] = list;
-            }
-
-            // Else return the listed values.
-            return list;
+            var ns = string.IsNullOrWhiteSpace(t.Namespace) ? "Global (Default)" : t.Namespace;
+            // Prefer DisplayName if it already includes containing types (e.g., "Outer.Inner")
+            var name = string.IsNullOrWhiteSpace(t.DisplayName) ? t.Name : t.DisplayName;
+            return $"{ns}.{name}";
         }
-
 
 
         /// <summary>
@@ -51,7 +47,7 @@ namespace xyDocumentor.Core.Docs
             yield return td_CallingType_;
 
             // For every nested type 
-            foreach (TypeDoc td_NestedType in td_CallingType_.NestedInnerTypes())
+            foreach (TypeDoc td_NestedType in td_CallingType_.NestedTypes)
             {
                 // For every subtype
                 foreach (TypeDoc td_SubType in td_NestedType.FlattenNested())
