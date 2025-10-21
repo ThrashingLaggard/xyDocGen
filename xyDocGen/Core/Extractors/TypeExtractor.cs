@@ -275,7 +275,7 @@ namespace xyDocumentor.Core.Extractors
             {
                 Kind = "delegate",
                 Name = delegateNode.Identifier.Text + (delegateNode.TypeParameterList?.ToString() ?? string.Empty),
-                Namespace = namespaceName ?? "Global (Default)",
+                Namespace = namespaceName ?? "Global",
                 Modifiers = modifiers.Trim(),
                 Attributes = Utils.FlattenAttributes(delegateNode.AttributeLists),
                 Summary = Utils.ExtractXmlSummaryFromSyntaxNode(delegateNode),

@@ -72,7 +72,7 @@ namespace xyDocumentor.Core
             RenderMembers("Fields", type.Fields);
 
             // --- Nested Types ---
-            var nestedTypes = type.NestedTypes(); // <- als Methode aufrufen!
+            var nestedTypes = type.NestedInnerTypes(); // <- als Methode aufrufen!
             if (nestedTypes != null)
             {
                 foreach (var nt in nestedTypes)

@@ -51,7 +51,7 @@ namespace xyDocumentor.Core.Renderer
             var map = new Dictionary<string, string>();
 
             // Use the existing extension method to traverse all types.
-            foreach (var td in td_RootType_.FlattenNested())
+            foreach (var td in td_RootType_.NestedTypes)
             {
                 // Create the unique name: Namespace.DisplayName 
                 // This guarantees the key is unique across the entire document.
@@ -109,7 +109,7 @@ namespace xyDocumentor.Core.Renderer
         private static void RenderMetadata(StringBuilder sb_MarkdownBuilder_, TypeDoc td_TargetType_, Dictionary<string, string> dic_AnchorMap_)
         {
             sb_MarkdownBuilder_.AppendLine("## Metadata");
-            sb_MarkdownBuilder_.AppendLine($"**Namespace**: `{td_TargetType_.Namespace ?? "Global (No specific namespace)"}`");
+            sb_MarkdownBuilder_.AppendLine($"**Namespace**: `{td_TargetType_.Namespace ?? "Global"}`");
             sb_MarkdownBuilder_.AppendLine($"**Visibility:** `{td_TargetType_.Modifiers}`");
             sb_MarkdownBuilder_.AppendLine($"**Source File:** `{td_TargetType_.FilePath}`");
 

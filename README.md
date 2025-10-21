@@ -49,10 +49,6 @@ dotnet list tool [--local/--global]
 dotnet tool update xydocgen [--local/--global]
 
 
-## Problems
-
--- private and/or nestedTypes are not working properly and im not yet sure why... maybe its the renderer?
-
 
 ## Planned features & improvements
 
@@ -62,8 +58,12 @@ dotnet tool update xydocgen [--local/--global]
 - Format mit als Unterordner hinzufügen..... was sollte das heißen?????
 - Changing the output structure:
   - Moving the output of index and tree into the first level 
-  - 
+  - Adding parameters to only output the index or only the tree
 
+
+## Problems
+
+nestedTypes are not working properly and im not yet sure why... maybe its the renderer?
 
 
 # Author

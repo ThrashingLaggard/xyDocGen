@@ -277,7 +277,7 @@ namespace xyDocumentor.Core.Helpers
         private static Task<string> OutputInformation()
         {
             // Set the string for the ouputing the commands
-            string information = "\nInfo for xyDocGen:\nThere are problems with __nested types__ and the __--private flag__ that i'm currently working on";
+            string information = "\nInfo for xyDocGen:\nThere are problems with __nested types__ that i'm currently working on";
 
             // Output asap
             {

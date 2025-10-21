@@ -22,3 +22,25 @@ public class MarkdownRendererTests
         Assert.Contains("TestClass", md);
     }
 }
+
+public class MarkdownRendererNestedTests
+{
+    [Fact]
+    public void Render_Includes_Nested_Types()
+    {
+        // Arrange: build a small nested type tree
+        var root = new TypeDoc { Kind = "class", Name = "Outer", Namespace = "Demo" };
+        var inner = new TypeDoc { Kind = "class", Name = "Inner", Namespace = "Demo", Parent = "Outer" };
+        var deeper = new TypeDoc { Kind = "enum", Name = "E", Namespace = "Demo", Parent = "Outer.Inner" };
+        inner.NestedTypes.Add(deeper);
+        root.NestedTypes.Add(inner);
+
+        // Act
+        var md = MarkdownRenderer.Render(root);
+
+        // Assert
+        Assert.Contains("**class** `Outer`", md);
+        Assert.Contains("**class** `Outer.Inner`", md);  // nested class
+        Assert.Contains("**enum** `Outer.Inner.E`", md); // nested enum
+    }
+}

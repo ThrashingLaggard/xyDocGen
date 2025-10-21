@@ -13,10 +13,11 @@ namespace xyDocumentor.Core.Docs
 
         /// <summary>
         /// Returns all nested types stored in the mapping.
+        /// The name is so stupid, because i dont want the conflict with the property again
         /// </summary>
         /// <param name="td_CallingType_"> the TypeDoc instance calling the method</param>
         /// <returns></returns>
-        public static List<TypeDoc> NestedTypes(this TypeDoc td_CallingType_) => td_CallingType_.GetNestedList();
+        public static List<TypeDoc> NestedInnerTypes(this TypeDoc td_CallingType_) => td_CallingType_.NestedTypes;
 
 
         /// <summary>
@@ -50,7 +51,7 @@ namespace xyDocumentor.Core.Docs
             yield return td_CallingType_;
 
             // For every nested type 
-            foreach (TypeDoc td_NestedType in td_CallingType_.NestedTypes())
+            foreach (TypeDoc td_NestedType in td_CallingType_.NestedInnerTypes())
             {
                 // For every subtype
                 foreach (TypeDoc td_SubType in td_NestedType.FlattenNested())
@@ -102,7 +103,7 @@ namespace xyDocumentor.Core.Docs
                 yield return member;
             }
 
-            foreach (TypeDoc td_NestedType in td_CallingType_.NestedTypes())
+            foreach (TypeDoc td_NestedType in td_CallingType_.NestedInnerTypes())
             {
                 foreach (MemberDoc md_NestedMember in td_NestedType.AllMembers())
                 {

@@ -53,7 +53,7 @@ namespace xyDocumentor.Core.Renderer
                 RenderMembers("Events", t.Events);
                 RenderMembers("Fields", t.Fields);
 
-                foreach (var nested in t.NestedTypes())
+                foreach (var nested in t.NestedInnerTypes())
                     RenderType(nested, indent + 1);
             }
 

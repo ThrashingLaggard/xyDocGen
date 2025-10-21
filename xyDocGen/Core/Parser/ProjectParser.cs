@@ -137,7 +137,7 @@ namespace xyDocumentor.Core.Parser
                     case InterfaceDeclarationSyntax itf:
                     case RecordDeclarationSyntax rec:
                         // Nested types
-                        td.NestedTypes().Add(HandleType((TypeDeclarationSyntax)mem, namespace_, filePath_, parentName_: td.Name));
+                        td.NestedInnerTypes().Add(HandleType((TypeDeclarationSyntax)mem, namespace_, filePath_, parentName_: td.Name));
                         break;
                     default:
                         td.AddMember(Utils.CreateMemberDoc(mem));
