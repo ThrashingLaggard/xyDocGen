@@ -59,11 +59,11 @@ dotnet tool update xydocgen [--local/--global]
 - Changing the output structure:
   - Moving the output of index and tree into the first level 
   - Adding parameters to only output the index or only the tree
-
+  - By using the --info flag output this readme file
 
 ## Problems
 
-nestedTypes are not working properly and im not yet sure why... maybe its the renderer?
+Markdown output is ugly
 
 
 # Author

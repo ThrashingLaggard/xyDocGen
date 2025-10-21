@@ -17,21 +17,22 @@ namespace xyDocumentor.Core.Renderer
         /// </summary>
         /// <param name="td_Type">The TypeDoc object to be rendered.</param>
         /// <param name="level">The starting heading level for the Markdown output (e.g., 1 for #, 2 for ##).</param>
+        /// <param name="prebuiltAnchorMap"></param>
         /// <returns>A string containing the generated Markdown documentation.</returns>
-        public static string Render(TypeDoc td_Type, int level = 1)
+        public static string Render(TypeDoc td_Type, int level = 1, Dictionary<string, string> prebuiltAnchorMap = null)
         {
             // The StringBuilder is used for efficient string manipulation and building.
             StringBuilder sb_MarkdownBuilder = new();
 
             // Create the central context map for internal linking
-            Dictionary<string, string> anchorMap = BuildAnchorMap(td_Type);
+            var anchorMap = prebuiltAnchorMap ?? BuildAnchorMap(td_Type);
 
             // Passing the map to all helper methods for anchoring and linking.
             RenderHeader(sb_MarkdownBuilder, td_Type, level, anchorMap);
             RenderMetadata(sb_MarkdownBuilder, td_Type, anchorMap);
             RenderDescriptionFromXmlSummaryInTypeDoc(sb_MarkdownBuilder, td_Type, anchorMap);
             RenderAllMembers(sb_MarkdownBuilder, td_Type, anchorMap);
-            RenderNestedTypes(sb_MarkdownBuilder, td_Type, level);
+            RenderNestedTypes(sb_MarkdownBuilder, td_Type, level, anchorMap);
 
 
             // Returns the final Markdown string, removing any leading or trailing whitespace.
@@ -51,7 +52,7 @@ namespace xyDocumentor.Core.Renderer
             var map = new Dictionary<string, string>();
 
             // Use the existing extension method to traverse all types.
-            foreach (var td in td_RootType_.NestedTypes)
+            foreach (var td in td_RootType_.FlattenNested())
             {
                 // Create the unique name: Namespace.DisplayName 
                 // This guarantees the key is unique across the entire document.
@@ -67,8 +68,8 @@ namespace xyDocumentor.Core.Renderer
         /// </summary>
         /// <param name="td_TargetType"></param>
         /// <returns></returns>
-        private static string GetUniqueTypeName(TypeDoc td_TargetType) => !string.IsNullOrWhiteSpace(td_TargetType.Namespace)? $"{td_TargetType.Namespace}.{td_TargetType.DisplayName}" : td_TargetType.DisplayName;
-
+        private static string GetUniqueTypeName(TypeDoc td_TargetType)=> !string.IsNullOrWhiteSpace(td_TargetType.Namespace)? $"{td_TargetType.Namespace}.{td_TargetType.DisplayName}": $"Global (Default).{td_TargetType.DisplayName}";
+        //private static string GetUniqueTypeName(TypeDoc td_TargetType) => !string.IsNullOrWhiteSpace(td_TargetType.Namespace)? $"{td_TargetType.Namespace}.{td_TargetType.DisplayName}" : td_TargetType.DisplayName;
 
         /// <summary>
         /// Cleans the type's name and changes it to lowercase 
@@ -88,8 +89,15 @@ namespace xyDocumentor.Core.Renderer
         {
             // Retrieve the anchor ID using the unique name as the key.
             string uniqueName = GetUniqueTypeName(type);
-            string anchorID = dic_AnchorMap_[uniqueName];
+            //string anchorID = dic_AnchorMap_[uniqueName];
 
+
+            if (!dic_AnchorMap_.TryGetValue(uniqueName, out string anchorID))
+            {
+                // Be forgiving: if the key is missing (edge-case), generate and cache deterministically
+                anchorID = GetAnchorIDFromTypeName(uniqueName);
+                dic_AnchorMap_[uniqueName] = anchorID;
+            }
             // Insert the `invisible` HTML anchor (the target for internal links)
             sb_MarkdownBuilder_.AppendLine($"<a id=\"{anchorID}\"></a>");
 
@@ -109,7 +117,7 @@ namespace xyDocumentor.Core.Renderer
         private static void RenderMetadata(StringBuilder sb_MarkdownBuilder_, TypeDoc td_TargetType_, Dictionary<string, string> dic_AnchorMap_)
         {
             sb_MarkdownBuilder_.AppendLine("## Metadata");
-            sb_MarkdownBuilder_.AppendLine($"**Namespace**: `{td_TargetType_.Namespace ?? "Global"}`");
+            sb_MarkdownBuilder_.AppendLine($"**Namespace**: `{(string.IsNullOrWhiteSpace(td_TargetType_.Namespace) ? "Global (Default)" : td_TargetType_.Namespace)}`");
             sb_MarkdownBuilder_.AppendLine($"**Visibility:** `{td_TargetType_.Modifiers}`");
             sb_MarkdownBuilder_.AppendLine($"**Source File:** `{td_TargetType_.FilePath}`");
 
@@ -236,7 +244,7 @@ namespace xyDocumentor.Core.Renderer
         /// <param name="sb_MarkdownRenderer">The StringBuilder to append to.</param>
         /// <param name="td_TargetType_">The TypeDoc object containing the data.</param>
         /// <param name="level_">The heading level for the Markdown output.</param>
-        private static void RenderNestedTypes(StringBuilder sb_MarkdownRenderer, TypeDoc td_TargetType_, int level_)
+        private static void RenderNestedTypes(StringBuilder sb_MarkdownRenderer, TypeDoc td_TargetType_, int level_, Dictionary<string, string> dic_AnchorMap_)
         {
             // FlattenNested() returns the type itself and all nested types.
             // Skip(1) skips the root element so we only process the nested types.
@@ -247,8 +255,8 @@ namespace xyDocumentor.Core.Renderer
 
             foreach (TypeDoc td_nestedType in nestedTypes)
             {
-                // Recursively calls the Render method for the nested type, incrementing the heading level.
-                sb_MarkdownRenderer.AppendLine(Render(td_nestedType, level_ + 1));
+                // Use the SAME anchor map for all nested levels to keep links stable
+                sb_MarkdownRenderer.AppendLine(Render(td_nestedType, level_ + 1, dic_AnchorMap_));
                 sb_MarkdownRenderer.AppendLine();
             }
         }
