@@ -263,6 +263,11 @@ namespace xyDocumentor.Core.Helpers
             return false;
         }
 
+        /// <summary>
+        /// Look for the Flag to render the file tree on itself
+        /// </summary>
+        /// <param name="externalArguments"></param>
+        /// <returns></returns>
         public static async Task<bool> AskForTree(List<string> externalArguments)
         {
             if (externalArguments.Contains("--tree"))

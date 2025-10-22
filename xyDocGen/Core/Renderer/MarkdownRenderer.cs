@@ -114,6 +114,7 @@ namespace xyDocumentor.Core.Renderer
             sb_MarkdownBuilder_.AppendLine();
         }
 
+
         /// <summary>
         /// Renders the metadata section for the type.
         /// </summary>
