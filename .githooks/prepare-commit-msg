@@ -1,29 +1,24 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # prepare-commit-msg <msg_file> <source> <sha>
-# Wir greifen NUR bei Merge-Commits ein (z.B. durch 'git pull', das mergen muss).
-
-set -euo pipefail
 
 MSG_FILE="$1"
 SOURCE="${2:-}"
 
-# Nur bei Merge-Commits anpassen
+# Nur bei Merge-Commits eingreifen
 if [ "$SOURCE" = "merge" ]; then
-  # Vor-Merge-Commit bestimmen:
-  # Bei Merge/Pull setzt Git ORIG_HEAD auf den Zustand vor dem Merge.
+  # Vorherigen Commit (vor dem Merge) ermitteln
   if PREV=$(git rev-parse -q --verify ORIG_HEAD 2>/dev/null); then
     :
   else
-    # Fallback: der vorherige HEAD in der Reflog-Historie
     PREV="HEAD@{1}"
   fi
 
-  # Letzte Commit-Message (multiline) exakt übernehmen
+  # letzte Commit-Message (mehrzeilig) holen
   PREV_MSG="$(git log -1 --pretty=%B "$PREV")"
 
-  # Falls die letzte Message leer wäre (sicherheitshalber), NICHT überschreiben
-  if [ -n "${PREV_MSG// }" ]; then
-    # Wichtig: \n am Ende hinzufügen, Git erwartet eine Zeile mit newline
+  # Nur überschreiben, wenn nicht komplett leer (nach Whitespace-Strip)
+  if [ -n "$(printf "%s" "$PREV_MSG" | tr -d '[:space:]')" ]; then
+    # trailing newline hinzufügen, Git erwartet eine Zeile mit \n
     printf "%s\n" "$PREV_MSG" > "$MSG_FILE"
   fi
 fi
