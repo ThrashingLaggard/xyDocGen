@@ -48,6 +48,9 @@ public class Program
 
     private static async Task<bool> CheckForBreakingKeyWords(List<string> listedArguments_) 
     {
+        bool isIndex = false;
+        bool isTree = false;
+        bool isPrintOnly = false;
         if (await StringAnalyzer.AskForHelp(listedArguments_))
         {
             return true;
@@ -58,7 +61,28 @@ public class Program
             return true;
         }
 
+        if (await StringAnalyzer.AskForIndex(listedArguments_))
+        {
+            isIndex = true;
+        }
 
+        if (await StringAnalyzer.AskForTree(listedArguments_))
+        {
+            isTree = true;
+        }
+
+        if (await StringAnalyzer.AskForPrint(listedArguments_))
+        {
+            if (await StringAnalyzer.AskForPrintOnly(listedArguments_))
+            {
+                isPrintOnly = true;
+            }
+            
+
+            // Print all the stuff into the console; only console?
+
+
+        }
 
         return false;
     }

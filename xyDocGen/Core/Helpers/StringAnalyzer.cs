@@ -297,7 +297,7 @@ namespace xyDocumentor.Core.Helpers
         {
             if (externalArguments.Contains("--info"))
             {
-                string commands = await OutputCommands();
+                string commands = await OutputInformation();
                 return true;
             }
             return false;
@@ -306,7 +306,7 @@ namespace xyDocumentor.Core.Helpers
         private static Task<string> OutputInformation()
         {
             // Set the string for the ouputing the commands
-            string information = "\nInfo for xyDocGen:\nThere are problems with __nested types__ that i'm currently working on";
+            string information = "\nInfo for xyDocGen:\nCurrently im working on expanding the parameters, after that ill work through the pdf renderer";
 
             // Output asap
             {
@@ -348,6 +348,14 @@ namespace xyDocumentor.Core.Helpers
             return Task.FromResult(commands);
         }
 
+        internal static async Task<bool> AskForPrint(List<string> listedArguments_)
+        {
+            throw new NotImplementedException();
+        }
 
+        internal static async Task<bool> AskForPrintOnly(List<string> listedArguments_)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
