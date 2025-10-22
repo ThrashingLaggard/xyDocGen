@@ -273,7 +273,6 @@ namespace xyDocumentor.Core.Helpers
             return false;
         }
 
-
         public static async Task<bool> AskForIndex(List<string> externalArguments)
         {
             if (externalArguments.Contains("--index"))
