@@ -23,7 +23,7 @@ using xyToolz.Helper.Logging;
 /// <summary>
 /// Basic startup class for the project
 /// </summary>
-public class Program
+public partial class Program
 {
 
     /// <summary>
@@ -173,6 +173,11 @@ public class Program
         var dataFromFiles = await TypeExtractor.TryParseDataFromFile(files, opt.IncludeNonPublic);
         var flattened = TypeDocExtensions.FlattenTypes(dataFromFiles);
 
+
+
+        // Program.cs (once at startup)
+        PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = new ResourceFontResolver();
+
         // Output strategy
         if (opt.ShowOnly)
         {
@@ -220,7 +225,7 @@ public class Program
     {
 
     }
- 
+
     /// <summary>
     /// Awawa 'nd Ahuhu
     /// </summary>
@@ -228,6 +233,4 @@ public class Program
     {
 
     }
-
-
 }
