@@ -46,46 +46,46 @@ public class Program
         }
     }
 
-    private static async Task<bool> CheckForBreakingKeyWords(List<string> listedArguments_) 
-    {
-        bool isIndex = false;
-        bool isTree = false;
-        bool isPrintOnly = false;
-        if (await StringAnalyzer.AskForHelp(listedArguments_))
-        {
-            return true;
-        }
+    //private static async Task<bool> CheckForBreakingKeyWords(List<string> listedArguments_) 
+    //{
+    //    bool isIndex = false;
+    //    bool isTree = false;
+    //    bool isPrintOnly = false;
+    //    if (await StringAnalyzer.AskForHelp(listedArguments_))
+    //    {
+    //        return true;
+    //    }
 
-        if (await StringAnalyzer.AskForInformation(listedArguments_))
-        {
-            return true;
-        }
+    //    if (await StringAnalyzer.AskForInformation(listedArguments_))
+    //    {
+    //        return true;
+    //    }
 
-        if (await StringAnalyzer.AskForIndex(listedArguments_))
-        {
-            isIndex = true;
-        }
+    //    if (await StringAnalyzer.AskForIndex(listedArguments_))
+    //    {
+    //        isIndex = true;
+    //    }
 
-        if (await StringAnalyzer.AskForTree(listedArguments_))
-        {
-            isTree = true;
-        }
+    //    if (await StringAnalyzer.AskForTree(listedArguments_))
+    //    {
+    //        isTree = true;
+    //    }
 
-        if (await StringAnalyzer.AskForPrint(listedArguments_))
-        {
-            if (await StringAnalyzer.AskForPrintOnly(listedArguments_))
-            {
-                isPrintOnly = true;
-            }
-            
-
-            // Print all the stuff into the console; only console?
+    //    if (await StringAnalyzer.O(listedArguments_))
+    //    {
+    //        if (await StringAnalyzer.AskForPrintOnly(listedArguments_))
+    //        {
+    //            isPrintOnly = true;
+    //        }
 
 
-        }
+    //        // Print all the stuff into the console; only console?
 
-        return false;
-    }
+
+    //    }
+
+    //    return false;
+    //}
 
     /// <summary>
     ///  Responsible for parsing arguments, collecting source files, 
@@ -93,53 +93,119 @@ public class Program
     /// </summary>
     /// <param name="args"></param>
     /// <returns></returns>
-    async static Task MainAsync(string[] args) 
+    //async static Task MainAsync(string[] args) 
+    //{
+    //    string format = "";
+    //    string outPath = "";
+    //    string rootPath = "";
+    //    bool includeNonPublic = true;
+    //    HashSet<string> excludedParts = [];
+    //    IEnumerable<TypeDoc> flattenedTypes = [];
+    //    List<string> externalArguments = args.ToList();
+
+    //    // If the --help keyword is detected in the parameter, output the list of commands and refrain from anything else
+    //    //if (await CheckForBreakingKeyWords(externalArguments)) return;
+
+    //    (rootPath, outPath, format, includeNonPublic, excludedParts) = StringAnalyzer.AnalyzeArgs(externalArguments, args);
+
+    //    if (string.IsNullOrWhiteSpace(rootPath) || string.IsNullOrWhiteSpace(outPath))
+    //    {
+    //        xyLog.Log("❌ Error: Source path (`--root`) or output path (`--out`/`--folder`) was not correctly specified or is empty. Please check arguments.");
+    //        return;
+    //    }
+    //    // Setting the output path 
+    //    Directory.CreateDirectory(outPath);
+
+    //    IEnumerable<string> files = Directory.EnumerateFiles(rootPath, "*.cs", SearchOption.AllDirectories).Where(p => !Utils.IsExcluded(p, excludedParts));
+
+    //    if (!files.Any())
+    //    {
+    //        xyLog.Log($"⚠️ Warning: No relevant `.cs` files found in path '{rootPath}'. Aborting documentation generation.");
+    //        return;
+    //    }
+
+    //    List<TypeDoc> dataFromFiles = await TypeExtractor.TryParseDataFromFile(files, includeNonPublic );
+    //    bool isWritten = await Utils.WriteDataToFilesOrderedByNamespace(dataFromFiles, outPath, format);
+
+    //    flattenedTypes = TypeDocExtensions.FlattenTypes(dataFromFiles);
+
+    //    // Hier irgendwo die --Tree und --Show Flaggen abfangen!
+    //    await FileTreeRenderer.BuildIndexAndTree(flattenedTypes,format,rootPath,outPath,excludedParts);
+
+    //    string output = $"\n✅ Finished. Types: {flattenedTypes.Count()}, Format: {format}, Output: {outPath}\n";
+    //    xyLog.Log(output);
+    //}
+    async static Task MainAsync(string[] args)
     {
-        string format = "";
-        string outPath = "";
-        string rootPath = "";
-        bool includeNonPublic = true;
-        HashSet<string> excludedParts = [];
-        IEnumerable<TypeDoc> flattenedTypes = [];
-        List<string> externalArguments = args.ToList();
-
-        // If the --help keyword is detected in the parameter, output the list of commands and refrain from anything else
-        if (await CheckForBreakingKeyWords(externalArguments)) return;
-
-        (rootPath, outPath, format, includeNonPublic, excludedParts) = StringAnalyzer.AnalyzeArgs(externalArguments, args);
-
-        if (string.IsNullOrWhiteSpace(rootPath) || string.IsNullOrWhiteSpace(outPath))
+        // Parse typed options
+        if (!StringAnalyzer.TryParseOptions(args, out var opt, out var err))
         {
-            xyLog.Log("❌ Error: Source path (`--root`) or output path (`--out`/`--folder`) was not correctly specified or is empty. Please check arguments.");
+            xyLog.Log("❌ " + err);
+            xyLog.Log(StringAnalyzer.BuildHelpText());
             return;
         }
-        // Setting the output path 
-        Directory.CreateDirectory(outPath);
 
-        IEnumerable<string> files = Directory.EnumerateFiles(rootPath, "*.cs", SearchOption.AllDirectories).Where(p => !Utils.IsExcluded(p, excludedParts));
+        if (opt.Help)
+        {
+            xyLog.Log(StringAnalyzer.BuildHelpText());
+            return;
+        }
+        if (opt.Info)
+        {
+            xyLog.Log(StringAnalyzer.BuildInfoText());
+            return;
+        }
 
+        // Ensure output folder exists (when writing files)
+        if (!opt.ShowOnly)
+            Directory.CreateDirectory(opt.OutPath);
+
+        // Enumerate .cs files (respect excludes)
+        var files = Directory.EnumerateFiles(opt.RootPath, "*.cs", SearchOption.AllDirectories)
+                             .Where(p => !Utils.IsExcluded(p, opt.ExcludedParts));
         if (!files.Any())
         {
-            xyLog.Log($"⚠️ Warning: No relevant `.cs` files found in path '{rootPath}'. Aborting documentation generation.");
+            xyLog.Log($"⚠️ No `.cs` files found in '{opt.RootPath}'. Aborting.");
             return;
         }
 
-        List<TypeDoc> dataFromFiles = await TypeExtractor.TryParseDataFromFile(files, includeNonPublic );
-        bool isWritten = await Utils.WriteDataToFilesOrderedByNamespace(dataFromFiles, outPath, format);
+        // Extract types
+        var dataFromFiles = await TypeExtractor.TryParseDataFromFile(files, opt.IncludeNonPublic);
+        var flattened = TypeDocExtensions.FlattenTypes(dataFromFiles);
 
-        flattenedTypes = TypeDocExtensions.FlattenTypes(dataFromFiles);
+        // Output strategy
+        if (opt.ShowOnly)
+        {
+            if (!string.Equals(opt.Format, "md", StringComparison.OrdinalIgnoreCase))
+                xyLog.Log("ℹ️ '--show' active: using Markdown in console (ignoring --format).");
 
-        // Hier irgendwo die --Tree und --Show Flaggen abfangen!
-        await FileTreeRenderer.BuildIndexAndTree(flattenedTypes,format,rootPath,outPath,excludedParts);
+            foreach (var t in dataFromFiles)
+            {
+                string md = MarkdownRenderer.Render(t);
+                xyLog.Log(md);
+                xyLog.Log("\n---\n");
+            }
+        }
+        else
+        {
+            bool written = await Utils.WriteDataToFilesOrderedByNamespace(dataFromFiles, opt.OutPath, opt.Format);
+            if (!written) xyLog.Log("⚠️ One or more files could not be written.");
+        }
 
-        string output = $"\n✅ Finished. Types: {flattenedTypes.Count()}, Format: {format}, Output: {outPath}\n";
-        xyLog.Log(output);
+        // Index/Tree only if requested
+        if (opt.BuildIndex || opt.BuildTree)
+        {
+            await FileTreeRenderer.BuildIndexAndTree(flattened, opt.Format, opt.RootPath, opt.OutPath, opt.ExcludedParts);
+            // (Wenn du später trennen willst: Overload mit buildIndex/buildTree-Parametern, wie zuvor skizziert.)
+        }
+
+        xyLog.Log($"\n✅ Finished. Types: {flattened.Count()}, Format: {opt.Format}, Output: {opt.OutPath}\n");
     }
 
     /// <summary>
     /// Ahuhu ma Awawawa
     /// </summary>
-     private class Awawa()
+    private class Awawa()
     {
 
     }
