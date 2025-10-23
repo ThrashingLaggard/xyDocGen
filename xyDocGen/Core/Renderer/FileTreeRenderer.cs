@@ -77,7 +77,7 @@ namespace xyDocumentor.Core.Renderer
         /// <param name="excludedParts"></param>
         /// <param name="prefix"></param>
         /// <returns></returns>
-        public static async Task<StringBuilder> BuildProjectTree(StringBuilder treeBuilder, string format, string rootPath, string outPath, HashSet<string> excludedParts, string prefix = "")
+        public static async Task<StringBuilder> BuildProjectTree(StringBuilder treeBuilder, string format, string rootPath, string outPath, HashSet<string> excludedParts, bool writeToDisk, string prefix = "")
         {
             string headline = "# Project structure\n";
             string fileName = "PROJECT-STRUCTURE.md";
@@ -88,19 +88,21 @@ namespace xyDocumentor.Core.Renderer
             // Rendering PROJECT-STRUCTURE.md 
             FileTreeRenderer.RenderTree(new DirectoryInfo(rootPath), prefix, true, treeBuilder, excludedParts);
 
-            // Combining the target path
-            string targetPath = Path.Combine(outPath, fileName);
-
-            // Write the tree into the target file
-            await xyFiles.SaveToFile(treeBuilder.ToString(), targetPath);
+            if (writeToDisk)
+            {
+                string targetPath = Path.Combine(outPath, "PROJECT-STRUCTURE.md");
+                await xyFiles.SaveToFile(treeBuilder.ToString(), targetPath);
+            }
 
             return treeBuilder;
         }
 
+     
+
         /// <summary>
         /// Builds an INDEX.md file listing all documented types, grouped by namespace.
         /// </summary>
-        public static async Task<StringBuilder> BuildProjectIndex(IEnumerable<TypeDoc> flattenedtypes, string format, string outpath)
+        public static async Task<StringBuilder> BuildProjectIndex(IEnumerable<TypeDoc> flattenedtypes, string format, string outpath, bool writeToDisk)
         {
             // Stores INDEX.md  ordered by namespace
             StringBuilder indexBuilder = new StringBuilder();
@@ -130,12 +132,11 @@ namespace xyDocumentor.Core.Renderer
                 indexBuilder.AppendLine();
             }
 
-            // Setting target path
-            string indexPath = Path.Combine(outpath, "INDEX.md");
-
-            // Saving the Index
-            await xyFiles.SaveToFile(indexBuilder.ToString(), indexPath);
-
+            // if (writeToDisk)
+            {
+                string indexPath = Path.Combine(outpath, "INDEX.md");
+                await xyFiles.SaveToFile(indexBuilder.ToString(), indexPath);
+            }
             return indexBuilder;
         }
 
@@ -157,6 +158,19 @@ namespace xyDocumentor.Core.Renderer
             StringBuilder projectBuilder = await BuildProjectTree(indexBuilder, format, rootPath, outPath, excludedParts);
             indexBuilder = null;
         }
+
+  
+
+        // Bequemer Overload (bestehende Aufrufe bleiben gültig)
+        public static Task<StringBuilder> BuildProjectIndex(IEnumerable<TypeDoc> flattenedtypes, string format, string outpath)
+            => BuildProjectIndex(flattenedtypes, format, outpath, writeToDisk: true);
+
+
+     
+
+        // Bequemer Overload
+        public static Task<StringBuilder> BuildProjectTree(StringBuilder treeBuilder, string format, string rootPath, string outPath, HashSet<string> excludedParts, string prefix = "")
+            => BuildProjectTree(treeBuilder, format, rootPath, outPath, excludedParts, writeToDisk: true, prefix);
 
     }
 }

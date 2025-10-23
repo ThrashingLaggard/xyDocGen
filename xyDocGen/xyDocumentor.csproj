@@ -3,17 +3,16 @@
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
 
-		
+		<AssemblyName>xyDocumentor</AssemblyName>		
 		
 		<!-- NuGet Metadata -->
 		<PackageId>xyDocGen</PackageId>
-		<Version>1.0.0</Version>
+		<ToolCommandName>xyDocGen</ToolCommandName>
+		<IsPackable>true</IsPackable>
 		<PackageVersion>1.0.37</PackageVersion>
 		<Authors>ThrashingLaggard</Authors>
 		<Company>ThrashingLaggardIndustries</Company>
 		<PackAsTool>true</PackAsTool>
-		<ToolCommandName>xyDocGen</ToolCommandName>
-		<PackageId>xyDocGen</PackageId>
 		<Description>Helper library for generating [Markdown/...] documentation from C# projects</Description>
 		<PackageTags>documentation;markdown;csharp;api</PackageTags>
 		<RepositoryUrl>https://github.com/ThrashingLaggard/xyDocGen</RepositoryUrl>
@@ -28,6 +27,7 @@
 		
 		<SelfContained>false</SelfContained>
 		<RuntimeIdentifier></RuntimeIdentifier>
+		<NoDefaultExcludes>false</NoDefaultExcludes>
 		<CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
 	</PropertyGroup>
 

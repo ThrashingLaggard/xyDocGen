@@ -19,8 +19,8 @@ namespace xyDocumentor.Core.Models
 
         // Feature flags
         public bool ShowOnly { get; init; } = false; // --show
-        public bool BuildIndex { get; init; } = false; // --index
-        public bool BuildTree { get; init; } = false; // --tree
+        public bool BuildIndex { get; init; } = true; // --index
+        public bool BuildTree { get; init; } = true; // --tree
 
         // Meta flags (handled early in Program.cs)
         public bool Help { get; init; } = false; // --help

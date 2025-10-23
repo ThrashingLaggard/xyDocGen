@@ -195,8 +195,19 @@ public class Program
         // Index/Tree only if requested
         if (opt.BuildIndex || opt.BuildTree)
         {
-            await FileTreeRenderer.BuildIndexAndTree(flattened, opt.Format, opt.RootPath, opt.OutPath, opt.ExcludedParts);
-            // (Wenn du später trennen willst: Overload mit buildIndex/buildTree-Parametern, wie zuvor skizziert.)
+            bool writeToDisk = !opt.ShowOnly;
+
+            if (opt.BuildIndex)
+            {
+                var index = await FileTreeRenderer.BuildProjectIndex(flattened, opt.Format, opt.OutPath, writeToDisk);
+                if (opt.ShowOnly) Console.WriteLine(index.ToString());
+            }
+
+            if (opt.BuildTree)
+            {
+                var tree = await FileTreeRenderer.BuildProjectTree(new StringBuilder(), opt.Format, opt.RootPath, opt.OutPath, opt.ExcludedParts, writeToDisk);
+                if (opt.ShowOnly) Console.WriteLine(tree.ToString());
+            }
         }
 
         xyLog.Log($"\n✅ Finished. Types: {flattened.Count()}, Format: {opt.Format}, Output: {opt.OutPath}\n");
