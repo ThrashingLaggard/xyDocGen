@@ -33,6 +33,6 @@ namespace xyDocumentor.Core.Pdf
             public int PageNumber => Document.Pages.Count; // 1-based user expectation
         }
 
-     
-    
+
+
 }
