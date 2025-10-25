@@ -9,7 +9,7 @@
 		<PackageId>xyDocGen</PackageId>
 		<ToolCommandName>xyDocGen</ToolCommandName>
 		<IsPackable>true</IsPackable>
-		<PackageVersion>1.0.39</PackageVersion>
+		<PackageVersion>1.0.40</PackageVersion>
 		<Authors>ThrashingLaggard</Authors>
 		<Company>ThrashingLaggardIndustries</Company>
 		<PackAsTool>true</PackAsTool>
