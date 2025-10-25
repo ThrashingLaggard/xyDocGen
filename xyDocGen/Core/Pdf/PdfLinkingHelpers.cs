@@ -33,28 +33,29 @@ namespace xyDocumentor.Core.Pdf
         /// Legt auf 'fromPage' einen klickbaren Bereich 'rect' an, der zu 'toPage' scrollt.
         /// 'targetYTopLeft' ist die Ziel-Y-Position im oben-links-Koordinatensystem.
         /// </summary>
-        public static void AddInternalLink(PdfPage fromPage, PdfRectangle rect, PdfPage toPage, double targetYTopLeft)
+        public static void AddInternalLink(PdfPage fromPage, PdfRectangle rect, PdfPage toPage, PdfDocument owningDoc)
         {
-            // Ziel-Top-Y in PDF-Koordinaten (unten-links)
-            double pdfTop = toPage.Height - targetYTopLeft;
+            int pageNumber = GetPageNumber1Based(owningDoc, toPage);
+            if (pageNumber <= 0)
+                throw new System.ArgumentException("Target page does not belong to the provided document.", nameof(toPage));
 
-            // Destination (XYZ = absolute Position; Zoom 0 = aktuellen Zoom beibehalten)
-            var dest = new PdfDestination(toPage)
+            fromPage.AddDocumentLink(rect, pageNumber); // PdfSharpCore: (rect, 1-basierter Seitenindex)
+        }
+
+        /// <summary>
+        /// Liefert die 1-basierte Seitennummer von 'page' in 'doc'.
+        /// </summary>
+        private static int GetPageNumber1Based(PdfDocument doc, PdfPage page)
+        {
+            if (doc == null || page == null) return -1;
+
+            // Manche Builds haben page.Owner == doc; wir verlassen uns aber nicht darauf.
+            for (int i = 0; i < doc.Pages.Count; i++)
             {
-                Mode = PdfDestinationMode.XYZ,
-                Left = 0,
-                Top = pdfTop,
-                Zoom = 0
-            };
-
-            // WICHTIG: PdfLinkAnnotation hat in PdfSharpCore üblicherweise den parameterlosen Ctor.
-            var link = new PdfLinkAnnotation
-            {
-                Rectangle = rect,
-                Destination = dest
-            };
-
-            fromPage.Annotations.Add(link);
+                if (ReferenceEquals(doc.Pages[i], page))
+                    return i + 1; // 1-basiert
+            }
+            return -1;
         }
     }
 }

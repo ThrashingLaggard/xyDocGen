@@ -1,22 +1,14 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing.Text;
 using System.IO;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
-using xyDocumentor.Core;
 using xyDocumentor.Core.Docs;
 using xyDocumentor.Core.Extractors;
+using xyDocumentor.Core.Fonts;
 using xyDocumentor.Core.Helpers;
 using xyDocumentor.Core.Renderer;
-using xyToolz.Filesystem;
 using xyToolz.Helper.Logging;
 
 
@@ -175,8 +167,11 @@ public partial class Program
 
 
 
-        // Program.cs (once at startup)
-        PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = new ResourceFontResolver();
+        var useEmbeddedFonts = Environment.GetEnvironmentVariable("XYDOCGEN_USE_EMBEDDED_FONTS") == "1";
+                if (useEmbeddedFonts)
+                    {
+                        PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = new ResourceFontResolver();
+                    }
 
         // Output strategy
         if (opt.ShowOnly)
