@@ -44,7 +44,7 @@ xydocgen --help
 
 + Changing the structure:
   - Moving the output of index and tree into the first level 
-  - Format mit als Unterordner hinzufügen..... was sollte das heißen?????
+  - Subfolders for the formats 
 
 
   
