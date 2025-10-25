@@ -30,6 +30,24 @@ xydocgen --root X://User/TestPrograms/TestRoot--out TestFolder/TestSubFolder
 xydocgen --help
 
 
+## Planned features & improvements
+
++ Parameters
+  - Adding parameters to output index and/or tree into the console
+  - Adding parameters to only output the index or only the tree
+  - By using the --info flag output this readme file
+  - Adding a flag to only output the target(s) in the console
+
++ Upgrades 
+- Reading and outputting the remarks
+- Upgrading the visual result of the outputs
+
++ Changing the structure:
+  - Moving the output of index and tree into the first level 
+  - Format mit als Unterordner hinzufügen..... was sollte das heißen?????
+
+
+  
 ## Installation
 
 ### Local:
@@ -49,26 +67,9 @@ dotnet list tool [--local/--global]
 dotnet tool update xydocgen [--local/--global]
 
 
-
-## Planned features & improvements
-
-+ Parameters
-  - Adding parameters to output index and/or tree into the console
-  - Adding parameters to only output the index or only the tree
-  - By using the --info flag output this readme file
-  - Adding a flag to only output the target(s) in the console
-
-+ Upgrades 
-- Reading and outputting the remarks
-- Upgrading the visual result of the outputs
-
-+ Changing the structure:
-  - Moving the output of index and tree into the first level 
-  - Format mit als Unterordner hinzufügen..... was sollte das heißen?????
-
 ## Problems
 
-PDF Renderer hasnt got the attention it deserves yet
+Output is not very bonita...
 
 
 # Author

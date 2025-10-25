@@ -30,7 +30,7 @@ internal static class StringAnalyzer
         string outPath = null;
         string folder = "docs";
         string subfolder = "api";
-        string format = "md";
+        string format = "pdf";
         bool includeNonPublic = true; // default: include non-public (unless --private)
         var excludes = CliOptions.DefaultExcludes();
 
@@ -186,7 +186,7 @@ internal static class StringAnalyzer
 
     public static string BuildInfoText()
     {
-        return "xyDocGen — actively adding CLI flags (index/tree/show), PDF renderer work upcoming.";
+        return "xyDocGen — reduced the package size by removing transistive packages.";
     }
 
     // ------------------------

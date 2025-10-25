@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using PdfSharpCore.Fonts;
 using System;
 using System.IO;
 using System.Linq;
@@ -27,6 +28,9 @@ public partial class Program
     {
         try
         {
+            if (PdfSharpCore.Fonts.GlobalFontSettings.FontResolver == null)
+                PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = new xyDocumentor.Core.Fonts.AutoResourceFontResolver();
+
             // Run the async main method synchronously
             MainAsync(args).GetAwaiter().GetResult();
             return 0; // weirdly its success 
@@ -165,13 +169,20 @@ public partial class Program
         var dataFromFiles = await TypeExtractor.TryParseDataFromFile(files, opt.IncludeNonPublic);
         var flattened = TypeDocExtensions.FlattenTypes(dataFromFiles);
 
+  
+            if (GlobalFontSettings.FontResolver == null)
+                GlobalFontSettings.FontResolver = new AutoResourceFontResolver();
 
+        // Set the custom resolver ASAP and test it via the INSTANCE, not the static helper
+        var fr = GlobalFontSettings.FontResolver = new AutoResourceFontResolver();
 
-        var useEmbeddedFonts = Environment.GetEnvironmentVariable("XYDOCGEN_USE_EMBEDDED_FONTS") == "1";
-                if (useEmbeddedFonts)
-                    {
-                        PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = new ResourceFontResolver();
-                    }
+        var info = fr.ResolveTypeface(xyDocumentor.Core.Fonts.AutoResourceFontResolver.FamilySans, false, false);
+        System.Diagnostics.Debug.WriteLine("Resolved face via instance resolver: " + info?.FaceName);
+
+        // Optional: list embedded resources to verify the fonts are really there
+        foreach (var n in typeof(xyDocumentor.Core.Fonts.AutoResourceFontResolver).Assembly.GetManifestResourceNames())
+            System.Diagnostics.Debug.WriteLine("RES: " + n);
+
 
         // Output strategy
         if (opt.ShowOnly)

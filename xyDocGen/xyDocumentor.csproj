@@ -41,6 +41,7 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
 		<PackageReference Include="PdfSharpCore" Version="1.3.67" />
 		<PackageReference Include="xyToolz" Version="1.0.68" />
+		<PackageReference Include="SharpZipLib" Version="1.4.2" />
 
 		<!-- Test libraries: compile-only (no runtime payload in the tool) -->
 		<PackageReference Include="FluentAssertions" Version="8.6.0" PrivateAssets="all" ExcludeAssets="runtime" />
@@ -96,12 +97,12 @@
 		<PackageReference Include="Microsoft.Extensions.FileProviders.Abstractions" Version="8.0.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 		<PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="8.0.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 		<PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="8.0.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
-
+<!--
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 		<PackageReference Include="Microsoft.Extensions.Options" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 		<PackageReference Include="Microsoft.Extensions.Primitives" Version="9.0.3" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
-
+-->
 		<PackageReference Include="Microsoft.IdentityModel.Abstractions" Version="7.1.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 		<PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.1.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 		<PackageReference Include="Microsoft.IdentityModel.Logging" Version="7.1.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
@@ -199,6 +200,12 @@
     -->
 		</ItemGroup>
 	</Target>
+
+	<ItemGroup>
+		<!-- Alle TTF/OTF in Resources/Fonts (auch in Unterordnern) werden als EmbeddedResource eingebunden -->
+		<EmbeddedResource Include="Resources/Fonts\**\*.ttf" />
+		<EmbeddedResource Include="Resources/Fonts\**\*.otf" />
+	</ItemGroup>
 
 
 </Project>

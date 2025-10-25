@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using PdfSharpCore.Pdf;
+using System;
 using xyDocumentor.Core.Pdf;
 
 namespace xyDocumentor.Core.Pdf
@@ -49,19 +50,34 @@ namespace xyDocumentor.Core.Pdf
         /// <returns>The newly added PdfPage, basically either the param or a blank, lol</returns>
         public PdfPage AddPage(PdfPage? pdf_Page_ = null)
         {
-            PdfPage page = new();
+            PdfPage page;
+
             if (pdf_Page_ is not null)
             {
+                // Wenn Seite noch keinem Document gehört → hinzufügen
+                if (pdf_Page_.Owner == null)
+                {
+                    Document.Pages.Add(pdf_Page_);
+                }
+                else if (!ReferenceEquals(pdf_Page_.Owner, Document))
+                {
+                    // Sicherheit: Seite gehört zu einem anderen Document
+                    throw new InvalidOperationException("Cannot add a page that belongs to another PdfDocument.");
+                }
+
                 page = pdf_Page_;
-                Document.AddPage(page);
             }
             else
             {
-                Document.AddPage();
+                // Neue Seite direkt in diesem Document erzeugen
+                page = Document.AddPage();
                 page.Size = PdfSharpCore.PageSize.A4;
             }
+
             return page;
         }
+
+
 
         /// <summary>
         /// Gets the current page number from a one based indexxx

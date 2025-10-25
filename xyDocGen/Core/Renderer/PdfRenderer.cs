@@ -23,15 +23,17 @@ namespace xyDocumentor.Core.Renderer
             var theme = PdfTheme.CreateDefault();
             var ctx = new RenderContext(document, theme);
 
+            // Render content starting on a new page
+            ctx.Writer = new PageWriter(ctx, ctx.AddPage());
+            
             // Reserve TOC page as the very first page (we fill it after content is rendered)
             var tocPage = ctx.AddPage();
+
             ctx.Writer.DrawHeaderFooter = false; // disable on TOC page for a clean look
 
             // Collect TOC entries while rendering
             var tocEntries = new List<TocEntry>();
 
-            // Render content starting on a new page
-            ctx.Writer = new PageWriter(ctx, ctx.AddPage());
 
             // Root heading + bookmark
             AddBookmark(document, ctx.Writer.Page, $"{root.DisplayName} ({root.Kind})");
