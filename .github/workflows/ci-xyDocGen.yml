@@ -18,26 +18,75 @@ concurrency:
 # ----------------------
 
 jobs:
+  precheck:
+    runs-on: ubuntu-latest
+    # Expose results of the keyword scan to downstream jobs.
+    # - should_run: "true"/"false" gate for the build job
+    # - bump_kind:  "major" | "minor" | "patch" | "none"
+    # - match_keyword: the exact keyword that triggered the bump ("BREAKING CHANGE" | "feat:" | "fix:" | "...")
+    outputs:
+      should_run:    ${{ steps.scan.outputs.should_run }}
+      bump_kind:     ${{ steps.scan.outputs.bump_kind }}
+      match_keyword: ${{ steps.scan.outputs.match_keyword }}
+    steps:
+      # Minimal checkout is sufficient for reading the latest commit message.
+      - name: Checkout (shallow is fine)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      
+      # Read the latest commit message exactly once.
+      # This step is the *single source of truth* 
+      - name: Scan latest commit message (case-insensitive)
+        id: scan
+        shell: bash
+        run: |
+          msg="$(git log -1 --pretty=%B)"
+          
+          echo "Commit message payload:"
+          echo "-----------------------"
+          echo "$msg"
+          echo "-----------------------"
+          echo
+
+          bump_kind="none"
+          match_keyword=""
+          
+          if echo "$msg" | grep -iqE '(^|[[:space:]])BREAKING[[:space:]]+CHANGE([[:space:]]|$)'; then
+            bump_kind="major"; match_keyword="BREAKING CHANGE"
+          elif echo "$msg" | grep -iqE '(^|[[:space:]])feat(\([^)]+\))?:'; then
+            bump_kind="minor"; match_keyword="feat:"
+          elif echo "$msg" | grep -iqE '(^|[[:space:]])fix(\([^)]+\))?:'; then
+            bump_kind="patch"; match_keyword="fix:"
+          fi
+  
+          if [ "$bump_kind" != "none" ]; then
+            echo "Keyword matched: $match_keyword  -> bump_kind=$bump_kind"
+            echo "should_run=true"        >> "$GITHUB_OUTPUT"
+            echo "bump_kind=$bump_kind"   >> "$GITHUB_OUTPUT"
+            echo "match_keyword=$match_keyword" >> "$GITHUB_OUTPUT"
+          else
+            echo "No matching keyword found -> should_run=false"
+            echo "should_run=false"        >> "$GITHUB_OUTPUT"
+            echo "bump_kind=none"          >> "$GITHUB_OUTPUT"
+            echo "match_keyword="          >> "$GITHUB_OUTPUT"
+          fi
+
   build-and-changed:
+    needs: precheck
     runs-on: ubuntu-latest  # GitHub-hosted Ubuntu Linux runner
 
     # =========================================================
-    # GLOBAL JOB GUARD (hard gate):
-    # Only run this entire job if the latest commit message contains
-    # any of the semantic-versioning keywords. We lower-case the
-    # message to make the check case-insensitive.
-    #
-    # Keywords checked here:
-    #   - "breaking change"  (major bump)
-    #   - "feat:"            (minor bump)
-    #   - "fix:"             (patch bump)
-    #
-    # To add more keywords, extend the OR list below.
+    # Hard gate at job level: only proceed if precheck decided so.
+    # This prevents wasting minutes on runners when no publish-worthy
+    # change was requested by commit message.
     # =========================================================
-    if: >
-      contains(toLower(github.event.head_commit.message), 'breaking change')
-      || contains(toLower(github.event.head_commit.message), 'feat:')
-      || contains(toLower(github.event.head_commit.message), 'fix:')
+    if: needs.precheck.outputs.should_run == 'true'
+    
+    # Make precheck outputs available as environment variables to all steps.
+    env:
+      BUMP_KIND:     ${{ needs.precheck.outputs.bump_kind }}       # "major" | "minor" | "patch"
+      MATCH_KEYWORD: ${{ needs.precheck.outputs.match_keyword }}   # e.g. "feat:" (diagnostics only)
 
     steps:
       # ------------------------------------------------------
@@ -85,71 +134,90 @@ jobs:
         run: dotnet restore xyDocGen/xyDocumentor.csproj
 
       # --------------------------------------------------------------------
-      # 5) Determine semantic version bump from the latest commit message
-      #    Rules (case-insensitive):
-      #      - Contains "BREAKING CHANGE"  -> major++
-      #      - Starts with "feat:"         -> minor++, patch=0
-      #      - Starts with "fix:"          -> patch++
+      # 5) Compute next semantic version **using BUMP_KIND from precheck**.
       #
-      #    Includes a fallback that flattens newlines to handle multi-line
-      #    messages reliably.
-      #    Exposes the computed version as env.version (GITHUB_ENV).
+      #    Primary path:
+      #      - Trust BUMP_KIND (authoritative result from precheck)
+      #        * major -> major++, minor=0, patch=0
+      #        * minor -> minor++, patch=0
+      #        * patch -> patch++
+      #
+      #    Defensive fallback (one-time, in case env is unexpectedly empty):
+      #      - Re-scan the latest commit message with the same rules to
+      #        determine a bump kind. This keeps the pipeline robust against
+      #        environment/output mishaps without double-scanning in normal runs.
+      #
+      #    The final version is exported as env.version (GITHUB_ENV).
       # --------------------------------------------------------------------
-      - name: Generate new version from commits
+      - name: Generate new version from prechecked bump kind (with fallback)
         id: versioning
         shell: bash
         run: |
-          # Get current version from the .csproj
+          # Read current version from .csproj
           current_version=$(grep -oPm1 "(?<=<PackageVersion>)[^<]+" xyDocGen/xyDocumentor.csproj)
           echo "Current version: $current_version"
 
-          # Get latest commit message (this is what gated the job)
-          commits=$(git log -1 --pretty=%B)
-          echo "Latest commit message:"
-          echo "----------------------"
-          echo "$commits"
-          echo "----------------------"
-
-          # Split current version into major.minor.patch
+          # Parse current version into components (major.minor.patch)
           major=$(echo "$current_version" | cut -d. -f1)
           minor=$(echo "$current_version" | cut -d. -f2)
           patch=$(echo "$current_version" | cut -d. -f3)
 
-          changed="false"
+          # Use authoritative bump kind from precheck if available
+          bump="${BUMP_KIND:-}"
 
-          # Primary check: line-sensitive (useful when prefixes like "feat:" start lines)
-          if echo "$commits" | grep -iq "BREAKING CHANGE"; then
-            major=$((major + 1)); minor=0; patch=0; changed="true"
-          elif echo "$commits" | grep -iqE "^(feat|fix):"; then
-            if echo "$commits" | grep -iq "^feat:"; then
-              minor=$((minor + 1)); patch=0; changed="true"
-            elif echo "$commits" | grep -iq "^fix:"; then
-              patch=$((patch + 1)); changed="true"
+          # --------- Fallback: recompute once if bump is empty ----------
+          if [ -z "$bump" ] || [ "$bump" = "none" ]; then
+            echo "BUMP_KIND not set or 'none' – performing defensive one-time rescan."
+            commits="$(git log -1 --pretty=%B)"
+
+            if echo "$commits" | grep -iqE '(^|[[:space:]])BREAKING[[:space:]]+CHANGE([[:space:]]|$)'; then
+              bump="major"
+            elif echo "$commits" | grep -iqE '(^|[[:space:]])feat(\([^)]+\))?:'; then
+              bump="minor"
+            elif echo "$commits" | grep -iqE '(^|[[:space:]])fix(\([^)]+\))?:'; then
+              bump="patch"
+            else # Secondary fallback: flatten newlines and re-check (handles unusual formatting)
+              flat="$(echo "$commits" | tr '\n' ' ')"
+              if echo "$flat" | grep -iqE 'BREAKING[[:space:]]+CHANGE'; then
+                bump="major"
+              elif echo "$flat" | grep -iqE 'feat(\([^)]+\))?:'; then
+                bump="minor"
+              elif echo "$flat" | grep -iqE 'fix(\([^)]+\))?:'; then
+                bump="patch"
+              else # If still nothing, keep current version unchanged.
+                echo "No semantic keyword found even after fallback scan – keeping current version."
+                bump="none"
+              fi
             fi
           fi
+          # ----------------------------------------------------------------
 
-          # Fallback: flatten newlines, then search again (robust against formatting)
-          if [ "$changed" = "false" ]; then
-            commitsSingleLine=$(echo "$commits" | tr '\n' ' ')
-            if echo "$commitsSingleLine" | grep -iq "BREAKING CHANGE"; then
-              major=$((major + 1)); minor=0; patch=0; changed="true"
-            elif echo "$commitsSingleLine" | grep -iq "feat:"; then
-              minor=$((minor + 1)); patch=0; changed="true"
-            elif echo "$commitsSingleLine" | grep -iq "fix:"; then
-              patch=$((patch + 1)); changed="true"
-            fi
-          fi
-
-          if [ "$changed" = "false" ]; then
-            echo "No semantic version keyword found. Keeping current version."
-          else
-            echo "Semantic version keyword found. Updating current version."
-          fi
+          # Apply bump according to resolved 'bump'
+          case "$bump" in
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              echo "Applying MAJOR bump (breaks API/compat)."
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              echo "Applying MINOR bump (new feature, backward compatible)."
+              ;;
+            patch)
+              patch=$((patch + 1))
+              echo "Applying PATCH bump (bug fix, backward compatible)."
+              ;;
+            *)
+              echo "No bump requested – version remains unchanged."
+              ;;
+          esac
 
           new_version="$major.$minor.$patch"
           echo "New version: $new_version"
 
-          # Export version for other steps
+          # Export for downstream steps
           echo "version=$new_version" >> "$GITHUB_ENV"
 
       # ----------------------------------------------------------------
@@ -193,7 +261,7 @@ jobs:
       # 9) Run unit tests (no build)
       # ------------------------------
       - name: Test xyDocGen
-        run: dotnet test xyDocGen/xyDocumentor.csproj --no-build --verbosity normal
+        run: dotnet test xyDocGen/xyDocumentor.csproj --no-build --verbosity detailed # quiet|minimal|normal|detailed|diagnostic
 
       # ---------------------------------------------
       # 10) Pack the NuGet package into ./out folder
@@ -243,5 +311,8 @@ jobs:
         with:
           tag_name: v${{ env.version }}
           name: Release ${{ env.version }}
+          body: |
+            Bump kind: ${{ env.BUMP_KIND }}
+            Triggered by keyword: ${{ env.MATCH_KEYWORD }}
           draft: false
           prerelease: false
