@@ -46,12 +46,13 @@ namespace xyDocumentor.Core.Renderer
 
             var theme = PdfTheme.CreateDefault();
             var ctx = new RenderContext(document, theme);
+            
+            // Reserve TOC page as the very first page (we fill it after content is rendered)
+            var tocPage = ctx.AddPage();
 
             // Render content starting on a new page
             ctx.Writer = new PageWriter(ctx, ctx.AddPage());
 
-            // Reserve TOC page as the very first page (we fill it after content is rendered)
-            var tocPage = ctx.AddPage();
 
             ctx.Writer.DrawHeaderFooter = false; // disable on TOC page for a clean look
 
