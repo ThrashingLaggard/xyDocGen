@@ -3,8 +3,8 @@
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
 
-		<AssemblyName>xyDocumentor</AssemblyName>		
-		
+		<AssemblyName>xyDocumentor</AssemblyName>
+
 		<!-- NuGet Metadata -->
 		<PackageId>xyDocGen</PackageId>
 		<ToolCommandName>xyDocGen</ToolCommandName>
@@ -24,83 +24,191 @@
 		<PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
 
 		<OutputType>Exe</OutputType>
-		
+
 		<SelfContained>false</SelfContained>
 		<RuntimeIdentifier></RuntimeIdentifier>
-		<IncludeContentInPack>false</IncludeContentInPack>
 		<NoDefaultExcludes>false</NoDefaultExcludes>
 		<CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
 	</PropertyGroup>
 
-	<Target Name="CopyReadmeIntoProject" BeforeTargets="Pack">
-		<Copy SourceFiles="..\\README.md"
-			  DestinationFiles="$(MSBuildProjectDirectory)\\README.md"
-			  SkipUnchangedFiles="true" />
-	</Target>
-	
 	<ItemGroup>
-		<None Include="README.md" Pack="true" PackagePath="\" Link="README.md" />
+		<None Include="..\\README.md" Pack="true" PackagePath="\" Link="README.md" />
 	</ItemGroup>
 
-	
+
 	<ItemGroup>
-		<PackageReference Include="FluentAssertions" Version="8.6.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.11.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
 		<PackageReference Include="PdfSharpCore" Version="1.3.67" />
-		<PackageReference Include="xunit.assert" Version="2.9.3" />
-		<PackageReference Include="xunit.extensibility.core" Version="2.9.3" />
-		<PackageReference Include="xunit.extensibility.execution" Version="2.9.3" />
-		<PackageReference Include="xyToolz" Version="1.0.63" />
+		<PackageReference Include="FluentAssertions" Version="8.6.0" PrivateAssets="all" ExcludeAssets="runtime" />
+		<PackageReference Include="xunit.assert" Version="2.9.3" PrivateAssets="all" ExcludeAssets="runtime" />
+		<PackageReference Include="xunit.extensibility.core" Version="2.9.3" PrivateAssets="all" ExcludeAssets="runtime" />
+		<PackageReference Include="xunit.extensibility.execution" Version="2.9.3" PrivateAssets="all" ExcludeAssets="runtime" />
+		<PackageReference Include="xyToolz" Version="1.0.68" />
 	</ItemGroup>
 
-	
+
 	<ItemGroup>
-	  <Compile Update="Properties\Resources.Designer.cs">
-	    <DesignTime>True</DesignTime>
-	    <AutoGen>True</AutoGen>
-	    <DependentUpon>Resources.resx</DependentUpon>
-	  </Compile>
+		<Compile Update="Properties\Resources.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Resources.resx</DependentUpon>
+		</Compile>
 	</ItemGroup>
 
-	
+
 	<ItemGroup>
-	  <EmbeddedResource Update="Properties\Resources.resx">
-	    <Generator>ResXFileCodeGenerator</Generator>
-	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-	  </EmbeddedResource>
+		<EmbeddedResource Update="Properties\Resources.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
 	</ItemGroup>
 
-	
+
 	<ItemGroup>
-	  <None Update="xyDocGen.runtimeconfig.json">
-	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-	  </None>
+		<None Update="xyDocGen.runtimeconfig.json">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
-	
+
 	<!-- Pack runtimeconfig.json ins NuGet Paket!!! -->
 	<ItemGroup>
 		<None Update="xyDocGen.runtimeconfig.json">
 			<Pack>true</Pack>
 			<PackagePath>\</PackagePath>
-			
+
 		</None>
 	</ItemGroup>
 
 
-		<!-- Make sure typical big folders never get packed, even if something re-enables content. -->
+
 	<ItemGroup>
-		<None Update="bin\**\*">
-			<Pack>false</Pack>
-		</None>
-		<None Update="obj\**\*">
-			<Pack>false</Pack>
-		</None>
-		<None Update="out\**\*">
-			<Pack>false</Pack>
-		</None>
+		<!-- ALLE transitiven Pakete aus deiner Liste: komplett ohne Runtime-/Native-/Content-/Build-Payload -->
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.3" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.3" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.1" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="Microsoft.Extensions.FileProviders.Abstractions" Version="8.0.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="8.0.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="8.0.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.Extensions.Primitives" Version="9.0.3" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="Microsoft.IdentityModel.Abstractions" Version="7.1.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.1.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.IdentityModel.Logging" Version="7.1.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.1.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="Microsoft.NETCore.Platforms" Version="1.1.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Microsoft.NETCore.Targets" Version="1.1.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="Microsoft.Win32.SystemEvents" Version="8.0.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<!-- Klassisches PDFsharp (du hast PdfSharpCore): kappen -->
+		<PackageReference Include="PDFsharp" Version="6.1.1" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<!-- Selenium zieht selenium-manager + WebDriver.dll -->
+		<PackageReference Include="Selenium.Support" Version="4.32.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="Selenium.WebDriver" Version="4.32.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="SharpZipLib" Version="1.4.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="SixLabors.Fonts" Version="1.0.0-beta17" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="System.Collections.Immutable" Version="8.0.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="System.Drawing.Common" Version="8.0.8" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.1.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="System.IO" Version="4.3.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="System.IO.FileSystem" Version="4.3.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="System.IO.Pipelines" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="System.Reflection.Metadata" Version="8.0.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="System.Runtime" Version="4.3.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="System.Runtime.Handles" Version="4.3.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="7.0.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="System.Text.Encoding" Version="4.3.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="System.Text.Encodings.Web" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="System.Text.Json" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="System.Threading.Tasks" Version="4.3.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+		<PackageReference Include="xunit.abstractions" Version="2.0.3" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 	</ItemGroup>
-	
-	
+
+
+
+	<PropertyGroup>
+		<!-- Optional: nur EN-Satelliten -->
+		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+	</PropertyGroup>
+
+	<Target Name="TrimToolPayload" AfterTargets="ResolveFilesToPublish">
+		<ItemGroup>
+			<!-- Hilfsliste mit eigenen (nicht reservierten) Metadaten -->
+			<_rfp Include="@(ResolvedFileToPublish)">
+				<_NORM>$([System.String]::Copy('%(ResolvedFileToPublish.RelativePath)').Replace('\','/').ToLowerInvariant())</_NORM>
+				<_FN>%(ResolvedFileToPublish.Filename)</_FN>
+				<_EXT>$([System.String]::Copy('%(ResolvedFileToPublish.Extension)').ToLowerInvariant())</_EXT>
+			</_rfp>
+
+			<!-- 1) Selenium-Manager (alle OS) -->
+			<ResolvedFileToPublish Remove="@(_rfp)"
+			  Condition="$([System.String]::Copy('%(_rfp._NORM)')).Contains('/selenium-manager/')" />
+
+			<!-- 2) WebDriver Assemblies -->
+			<ResolvedFileToPublish Remove="@(_rfp)"
+			  Condition="'%(_rfp._FN)' == 'WebDriver' OR '%(_rfp._FN)' == 'WebDriver.Support'" />
+
+			<!-- 3) EF Core (nur entfernen, wenn nicht benötigt) -->
+			<ResolvedFileToPublish Remove="@(_rfp)"
+			  Condition="'%(_rfp._FN)' == 'Microsoft.EntityFrameworkCore' OR '%(_rfp._FN)' == 'Microsoft.EntityFrameworkCore.Abstractions'" />
+
+			<!-- 4) Klassisches PdfSharp raus (wenn du nur PdfSharpCore nutzt) -->
+			<ResolvedFileToPublish Remove="@(_rfp)"
+			  Condition="$([System.String]::Copy('%(_rfp._FN)')).StartsWith('PdfSharp')" />
+			<!-- PdfSharpCore bleibt automatisch, da es nicht entfernt wird -->
+
+			<!-- 5) Testbibliotheken -->
+			<ResolvedFileToPublish Remove="@(_rfp)"
+			  Condition="$([System.String]::Copy('%(_rfp._FN)')).StartsWith('xunit') OR '%(_rfp._FN)' == 'FluentAssertions'" />
+
+			<!-- 6) Roslyn-Satellites != en -->
+			<ResolvedFileToPublish Remove="@(_rfp)"
+			  Condition="$([System.String]::Copy('%(_rfp._NORM)')).Contains('/microsoft.codeanalysis') 
+                And !$([System.String]::Copy('%(_rfp._NORM)')).Contains('/en/')" />
+
+			<!-- 7) (Optional) Symbole/Doku raus -->
+			<!--
+    <ResolvedFileToPublish Remove="@(_rfp)"
+      Condition="'%(_rfp._EXT)'=='.pdb' OR ('%(_rfp._EXT)'=='.xml' AND '%(_rfp._FN)'!='README')" />
+    -->
+		</ItemGroup>
+	</Target>
+
+
 </Project>
