@@ -32,9 +32,14 @@
 		<CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
 	</PropertyGroup>
 
+	<Target Name="CopyReadmeIntoProject" BeforeTargets="Pack">
+		<Copy SourceFiles="..\\README.md"
+			  DestinationFiles="$(MSBuildProjectDirectory)\\README.md"
+			  SkipUnchangedFiles="true" />
+	</Target>
 	
 	<ItemGroup>
-		<None Include="..\README.md" Pack="true" PackagePath="" Link="README.md" />
+		<None Include="README.md" Pack="true" PackagePath="\" Link="README.md" />
 	</ItemGroup>
 
 	
