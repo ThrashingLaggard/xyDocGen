@@ -10,6 +10,9 @@ namespace xyDocumentor.Core.Pdf
     /// </summary>
     public class RenderContext
     {
+        public string? CurrentSectionTitle { get; set; }
+
+        public string Description{ get; set; }
         /// <summary>
         /// 
         /// </summary>

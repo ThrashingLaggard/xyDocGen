@@ -9,10 +9,11 @@ namespace xyDocumentor.Interfaces
 {
 
     /// <summary>
-    /// Useless for now, since all the renderers are static and thus cant parttake in this luxurious idea
+    /// Useless for now, since all the renderers are         STATIC             and thus cant parttake in this luxurious idea
     /// </summary>
     internal interface IDocRenderer
     {
+        public string Description { get; set; }
         /// <summary>
         /// Render it! Now!
         /// </summary>

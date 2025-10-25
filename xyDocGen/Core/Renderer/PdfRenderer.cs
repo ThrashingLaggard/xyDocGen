@@ -13,19 +13,43 @@ namespace xyDocumentor.Core.Renderer
     /// </summary>
     public static partial class PdfRenderer
     {
-        // -----------------------------
-        // Public entry point
-        // -----------------------------
+        /// <summary>
+        /// Add usefull information
+        /// </summary>
+        public static string Description { get; set; }
+
+        /// <summary>
+        /// Create a new PdfDocument with basic placeholder information and set compression
+        /// </summary>
+        /// <param name="td_Root_"></param>
+        /// <returns></returns>
+        private static PdfDocument CreatePdfDocumentWithBasicValues(TypeDoc td_Root_)
+        {
+            PdfDocument document = new();
+            document.Info.Title = $"{td_Root_.DisplayName} API Documentation";
+            document.Info.Author = $"xyDocumentor@{Environment.CurrentDirectory}";
+            document.Info.Subject = "C# API Reference";
+            document.Options.NoCompression = false;
+            document.Options.CompressContentStreams = true;
+
+            return document;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="root"></param>
+        /// <param name="outputPath"></param>
         public static void RenderToFile(TypeDoc root, string outputPath)
         {
-            using var document = new PdfDocument();
+            using PdfDocument document = CreatePdfDocumentWithBasicValues(root);
 
             var theme = PdfTheme.CreateDefault();
             var ctx = new RenderContext(document, theme);
 
             // Render content starting on a new page
             ctx.Writer = new PageWriter(ctx, ctx.AddPage());
-            
+
             // Reserve TOC page as the very first page (we fill it after content is rendered)
             var tocPage = ctx.AddPage();
 
@@ -57,6 +81,8 @@ namespace xyDocumentor.Core.Renderer
         {
             // Heading
             ctx.Writer.DrawHeading(level, $"{t.DisplayName}  [{t.Kind}]");
+            if (level <= 2) ctx.CurrentSectionTitle = t.DisplayName;
+
             ctx.Writer.Spacer(6);
 
             // Metadata block
@@ -139,8 +165,11 @@ namespace xyDocumentor.Core.Renderer
 
             foreach (var e in entries)
             {
-                // Simple TOC line: Title ....... Page
-                ctx.Writer.DrawTocLine(e.Title, e.PageNumber);
+                var rect = ctx.Writer.DrawTocLine(e.Title, e.PageNumber);
+                if (e.Page != null)
+                {
+                    PdfLinkingHelpers.AddGoToLink(ctx.Writer.Page, rect.X, rect.Y, rect.Width, rect.Height,e.Page, e.Y);
+                }
             }
         }
 
@@ -153,6 +182,6 @@ namespace xyDocumentor.Core.Renderer
             doc.Outlines.Add(title, page, true);
         }
 
-     
+
     }
 }

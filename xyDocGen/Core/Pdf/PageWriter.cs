@@ -17,8 +17,12 @@ using XStringFormats = PdfSharpCore.Drawing.XStringFormats;
 
 namespace xyDocumentor.Core.Pdf
 {
+    /// <summary>
+    /// Writes content to a pdf page according to the given RenderContext and PdfTheme
+    /// </summary>
     public sealed class PageWriter : IDisposable
     {
+        public string Description { get; set; }
         public PdfPage Page { get; private set; }
         public XGraphics Gfx { get; private set; }
         public double Y { get; private set; }
@@ -173,31 +177,60 @@ namespace xyDocumentor.Core.Pdf
             }
         }
 
-        public void DrawTocLine(string title, int pageNumber)
+        public XRect DrawTocLine(string title, int pageNumber)
         {
             var font = Theme.FontNormal;
-            var dots = " ........................................................................................................";
-            var left = $"{title}";
-            var right = pageNumber.ToString();
+            double lineHeight = Theme.LineHeight(font);
 
-            // Calculate available width and trim if needed
-            var leftWidth = Gfx.MeasureString(left, font).Width;
-            var rightWidth = Gfx.MeasureString(right, font).Width + 6;
-            var avail = _contentWidth - rightWidth;
+            // Left and right text parts: title and page number
+            string left = $"{title}";
+            string right = pageNumber.ToString();
 
+            // Measure widths of both parts
+            double rightWidth = Gfx.MeasureString(right, font).Width + 6; // small padding
+            double avail = _contentWidth - rightWidth; // available width for the title
+            double leftWidth = Gfx.MeasureString(left, font).Width;
+
+            // Ellipsize title if it exceeds available space
             if (leftWidth > avail)
             {
-                // ellipsize
-                while (left.Length > 4 && Gfx.MeasureString(left + "…", font).Width > avail)
+                const string ell = "…";
+                while (left.Length > 4 && Gfx.MeasureString(left + ell, font).Width > avail)
                     left = left[..^1];
-                left += "…";
+                left += ell;
+                leftWidth = Gfx.MeasureString(left, font).Width;
             }
 
-            EnsureSpace(Theme.LineHeight(font));
-            Gfx.DrawString(left, font, XBrushes.Black, new XRect(_left, Y, avail, Theme.LineHeight(font)), XStringFormats.TopLeft);
-            Gfx.DrawString(right, font, XBrushes.Black, new XRect(_left + avail, Y, rightWidth, Theme.LineHeight(font)), XStringFormats.TopLeft);
-            Y += Theme.LineHeight(font);
+            // Compute how many dots fit between the title and the page number
+            double dotWidth = Math.Max(1.0, Gfx.MeasureString(".", font).Width);
+            double remaining = Math.Max(0, avail - leftWidth);
+            int dotCount = (int)Math.Floor(Math.Max(0, remaining - 1) / dotWidth);
+            string dots = dotCount > 0 ? new string('.', dotCount) : string.Empty;
+
+            // Ensure enough vertical space for the line
+            EnsureSpace(lineHeight);
+
+            // Calculate text rectangles
+            var leftRect = new XRect(_left, Y, avail, lineHeight);
+            var rightRect = new XRect(_left + avail, Y, rightWidth, lineHeight);
+
+            // Draw the left part (title + dots) using the text formatter
+            _formatter.DrawString(left + dots, font, XBrushes.Black, leftRect);
+
+            // Draw the right part (page number), right-aligned
+            Gfx.DrawString(right, font, XBrushes.Black, rightRect, XStringFormats.TopRight);
+
+            // Define the overall line area (used for clickable TOC links later)
+            var lineRect = new XRect(_left, Y, _contentWidth, lineHeight);
+
+            // Move Y down for the next line
+            Y += lineHeight + 2;
+
+            // Return the drawn area
+            return lineRect;
         }
+
+
 
         public void DrawHairline(double alpha = 0.35)
         {
@@ -227,20 +260,22 @@ namespace xyDocumentor.Core.Pdf
         private void DrawHeaderFooterArea()
         {
             // Header
-            var header = PageHeaderOverride ?? "xyDocumentor";
+            var header = PageHeaderOverride ?? Ctx.CurrentSectionTitle?? (Ctx.Document.Info?.Title ?? "xyDocumentor");
             var headerHeight = Theme.LineHeight(Theme.FontSmall);
             Gfx.DrawString(header, Theme.FontSmall, XBrushes.Gray, new XRect(_left, Theme.PageHeaderTop, _contentWidth, headerHeight), XStringFormats.TopLeft);
 
             // Footer (page number)
             var pn = Ctx.PageNumber.ToString();
             var footerHeight = Theme.LineHeight(Theme.FontSmall);
-            Gfx.DrawString(pn, Theme.FontSmall, XBrushes.Gray, new XRect(_left, Page.Height - Theme.MarginBottom + 6, _contentWidth, footerHeight), XStringFormats.Center);
+            Gfx.DrawString(header, Theme.FontSmall, XBrushes.Gray,new XRect(_left, Theme.PageHeaderTop, _contentWidth, headerHeight), XStringFormats.TopLeft);
 
             // Move Y below header
             Y = _top;
+
             // Light rule under header
             var pen = new XPen(XColors.LightGray, 0.5);
-            Gfx.DrawLine(pen, _left, Theme.PageHeaderTop + headerHeight + 2, _right, Theme.PageHeaderTop + headerHeight + 2);
+            Gfx.DrawString(pn, Theme.FontSmall, XBrushes.Gray,new XRect(_left, _bottom + 6, _contentWidth, footerHeight), XStringFormats.TopRight);
+
             Y += 6;
         }
 

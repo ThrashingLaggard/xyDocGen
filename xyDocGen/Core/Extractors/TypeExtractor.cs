@@ -17,6 +17,12 @@ namespace xyDocumentor.Core.Extractors
     /// </summary>
     public class TypeExtractor
     {
+
+        /// <summary>
+        /// Get or set usefull information
+        /// </summary>
+        public string Description { get; set; }
+
         private readonly bool _includeNonPublic;
 
 

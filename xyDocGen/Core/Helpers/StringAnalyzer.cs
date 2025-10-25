@@ -12,6 +12,8 @@ using xyDocumentor.Core.Models;
 /// </summary>
 internal static class StringAnalyzer
 {
+    public static string Description { get; set; }
+
     private static readonly string[] AllowedFormats = { "md", "html", "pdf", "json" };
 
     /// <summary>

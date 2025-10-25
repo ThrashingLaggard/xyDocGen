@@ -22,6 +22,8 @@ namespace xyDocumentor.Core.Helpers
     /// </summary>
     internal static class Utils
     {
+        public static string Description { get; set; }
+
         // Fallback string
         private const string NO_XML_SUMMARY_FALLBACK = "(No XML-Summary)";
         private readonly static xyMessageFactory xyMsgFactory = new();

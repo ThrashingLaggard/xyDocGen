@@ -9,6 +9,9 @@ namespace xyDocumentor.Core
     /// </summary>
     public static class HtmlRenderer
     {
+        public static string Description { get; set; }
+
+
         /// <summary>
         /// Generates a full HTML page for a TypeDoc object.
         /// </summary>

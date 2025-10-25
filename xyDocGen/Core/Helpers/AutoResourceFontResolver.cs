@@ -18,6 +18,8 @@ using PdfSharpCore.Fonts;
 /// </summary>
 public sealed class AutoResourceFontResolver : IFontResolver
 {
+    public string Description { get; set; }
+
     private readonly Assembly _asm;
 
     public const string FamilySans = "XY Sans";

@@ -12,12 +12,13 @@ namespace xyDocumentor.Core.Pdf
     /// </summary>
     public class PdfTheme
     {
-
         static PdfTheme()
         {
             if (GlobalFontSettings.FontResolver == null)
                 GlobalFontSettings.FontResolver = new AutoResourceFontResolver();
         }
+
+        public string Description { get; set; }
 
         // Margins
         public double MarginLeft { get; init; } = 54;  // 0.75"

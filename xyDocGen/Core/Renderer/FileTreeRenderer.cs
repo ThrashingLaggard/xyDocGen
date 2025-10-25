@@ -14,6 +14,9 @@ namespace xyDocumentor.Core.Renderer
     /// </summary>
     public static class FileTreeRenderer
     {
+
+        public static string Description { get; set; }
+
         /// <summary>
         /// Recursive method to render the tree structure for better representation of the project
         /// </summary>
