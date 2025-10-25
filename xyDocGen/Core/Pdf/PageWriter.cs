@@ -230,6 +230,116 @@ namespace xyDocumentor.Core.Pdf
             return lineRect;
         }
 
+        /// <summary>
+        /// Word-wrap into lines that fit into 'maxWidth'. Keeps words intact.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="font"></param>
+        /// <param name="maxWidth"></param>
+        /// <returns></returns>
+        private List<string> WrapText(string text, XFont font, double maxWidth)
+        {
+            var lines = new List<string>();
+            if (string.IsNullOrEmpty(text))
+            {
+                lines.Add(string.Empty);
+                return lines;
+            }
+
+            var words = text.Split(' ');
+            var line = new StringBuilder();
+            foreach (var w in words)
+            {
+                var candidate = line.Length == 0 ? w : line.ToString() + " " + w;
+                if (Gfx.MeasureString(candidate, font).Width <= maxWidth)
+                {
+                    if (line.Length == 0) line.Append(w); else line.Append(' ').Append(w);
+                }
+                else
+                {
+                    if (line.Length > 0) lines.Add(line.ToString());
+                    line.Clear();
+                    // If single word longer than maxWidth: hard-cut (rare for wide generics)
+                    if (Gfx.MeasureString(w, font).Width > maxWidth)
+                    {
+                        var cut = new StringBuilder();
+                        foreach (var ch in w)
+                        {
+                            var cand2 = cut.ToString() + ch;
+                            if (Gfx.MeasureString(cand2, font).Width > maxWidth)
+                            {
+                                if (cut.Length > 0) lines.Add(cut.ToString());
+                                cut.Clear();
+                            }
+                            cut.Append(ch);
+                        }
+                        if (cut.Length > 0) line.Append(cut.ToString());
+                    }
+                    else
+                    {
+                        line.Append(w);
+                    }
+                }
+            }
+            if (line.Length > 0) lines.Add(line.ToString());
+            return lines;
+        }
+
+        /// <summary>
+        /// Draws a wrapped TOC entry: leftText (e.g., Title + Signature + Description) 
+        /// with hanging indent, page number on the right, dots only on the first line.
+        /// </summary>
+        /// <param name="leftText"></param>
+        /// <param name="pageNumber"></param>
+        /// <param name="hangingIndent"></param>
+        /// <returns></returns>
+        public XRect DrawTocLineWrapped(string leftText, int pageNumber, double? hangingIndent = null)
+        {
+            var font = Theme.FontNormal;                    // same size as before
+            double lineHeight = Theme.LineHeight(font);
+            double indent = Math.Max(0, hangingIndent ?? 10); // 10pt hanging indent by default
+
+            string right = pageNumber.ToString();
+            double rightWidth = Gfx.MeasureString(right, font).Width + 6;
+            double avail = _contentWidth - rightWidth;
+
+            // Word-wrap the left text into lines that fit avail
+            var lines = WrapText(leftText, font, avail);
+
+            // Compute dots for the FIRST line only
+            double firstLeftWidth = Gfx.MeasureString(lines[0], font).Width;
+            double dotWidth = Math.Max(1.0, Gfx.MeasureString(".", font).Width);
+            double remaining = Math.Max(0, avail - firstLeftWidth);
+            int dotCount = (int)Math.Floor(Math.Max(0, remaining - 1) / dotWidth);
+            string dots = dotCount > 0 ? new string('.', dotCount) : string.Empty;
+
+            // Ensure vertical space for all needed lines
+            double blockHeight = lines.Count * lineHeight + 2;
+            EnsureSpace(blockHeight);
+
+            // Right rect for page number (aligned to the top line)
+            var rightRect = new XRect(_left + avail, Y, rightWidth, lineHeight);
+
+            // Draw first line with dots
+            var firstRect = new XRect(_left, Y, avail, lineHeight);
+            _formatter.DrawString(lines[0] + dots, font, XBrushes.Black, firstRect);
+            Gfx.DrawString(right, font, XBrushes.Black, rightRect, XStringFormats.TopRight);
+
+            double yCursor = Y + lineHeight;
+
+            // Draw subsequent lines with a hanging indent (no dots)
+            for (int i = 1; i < lines.Count; i++)
+            {
+                var lr = new XRect(_left + indent, yCursor, avail - indent, lineHeight);
+                _formatter.DrawString(lines[i], font, XBrushes.Black, lr);
+                yCursor += lineHeight;
+            }
+
+            // Overall area (for link annotation)
+            var lineRect = new XRect(_left, Y, _contentWidth, lines.Count * lineHeight);
+            Y = yCursor + 2; // small padding after the block
+            return lineRect;
+        }
 
 
         public void DrawHairline(double alpha = 0.35)

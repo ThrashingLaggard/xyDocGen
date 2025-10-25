@@ -15,8 +15,15 @@ namespace xyDocumentor.Core.Pdf
         /// <summary>
         /// Add usefull information
         /// </summary>
-        public string Description { get; set; }
+        public string? Infos { get; set; }
+
+
+        public string? Signature { get; set; }     // i.e., generic signature
         
+        public string Description { get; set; } // i.e., summary snippet
+
+
+
         /// <summary>
         /// The number of the page in a pdf document
         /// </summary>

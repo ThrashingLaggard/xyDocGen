@@ -61,8 +61,8 @@ namespace xyDocumentor.Core.Renderer
 
 
             // Root heading + bookmark
-            AddBookmark(document, ctx.Writer.Page, $"{root.DisplayName} ({root.Kind})");
-            tocEntries.Add(new TocEntry { Title = $"{root.DisplayName} ({root.Kind})", PageNumber = ctx.PageNumber });
+            //AddBookmark(document, ctx.Writer.Page, $"{root.DisplayName} ({root.Kind})");
+            //tocEntries.Add(new TocEntry { Title = $"{root.DisplayName} ({root.Kind})", PageNumber = ctx.PageNumber });
 
             RenderTypeRecursive(ctx, root, level: 1, tocEntries);
 
@@ -79,10 +79,28 @@ namespace xyDocumentor.Core.Renderer
         // Core type rendering
         // -----------------------------
         private static void RenderTypeRecursive(RenderContext ctx, TypeDoc t, int level, List<TocEntry> toc)
-        {
+        { 
+            // Remember top Y before drawing the heading (for the link destination)
+            double yTop = ctx.Writer.Y;
+
             // Heading
             ctx.Writer.DrawHeading(level, $"{t.DisplayName}  [{t.Kind}]");
             if (level <= 2) ctx.CurrentSectionTitle = t.DisplayName;
+
+            // Build richer TOC text (all optional, safe fallbacks)
+            string? signature = BuildTypeSignatureForToc(t);      
+            string? descr = BuildSummarySnippet(t.Summary);   
+
+            // Add TOC entry with link target info
+            toc.Add(new TocEntry
+            {
+                Title = $"{t.DisplayName} ({t.Kind})",
+                Signature = signature,
+                Description = descr,
+                PageNumber = ctx.PageNumber,
+                Page = ctx.Writer.Page,
+                Y = yTop
+            });
 
             ctx.Writer.Spacer(6);
 
@@ -132,6 +150,39 @@ namespace xyDocumentor.Core.Renderer
             ctx.Writer.Spacer(6);
         }
 
+        private static string BuildSummarySnippet(string summary)
+        {
+            if (string.IsNullOrWhiteSpace(summary)) return null;
+            var s = summary.Trim();
+
+            // First sentence heuristic: split on '.', '!' or '?'.
+            int cut = s.IndexOfAny(new[] { '.', '!', '?' });
+            string first = cut > 0 ? s[..(cut + 1)] : s;
+
+            // Normalize whitespace
+            first = System.Text.RegularExpressions.Regex.Replace(first, @"\s+", " ");
+
+            // Trim for TOC use
+            const int max = 180;
+            if (first.Length > max) first = first[..(max - 1)] + "…";
+            return first;
+        }
+
+        private static string BuildTypeSignatureForToc(TypeDoc t)
+        {
+            // Prefer a real signature if you have it; otherwise use the display name.
+            // If you have generics, you can include them here.
+            // Keep it compact for TOC.
+            var sig = t.Signature ?? ""; // if such a field exists
+            if (string.IsNullOrWhiteSpace(sig)) sig = t.DisplayName;
+
+            // Hard-trim very long signatures (optional, keeps TOC tidy)
+            const int max = 140;
+            if (!string.IsNullOrWhiteSpace(sig) && sig!.Length > max)
+                sig = sig.Substring(0, max - 1) + "…";
+            return sig;
+        }
+
         private static void RenderMembers(RenderContext ctx, string title, List<MemberDoc> members)
         {
             if (members == null || members.Count == 0) return;
@@ -159,17 +210,29 @@ namespace xyDocumentor.Core.Renderer
         // -----------------------------
         // TOC Rendering
         // -----------------------------
-        private static void RenderToc(RenderContext ctx, string title, List<TocEntry> entries)
+        private static void RenderToc(RenderContext ctx, string title, List<TocEntry> listedEntries_)
         {
             ctx.Writer.DrawHeading(1, title);
             ctx.Writer.Spacer(8);
 
-            foreach (var e in entries)
+            foreach (TocEntry te_ContentTableEntry in listedEntries_)
             {
-                var rect = ctx.Writer.DrawTocLine(e.Title, e.PageNumber);
-                if (e.Page != null)
+                // Compose left column: Title — Signature — Description (only if present)
+                string leftText = te_ContentTableEntry.Title;
+                
+                if (!string.IsNullOrWhiteSpace(te_ContentTableEntry.Signature))
+                    leftText += " — " + te_ContentTableEntry.Signature;
+                
+                if (!string.IsNullOrWhiteSpace(te_ContentTableEntry.Description))
+                    leftText += " — " + te_ContentTableEntry.Description;
+
+                // Now with a wrap-friendly TOC line....yay
+                //var rect = ctx.Writer.DrawTocLine(e.Title, e.PageNumber);
+                var rect = ctx.Writer.DrawTocLineWrapped(leftText, te_ContentTableEntry.PageNumber);
+                
+                if (te_ContentTableEntry.Page != null)
                 {
-                    PdfLinkingHelpers.AddGoToLink(ctx.Writer.Page, rect.X, rect.Y, rect.Width, rect.Height,e.Page, e.Y);
+                    PdfLinkingHelpers.AddGoToLink(ctx.Writer.Page, rect.X, rect.Y, rect.Width, rect.Height,te_ContentTableEntry.Page, te_ContentTableEntry.Y);
                 }
             }
         }

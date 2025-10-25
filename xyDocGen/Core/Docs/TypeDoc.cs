@@ -46,5 +46,7 @@ namespace xyDocumentor.Core.Docs
 
         ///<summary> Display name including parent if nested </summary>
         public string DisplayName => string.IsNullOrWhiteSpace(Parent) ? Name : $"{Parent}.{Name}";
+
+        public string Signature { get; internal set; }
     }
 }
