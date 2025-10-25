@@ -31,6 +31,10 @@ public sealed class AutoResourceFontResolver : IFontResolver
     private readonly string? _resSansBold;
     private readonly string? _resMonoReg;
 
+    public string? SansRegularResourceName => _resSansReg;
+    public string? SansBoldResourceName => _resSansBold;
+    public string? MonoRegularResourceName => _resMonoReg;
+
     private byte[]? _bufSansReg, _bufSansBold, _bufMonoReg;
 
     public string DefaultFontName => FamilySans;
@@ -56,7 +60,7 @@ public sealed class AutoResourceFontResolver : IFontResolver
         // Heuristics for picking sans/mono/bold faces
         var sansRegex = new Regex("(inter|roboto|open.?sans|noto.?sans(?!.*mono)|dejavu.?sans(?!.*mono)|source.?sans|montserrat|lato|arial|helvetica|liberation.?sans)",
                                   RegexOptions.IgnoreCase);
-        var monoRegex = new Regex("(cascadia|fira.?mono|dejavu.?sans.?mono|noto.?sans.?mono|inconsolata|source.?code|courier|consolas|menlo|mono|code)",
+        var monoRegex = new Regex("(comic.?mono|comic.?sans|comic|monospace|cascadia|fira.?mono|dejavu.?sans.?mono|noto.?sans.?mono|inconsolata|source.?code|courier|consolas|menlo|mono|code)",
                                   RegexOptions.IgnoreCase);
         var boldRegex = new Regex("(bold|semi.?bold|demi|black)", RegexOptions.IgnoreCase);
 
@@ -75,7 +79,13 @@ public sealed class AutoResourceFontResolver : IFontResolver
         }
 
         // Pick a mono regular
-        _resMonoReg = fontRes.FirstOrDefault(n => monoRegex.IsMatch(n));
+        // _resMonoReg = fontRes.FirstOrDefault(n => monoRegex.IsMatch(n));
+
+        // Pick a mono regular (Comic bevorzugen)
+        _resMonoReg = fontRes.Where(n => monoRegex.IsMatch(n)).OrderByDescending(n => Regex.IsMatch(n, "comic", RegexOptions.IgnoreCase) ? 
+            2 : Regex.IsMatch(n, "monospace", RegexOptions.IgnoreCase) ? 1 : 0).FirstOrDefault();
+
+
 
         // Optional diagnostics: set XYDOCGEN_LOG_FONTS=1 to log selected resources
         if (Environment.GetEnvironmentVariable("XYDOCGEN_LOG_FONTS") == "1")
@@ -95,8 +105,10 @@ public sealed class AutoResourceFontResolver : IFontResolver
     {
         var fam = (familyName ?? "").Trim().ToLowerInvariant();
 
-        // Mono family?
-        if (fam.Contains("mono") || fam.Contains("cascadia") || fam.Contains("consolas") || fam.Contains("courier") || fam.Contains("code"))
+        // Mono family? (+Comic & Monospace)
+        if (fam.Contains("comic") || fam.Contains("monospace") ||
+            fam.Contains("mono") || fam.Contains("cascadia") ||
+            fam.Contains("consolas") || fam.Contains("courier") || fam.Contains("code")) 
             return new FontResolverInfo(FaceMonoRegular);
 
         // Sans family
@@ -114,6 +126,7 @@ public sealed class AutoResourceFontResolver : IFontResolver
             FaceSansRegular => _bufSansReg ??= LoadBytes(_asm, _resSansReg!),
             FaceSansBold => _bufSansBold ??= LoadBytes(_asm, _resSansBold ?? _resSansReg!),
             FaceMonoRegular => _bufMonoReg ??= LoadBytes(_asm, _resMonoReg ?? _resSansReg!),
+            // Comic Sans MS is missing here
             _ => throw new ArgumentException($"Unknown face name: {faceName}", nameof(faceName))
         };
     }
