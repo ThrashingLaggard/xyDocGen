@@ -26,7 +26,6 @@
 		<OutputType>Exe</OutputType>
 
 		<SelfContained>false</SelfContained>
-		<RuntimeIdentifier></RuntimeIdentifier>
 		<NoDefaultExcludes>false</NoDefaultExcludes>
 		<CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
 	</PropertyGroup>
@@ -37,27 +36,26 @@
 
 
 	<ItemGroup>
+		<!-- Direct dependencies actually used by the tool -->
 		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.11.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
 		<PackageReference Include="PdfSharpCore" Version="1.3.67" />
+		<PackageReference Include="xyToolz" Version="1.0.68" />
+
+		<!-- Test libraries: compile-only (no runtime payload in the tool) -->
 		<PackageReference Include="FluentAssertions" Version="8.6.0" PrivateAssets="all" ExcludeAssets="runtime" />
 		<PackageReference Include="xunit.assert" Version="2.9.3" PrivateAssets="all" ExcludeAssets="runtime" />
 		<PackageReference Include="xunit.extensibility.core" Version="2.9.3" PrivateAssets="all" ExcludeAssets="runtime" />
 		<PackageReference Include="xunit.extensibility.execution" Version="2.9.3" PrivateAssets="all" ExcludeAssets="runtime" />
-		<PackageReference Include="xyToolz" Version="1.0.68" />
 	</ItemGroup>
 
-
+	<!-- Test libraries: compile-only (no runtime payload in the tool) -->
 	<ItemGroup>
 		<Compile Update="Properties\Resources.Designer.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Resources.resx</DependentUpon>
 		</Compile>
-	</ItemGroup>
-
-
-	<ItemGroup>
 		<EmbeddedResource Update="Properties\Resources.resx">
 			<Generator>ResXFileCodeGenerator</Generator>
 			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -65,26 +63,19 @@
 	</ItemGroup>
 
 
+	<!-- Ensure runtimeconfig.json is packed into the .nupkg root -->
 	<ItemGroup>
 		<None Update="xyDocGen.runtimeconfig.json">
+			<Pack>true</Pack>
+			<PackagePath>\</PackagePath>
 			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 
 
-	<!-- Pack runtimeconfig.json ins NuGet Paket!!! -->
+	<!-- All listed transitive packages: block runtime/native/content/build/analyzers payload -->
 	<ItemGroup>
-		<None Update="xyDocGen.runtimeconfig.json">
-			<Pack>true</Pack>
-			<PackagePath>\</PackagePath>
 
-		</None>
-	</ItemGroup>
-
-
-
-	<ItemGroup>
-		<!-- ALLE transitiven Pakete aus deiner Liste: komplett ohne Runtime-/Native-/Content-/Build-Payload -->
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
@@ -123,10 +114,10 @@
 
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 
-		<!-- Klassisches PDFsharp (du hast PdfSharpCore): kappen -->
+
 		<PackageReference Include="PDFsharp" Version="6.1.1" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 
-		<!-- Selenium zieht selenium-manager + WebDriver.dll -->
+
 		<PackageReference Include="Selenium.Support" Version="4.32.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 		<PackageReference Include="Selenium.WebDriver" Version="4.32.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 
@@ -161,22 +152,22 @@
 	</ItemGroup>
 
 
-
+	<!-- Limit satellite resources to English only -->
 	<PropertyGroup>
-		<!-- Optional: nur EN-Satelliten -->
 		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 	</PropertyGroup>
 
+	<!-- Hard filter files that would otherwise get packed into the tool -->
 	<Target Name="TrimToolPayload" AfterTargets="ResolveFilesToPublish">
 		<ItemGroup>
-			<!-- Hilfsliste mit eigenen (nicht reservierten) Metadaten -->
+			<!-- Helper list with custom (non-reserved) metadata -->
 			<_rfp Include="@(ResolvedFileToPublish)">
 				<_NORM>$([System.String]::Copy('%(ResolvedFileToPublish.RelativePath)').Replace('\','/').ToLowerInvariant())</_NORM>
 				<_FN>%(ResolvedFileToPublish.Filename)</_FN>
 				<_EXT>$([System.String]::Copy('%(ResolvedFileToPublish.Extension)').ToLowerInvariant())</_EXT>
 			</_rfp>
 
-			<!-- 1) Selenium-Manager (alle OS) -->
+			<!-- 1) Selenium-Manager (all OS) -->
 			<ResolvedFileToPublish Remove="@(_rfp)"
 			  Condition="$([System.String]::Copy('%(_rfp._NORM)')).Contains('/selenium-manager/')" />
 
@@ -184,16 +175,15 @@
 			<ResolvedFileToPublish Remove="@(_rfp)"
 			  Condition="'%(_rfp._FN)' == 'WebDriver' OR '%(_rfp._FN)' == 'WebDriver.Support'" />
 
-			<!-- 3) EF Core (nur entfernen, wenn nicht benötigt) -->
+			<!-- 3) EF Core -->
 			<ResolvedFileToPublish Remove="@(_rfp)"
 			  Condition="'%(_rfp._FN)' == 'Microsoft.EntityFrameworkCore' OR '%(_rfp._FN)' == 'Microsoft.EntityFrameworkCore.Abstractions'" />
 
-			<!-- 4) Klassisches PdfSharp raus (wenn du nur PdfSharpCore nutzt) -->
+			<!-- 4) classic PdfSharp -->
 			<ResolvedFileToPublish Remove="@(_rfp)"
 			  Condition="$([System.String]::Copy('%(_rfp._FN)')).StartsWith('PdfSharp')" />
-			<!-- PdfSharpCore bleibt automatisch, da es nicht entfernt wird -->
 
-			<!-- 5) Testbibliotheken -->
+			<!-- 5) Test libs-->
 			<ResolvedFileToPublish Remove="@(_rfp)"
 			  Condition="$([System.String]::Copy('%(_rfp._FN)')).StartsWith('xunit') OR '%(_rfp._FN)' == 'FluentAssertions'" />
 
@@ -202,7 +192,7 @@
 			  Condition="$([System.String]::Copy('%(_rfp._NORM)')).Contains('/microsoft.codeanalysis') 
                 And !$([System.String]::Copy('%(_rfp._NORM)')).Contains('/en/')" />
 
-			<!-- 7) (Optional) Symbole/Doku raus -->
+			<!-- 7) Optional: strip symbols and docs from the tool package-->
 			<!--
     <ResolvedFileToPublish Remove="@(_rfp)"
       Condition="'%(_rfp._EXT)'=='.pdb' OR ('%(_rfp._EXT)'=='.xml' AND '%(_rfp._FN)'!='README')" />
