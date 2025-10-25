@@ -1,4 +1,4 @@
-﻿namespace xyDocumentor.Core.Renderer.Pdf
+﻿namespace xyDocumentor.Core.Pdf
 {
     /// <summary>
     /// Utility for generating the canonical anchor key your pipeline uses consistently.

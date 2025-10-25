@@ -1,4 +1,4 @@
-﻿namespace xyDocumentor.Core.Renderer.Pdf
+﻿namespace xyDocumentor.Core.Pdf
 {
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using PdfSharpCore.Pdf;
     /// <summary>
     /// Stores navigation anchors (type headings) and their exact PDF landing positions.
     /// </summary>
-    internal sealed class AnchorRegistry
+    public sealed class AnchorRegistry
     {
         private readonly Dictionary<string, AnchorTarget> _map =
             new(StringComparer.OrdinalIgnoreCase);

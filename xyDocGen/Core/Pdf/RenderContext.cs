@@ -1,37 +1,73 @@
-﻿using PdfSharpCore.Pdf;
+﻿using Microsoft.Extensions.Logging;
+using PdfSharpCore.Pdf;
 using xyDocumentor.Core.Pdf;
 
 namespace xyDocumentor.Core.Pdf
 {
+    /// <summary>
+    /// Conveniently stores information for better oversight
+    /// </summary>
+    public class RenderContext
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public PdfDocument Document { get; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public PdfTheme Theme { get; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public PageWriter Writer { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public AnchorRegistry Anchors { get; } = new AnchorRegistry();
 
-        // ============================================================
-        // Infrastructure: layout, theme, helpers
-        // ============================================================
-
-        public class RenderContext
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pdf_Document_"></param>
+        /// <param name="pdf_Theme_"></param>
+        /// <param name="pwr_Writer_"></param>
+        public RenderContext(PdfDocument pdf_Document_, PdfTheme pdf_Theme_, PageWriter? pwr_Writer_ = null)
         {
-            public PdfDocument Document { get; }
-            public PdfTheme Theme { get; }
-            public PageWriter Writer { get; set; }
-
-           // public AnchorRegistry Anchors { get; } = new AnchorRegistry();
+            Document = pdf_Document_;
+            Theme = pdf_Theme_;
+            Writer = pwr_Writer_ ?? default;
 
 
-        public RenderContext(PdfDocument doc, PdfTheme theme)
-            {
-                Document = doc;
-                Theme = theme;
-            }
 
-            public PdfPage AddPage()
-            {
-                var page = Document.AddPage();
-                page.Size = PdfSharpCore.PageSize.A4;
-                return page;
-            }
-
-            public int PageNumber => Document.Pages.Count; // 1-based user expectation
         }
+
+        /// <summary>
+        /// Adds either the target page or a clean and fresh one to the Document property
+        /// </summary>
+        /// <param name="pdf_Page_"></param>
+        /// <returns>The newly added PdfPage, basically either the param or a blank, lol</returns>
+        public PdfPage AddPage(PdfPage? pdf_Page_ = null)
+        {
+            PdfPage page = new();
+            if (pdf_Page_ is not null)
+            {
+                page = pdf_Page_;
+                Document.AddPage(page);
+            }
+            else
+            {
+                Document.AddPage();
+                page.Size = PdfSharpCore.PageSize.A4;
+            }
+            return page;
+        }
+
+        /// <summary>
+        /// Gets the current page number from a one based indexxx
+        /// </summary>
+        public int PageNumber => Document.Pages.Count; // 1-based user expectation
+    }
 
 
 
