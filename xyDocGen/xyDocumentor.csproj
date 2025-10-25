@@ -21,12 +21,13 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<NeutralLanguage>en</NeutralLanguage>
 		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-		<PackageLicenseExpression> LGPL-3.0-or-later</PackageLicenseExpression>
+		<PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
 
 		<OutputType>Exe</OutputType>
 		
 		<SelfContained>false</SelfContained>
 		<RuntimeIdentifier></RuntimeIdentifier>
+		<IncludeContentInPack>false</IncludeContentInPack>
 		<NoDefaultExcludes>false</NoDefaultExcludes>
 		<CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
 	</PropertyGroup>
@@ -84,5 +85,20 @@
 			
 		</None>
 	</ItemGroup>
+
+
+		<!-- Make sure typical big folders never get packed, even if something re-enables content. -->
+	<ItemGroup>
+		<None Update="bin\**\*">
+			<Pack>false</Pack>
+		</None>
+		<None Update="obj\**\*">
+			<Pack>false</Pack>
+		</None>
+		<None Update="out\**\*">
+			<Pack>false</Pack>
+		</None>
+	</ItemGroup>
+	
 	
 </Project>
