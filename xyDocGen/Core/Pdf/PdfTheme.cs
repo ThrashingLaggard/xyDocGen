@@ -23,8 +23,8 @@ namespace xyDocumentor.Core.Pdf
         // Margins
         public double MarginLeft { get; init; } = 54;  // 0.75"
         public double MarginRight { get; init; } = 54;
-        public double MarginTop { get; init; } = 72;  // 1.0"
-        public double MarginBottom { get; init; } = 72;
+        public double MarginTop { get; init; } = 36;  
+        public double MarginBottom { get; init; } = 36;
         public double PageHeaderTop { get; init; } = 36;
 
         // Spacing

@@ -207,35 +207,64 @@ namespace xyDocumentor.Core.Renderer
             ctx.Writer.DrawTable(cols, rows);
         }
 
+
+
+        static string ExtractKindFromTitle(string t)
+        {
+            if (string.IsNullOrEmpty(t)) return string.Empty;
+            int close = t.LastIndexOf(')');
+            if (close <= 0) return string.Empty;
+            int open = t.LastIndexOf('(', close - 1);
+            if (open < 0 || open + 1 >= close) return string.Empty;
+            return t.Substring(open + 1, close - open - 1).Trim();
+        }
         // -----------------------------
         // TOC Rendering
         // -----------------------------
-        private static void RenderToc(RenderContext ctx, string title, List<TocEntry> listedEntries_)
+        // -----------------------------
+        private static void RenderToc(RenderContext ctx, string title, List<TocEntry> entries)
         {
             ctx.Writer.DrawHeading(1, title);
             ctx.Writer.Spacer(8);
 
-            foreach (TocEntry te_ContentTableEntry in listedEntries_)
-            {
-                // Compose left column: Title — Signature — Description (only if present)
-                string leftText = te_ContentTableEntry.Title;
-                
-                if (!string.IsNullOrWhiteSpace(te_ContentTableEntry.Signature))
-                    leftText += " — " + te_ContentTableEntry.Signature;
-                
-                if (!string.IsNullOrWhiteSpace(te_ContentTableEntry.Description))
-                    leftText += " — " + te_ContentTableEntry.Description;
+            // Fixed narrow width for the left "(Kind)" slice.
+            // Adjust a bit if your font feels cramped (e.g. 24–28).
+            const double KIND_WIDTH_PT = 16.0;
+            const double KIND_GAP_PT = 2.0;
 
-                // Now with a wrap-friendly TOC line....yay
-                //var rect = ctx.Writer.DrawTocLine(e.Title, e.PageNumber);
-                var rect = ctx.Writer.DrawTocLineWrapped(leftText, te_ContentTableEntry.PageNumber);
-                
-                if (te_ContentTableEntry.Page != null)
+            foreach (var e in entries)
+            {
+                // Original title as produced elsewhere (e.g., "Foo (class)")
+                string fullTitle = e.Title ?? string.Empty;
+
+                // Extract trailing "(Kind)" text; returns "" if not present
+                string kind = ExtractKindFromTitle(fullTitle);
+
+                // Remove the " (Kind)" suffix from the left text to avoid duplication
+                string leftText = fullTitle;
+                if (!string.IsNullOrEmpty(kind))
                 {
-                    PdfLinkingHelpers.AddGoToLink(ctx.Writer.Page, rect.X, rect.Y, rect.Width, rect.Height,te_ContentTableEntry.Page, te_ContentTableEntry.Y);
+                    string suffix = " (" + kind + ")";
+                    if (leftText.EndsWith(suffix, StringComparison.Ordinal))
+                        leftText = leftText.Substring(0, leftText.Length - suffix.Length);
+                }
+
+                // Draw one TOC line with a fixed, narrow kind column
+                var rect = ctx.Writer.DrawTocLineWrapped(kind, leftText, e.PageNumber, KIND_WIDTH_PT, KIND_GAP_PT);
+
+                // Make it clickable if we have a target
+                if (e.Page != null)
+                {
+                    PdfLinkingHelpers.AddGoToLink(
+                        ctx.Writer.Page, rect.X, rect.Y, rect.Width, rect.Height,
+                        e.Page, e.Y
+                    );
                 }
             }
         }
+
+
+
 
         // -----------------------------
         // PDF Outline / Bookmarks
