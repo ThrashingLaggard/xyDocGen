@@ -12,8 +12,23 @@ namespace xyDocumentor.Core.Models
     internal sealed class CliOptions
     {
         public string RootPath { get; init; } = "";
-        public string OutPath { get; init; } = "";
-        public string Format { get; init; } = "md"; // "md" | "html" | "pdf" | "json"
+        public string OutPath { get; set; } // Basis (z. B. <repo>/docs oder --out)
+        public List<string> Formats { get; set; } = new();
+        public List<string> Subfolders { get; set; } = new(); // "md" | "html" | "pdf" | "json"
+
+        public Dictionary<string, string> OutputDirs { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+        // Rückwärtskompatibel für alten Code:
+        public string Format
+        {
+            get => Formats.FirstOrDefault() ?? "md";
+            set
+            {
+                Formats.Clear();
+                if (!string.IsNullOrWhiteSpace(value)) Formats.Add(value);
+            }
+        }
+
         public bool IncludeNonPublic { get; init; } = true;
         public HashSet<string> ExcludedParts { get; init; } = DefaultExcludes();
 

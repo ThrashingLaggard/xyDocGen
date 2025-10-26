@@ -14,7 +14,7 @@ internal static class StringAnalyzer
 {
     public static string Description { get; set; }
 
-    private static readonly string[] AllowedFormats = { "md", "html", "pdf", "json" };
+    private static readonly HashSet<string> AllowedFormats = new(StringComparer.OrdinalIgnoreCase) { "md", "html", "pdf", "json" };
 
     /// <summary>
     /// Parse args into CliOptions. Returns false with an error if invalid.
@@ -22,17 +22,16 @@ internal static class StringAnalyzer
     public static bool TryParseOptions(string[] args, out CliOptions opts, out string error)
     {
         error = "";
-        // Normalize tokens to preserve original values but enable case-insensitive flag matching.
         var tokens = args?.ToList() ?? new List<string>();
         var dictEq = BuildEqMap(tokens); // for --key=value
         var i = 0;
 
         // Local accumulators with sensible defaults
         string rootPath = null;
-        string outPath = null;
+        string outPath = null;  // Benutzer kann --out setzen; wir wandeln später in outBase um
         string folder = "docs";
-        string subfolder = "api";
-        string format = "pdf";
+        List<string> listedFormats = new() { "pdf" };
+        List<string> listedSubfolders = new() { "api" };
         bool includeNonPublic = true; // default: include non-public (unless --private)
         var excludes = CliOptions.DefaultExcludes();
 
@@ -45,10 +44,10 @@ internal static class StringAnalyzer
         while (i < tokens.Count)
         {
             string t = tokens[i];
-
             if (!IsFlag(t)) { i++; continue; }
 
             var key = t.Trim();
+
             // `--key=value` → prefer equals map
             if (TryGetEq(dictEq, key, out string eqValue))
             {
@@ -57,23 +56,39 @@ internal static class StringAnalyzer
                     case "--root": rootPath = eqValue; break;
                     case "--out": outPath = eqValue; break;
                     case "--folder": folder = eqValue; break;
-                    case "--subfolder": subfolder = eqValue; break;
+
+                    case "--subfolder":
+                        listedSubfolders = NormalizeList(eqValue);
+                        if (listedSubfolders.Count == 0)
+                            listedSubfolders = new() { "api" };
+                        break;
+
                     case "--format":
-                        format = NormalizeFormat(eqValue);
-                        if (!AllowedFormats.Contains(format))
+                        listedFormats = NormalizeFormats(eqValue);
+                        if (listedFormats.Count == 0)
+                            listedFormats = new() { "md" };
+                        foreach (var f in listedFormats)
                         {
-                            error = $"Unsupported --format '{eqValue}'. Allowed: {string.Join(", ", AllowedFormats)}";
-                            opts = null; return false;
+                            if (!AllowedFormats.Contains(f, StringComparer.OrdinalIgnoreCase))
+                            {
+                                error = $"Unsupported --format '{f}'. Allowed: {string.Join(", ", AllowedFormats)}";
+                                opts = null; return false;
+                            }
                         }
                         break;
+
                     case "--exclude":
                         foreach (var part in SplitList(eqValue))
                             excludes.Add(part);
                         break;
+
                     default:
                         // flags with boolean assignment
                         var boolVal = ParseBool(eqValue);
-                        ApplyBooleanFlag(KeyName(key), boolVal, ref showOnly, ref buildIndex, ref buildTree, ref help, ref info, ref includeNonPublic);
+                        ApplyBooleanFlag(
+                            KeyName(key), boolVal,
+                            ref showOnly, ref buildIndex, ref buildTree, ref help, ref info, ref includeNonPublic
+                        );
                         break;
                 }
                 i++; continue;
@@ -83,28 +98,43 @@ internal static class StringAnalyzer
             switch (KeyName(key))
             {
                 case "--root":
-                    if (!TryReadNext(tokens, ref i, out rootPath)) { error = "Missing value after --root."; opts = null; return false; }
+                    if (!TryReadNext(tokens, ref i, out rootPath))
+                    { error = "Missing value after --root."; opts = null; return false; }
                     continue;
+
                 case "--out":
-                    if (!TryReadNext(tokens, ref i, out outPath)) { error = "Missing value after --out."; opts = null; return false; }
+                    if (!TryReadNext(tokens, ref i, out outPath))
+                    { error = "Missing value after --out."; opts = null; return false; }
                     continue;
+
                 case "--folder":
-                    if (!TryReadNext(tokens, ref i, out folder)) { error = "Missing value after --folder."; opts = null; return false; }
+                    if (!TryReadNext(tokens, ref i, out folder))
+                    { error = "Missing value after --folder."; opts = null; return false; }
                     continue;
+
                 case "--subfolder":
-                    if (!TryReadNext(tokens, ref i, out subfolder)) { error = "Missing value after --subfolder."; opts = null; return false; }
+                    if (!TryReadNext(tokens, ref i, out string rawSubs))
+                    { error = "Missing value after --subfolder."; opts = null; return false; }
+                    listedSubfolders = NormalizeList(rawSubs);
                     continue;
+
                 case "--format":
-                    if (!TryReadNext(tokens, ref i, out var fmt)) { error = "Missing value after --format."; opts = null; return false; }
-                    format = NormalizeFormat(fmt);
-                    if (!AllowedFormats.Contains(format))
+                    if (!TryReadNext(tokens, ref i, out var fmt))
+                    { error = "Missing value after --format."; opts = null; return false; }
+                    listedFormats = NormalizeFormats(fmt);
+                    foreach (var f in listedFormats)
                     {
-                        error = $"Unsupported --format '{fmt}'. Allowed: {string.Join(", ", AllowedFormats)}";
-                        opts = null; return false;
+                        if (!AllowedFormats.Contains(f, StringComparer.OrdinalIgnoreCase))
+                        {
+                            error = $"Unsupported --format '{f}'. Allowed: {string.Join(", ", AllowedFormats)}";
+                            opts = null; return false;
+                        }
                     }
                     continue;
+
                 case "--exclude":
-                    if (!TryReadNext(tokens, ref i, out var exStr)) { error = "Missing value after --exclude."; opts = null; return false; }
+                    if (!TryReadNext(tokens, ref i, out var exStr))
+                    { error = "Missing value after --exclude."; opts = null; return false; }
                     foreach (var part in SplitList(exStr))
                         excludes.Add(part);
                     continue;
@@ -118,36 +148,62 @@ internal static class StringAnalyzer
                 case "--private": includeNonPublic = false; i++; continue;
 
                 default:
-                    // Unknown flag — ignore silently or fail. We choose to warn through error.
-                    // Comment next 2 lines if you prefer “ignore unknown”.
                     error = $"Unknown option '{key}'. Use --help.";
                     opts = null; return false;
             }
         }
 
-        // Resolve paths & defaults
+        // -------- Pfade & Defaults auflösen --------
         if (string.IsNullOrWhiteSpace(rootPath))
             rootPath = GetDefaultRoot();
 
-        if (string.IsNullOrWhiteSpace(outPath))
-            outPath = Path.Combine(rootPath, folder, subfolder);
+        // outBase = Basis-Ausgabeverzeichnis (z. B. <root>/docs oder explizites --out)
+        var outBase = string.IsNullOrWhiteSpace(outPath)
+            ? Path.Combine(rootPath, folder)
+            : outPath;
 
-        // Final normalization
-        outPath = NormalizePath(outPath);
+        // Final normalization der Basis & Root
+        outBase = NormalizePath(outBase);
         rootPath = NormalizePath(rootPath);
 
-        // Validate basic existence for root (if you want strict)
+        // Root prüfen
         if (!Directory.Exists(rootPath))
         {
             error = $"Root path does not exist: '{rootPath}'.";
             opts = null; return false;
         }
 
+        // -------- (E) 1:1-Abbildung & Mapping Format → Zielpfad --------
+        // 1 Subfolder für alle Formate erlauben; sonst 1:1 verlangen
+        if (listedSubfolders.Count == 1 && listedFormats.Count > 1)
+        {
+            listedSubfolders = Enumerable.Repeat(listedSubfolders[0], listedFormats.Count).ToList();
+        }
+        else if (listedSubfolders.Count != listedFormats.Count)
+        {
+            error = $"Number of --subfolder entries ({listedSubfolders.Count}) must be 1 or equal to number of formats ({listedFormats.Count}).";
+            opts = null; return false;
+        }
+
+        var outputDirs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        for (int idx = 0; idx < listedFormats.Count; idx++)
+        {
+            var f = listedFormats[idx].ToLowerInvariant();
+            var sub = listedSubfolders[idx];
+            var full = NormalizePath(Path.Combine(outBase, sub));
+            outputDirs[f] = full;
+        }
+
+        // -------- Optionen befüllen --------
         opts = new CliOptions
         {
             RootPath = rootPath,
-            OutPath = outPath,
-            Format = format,
+            OutPath = outBase,             // Basis (z. B. <repo>/docs oder --out)
+            Formats = listedFormats,
+            Subfolders = listedSubfolders,  // Liste der Subfolder (in gleicher Reihenfolge wie Formats)
+            OutputDirs = outputDirs,        // Format → absoluter Zielpfad
+            Format = listedFormats.FirstOrDefault(), // Backcompat
+
             IncludeNonPublic = includeNonPublic,
             ExcludedParts = excludes,
             ShowOnly = showOnly,
@@ -158,6 +214,7 @@ internal static class StringAnalyzer
         };
         return true;
     }
+
 
     // ------------------------
     // Help / Info text
@@ -171,18 +228,18 @@ internal static class StringAnalyzer
         sb.AppendLine("  xydocgen --root <path> --out <folder> --format <md|html|pdf|json> [options]");
         sb.AppendLine();
         sb.AppendLine("Options:");
-        sb.AppendLine("  --help                       Show this help and exit");
-        sb.AppendLine("  --info                       Show current status info and exit");
-        sb.AppendLine("  --root <path>                Source root (default: current project dir)");
-        sb.AppendLine("  --out <path>                 Output directory (overrides --folder/--subfolder)");
-        sb.AppendLine("  --folder <name>              Default: 'docs'");
-        sb.AppendLine("  --subfolder <name>           Default: 'api'");
+        sb.AppendLine("  --help                                      Show this help and exit");
+        sb.AppendLine("  --info                                      Show current status info and exit");
+        sb.AppendLine("  --root <path>                           Source root (default: current project dir)");
+        sb.AppendLine("  --out <path>                             Output directory (overrides --folder/--subfolder)");
+        sb.AppendLine("  --folder <name>                       Default: 'docs'");
+        sb.AppendLine("  --subfolder <name>                  Default: 'api'");
         sb.AppendLine("  --format <md|html|pdf|json>  Default: 'md'");
-        sb.AppendLine("  --exclude <a;b;c>            Extra directories to exclude; delimiter ';' or ','");
-        sb.AppendLine("  --private                    Exclude non-public members (i.e., IncludeNonPublic=false)");
-        sb.AppendLine("  --index                      Build namespace index (INDEX.md)");
-        sb.AppendLine("  --tree                       Build project structure (PROJECT-STRUCTURE.md)");
-        sb.AppendLine("  --show                       Print Markdown to console only (no files written)");
+        sb.AppendLine("  --exclude <a;b;c>                      Extra directories to exclude; delimiter ';' or ','");
+        sb.AppendLine("  --private                                  Exclude non-public members (i.e., IncludeNonPublic=false)");
+        sb.AppendLine("  --index                                    Build namespace index (INDEX.md)");
+        sb.AppendLine("  --tree                                      Build project structure (PROJECT-STRUCTURE.md)");
+        sb.AppendLine("  --show                                     Print Markdown to console only (no files written)");
         return sb.ToString();
     }
 
@@ -243,7 +300,18 @@ internal static class StringAnalyzer
         return false;
     }
 
-    private static string NormalizeFormat(string f) => (f ?? "md").Trim().ToLowerInvariant();
+    private static List<string> NormalizeFormats(string s)
+    => NormalizeList(s)
+        .Select(x => x.ToLowerInvariant())
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    private static List<string> NormalizeList(string s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return new List<string>();
+        return s.Split(new[] { ';', ',' }, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .ToList();
+    }
 
     private static IEnumerable<string> SplitList(string s)
     {
@@ -294,19 +362,34 @@ internal static class StringAnalyzer
 
     // Backwards-compatible API (only used by older code paths). Prefer TryParseOptions above.
     internal static (string root, string outPath, string format, bool includeNonPublic, HashSet<string> excludedParts)
-        AnalyzeArgs(List<string> externalArguments_, string[] args_)
+      AnalyzeArgs(List<string> externalArguments_, string[] args_)
     {
         if (!TryParseOptions(args_, out var o, out string parseError))
         {
-            // Keep behavior: fall back to defaults
-            o = new CliOptions { RootPath = GetDefaultRoot(), OutPath = Path.Combine(GetDefaultRoot(), "docs", "api") };
+            // Fallback: alter Default-Pfad mit 'docs/api'
+            var defRoot = GetDefaultRoot();
+            return (defRoot, Path.Combine(defRoot, "docs", "api"), "md", true, CliOptions.DefaultExcludes());
         }
-        return (o.RootPath, o.OutPath, o.Format, o.IncludeNonPublic, o.ExcludedParts);
-    }
 
-    // Compatibility shims for Program.cs (prefer handling Help/Info in main)
-    public static bool AskForHelp(List<string> a) => a.Any(x => string.Equals(x, "--help", StringComparison.OrdinalIgnoreCase));
-    public static bool AskForInformation(List<string> a) => a.Any(x => string.Equals(x, "--info", StringComparison.OrdinalIgnoreCase));
+        // Backcompat: Für Alt-Code, der einen EINZELNEN Zielpfad erwartet,
+        // nimm das (erste) Format und mappe es auf den konkreten Pfad:
+        var selectedFormat = o.Format; // erstes Format oder "md"
+        string legacyOut = null;
+
+        if (!string.IsNullOrWhiteSpace(selectedFormat) && o.OutputDirs != null
+            && o.OutputDirs.TryGetValue(selectedFormat, out var mapped))
+        {
+            legacyOut = mapped; // z. B. <OutPath>/<Subfolder_for_that_format>
+        }
+        else
+        {
+            // Fallback: OutPath + erster Subfolder (falls kein Mapping verfügbar)
+            var sub = o.Subfolders?.FirstOrDefault() ?? "api";
+            legacyOut = Path.Combine(o.OutPath ?? GetDefaultRoot(), sub);
+        }
+
+        return (o.RootPath, legacyOut, selectedFormat, o.IncludeNonPublic, o.ExcludedParts);
+    }
 }
 
 // __________________________________OldParser______________________________________

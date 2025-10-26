@@ -29,6 +29,10 @@ xydocgen --root X://User/TestPrograms/TestRoot--out TestFolder/TestSubFolder
 (Output a list of commands, discard other commands written with it)
 xydocgen --help
 
+## Changes
+
+- Now every format has its own folder
+- Generate multiple formats in one go
 
 ## Planned features & improvements
 
@@ -44,7 +48,7 @@ xydocgen --help
 
 + Changing the structure:
   - Moving the output of index and tree into the first level 
-  - Subfolders for the formats 
+  
 
 
   
@@ -69,7 +73,8 @@ dotnet tool update xydocgen [--local/--global]
 
 ## Problems
 
-Output is not very bonita...
+There is currently no format subfolder being used and the pdf folders lie in the docs folder
+The api folder is useless and needs to be removed, if there is no replacement from the input
 
 
 # Author
