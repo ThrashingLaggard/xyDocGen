@@ -48,8 +48,8 @@ namespace xyDocumentor.Core.Extractors
             {
                 string? defaultValueExpression = param.Default?.Value?.ToString();
 
-                // Mal schauen, was es noch für lustige Keywords gibt
-                bool isRef = param.Modifiers.Any(t => t.IsKind(SyntaxKind.RefKeyword));
+                // Mal schauen, was es noch für lustige Keywords gibt
+                bool isRef = param.Modifiers.Any(t => t.IsKind(SyntaxKind.RefKeyword));
                 bool isOut = param.Modifiers.Any(t => t.IsKind(SyntaxKind.OutKeyword));
                 bool isIn = param.Modifiers.Any(t => t.IsKind(SyntaxKind.InKeyword));
                 bool isParams = param.Modifiers.Any(t => t.IsKind(SyntaxKind.ParamsKeyword));
