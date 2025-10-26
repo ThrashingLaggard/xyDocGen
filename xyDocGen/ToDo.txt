@@ -1,15 +1,14 @@
 ﻿Interne Anpassungen:
 - Remarks mit auslesen und ausgeben
-- Baum & Index auf Wunsch direkt in Kosole ausgeben
+
 - Befehle für output in Dictionary speichern?
 
-- Nested types reparieren--- wahrscheinlich im Renderer!
 
 
 
 
 - Format mit als Unterordner hinzufügen.....????
-
+--> Ggf mehrere Formate auf einmal?
 
 
 
