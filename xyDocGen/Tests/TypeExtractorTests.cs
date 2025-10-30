@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+﻿namespace xyDocumentor.Tests;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Linq;
 using Xunit;
@@ -10,6 +10,7 @@ using xyDocumentor.Core.Extractors;
 /// </summary>
 public class TypeExtractorTests
 {
+    ///
     [Fact]
     public void ExtractsClassName()
     {
@@ -21,11 +22,11 @@ public class TypeExtractorTests
         Assert.Single(types);
         Assert.Equal("MyClass", types[0].Name);
     }
-}
 
 
-public class TypeExtractorNestedTests
-{
+    /// <summary>
+    /// Testing for the correct handling of nested types by the extractor
+    /// </summary>
     [Fact]
     public void ProcessMembers_Collects_Nested_Types()
     {

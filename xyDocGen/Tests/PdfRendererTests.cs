@@ -1,8 +1,13 @@
+namespace xyDocumentor.Tests;
+
 using Xunit;
 using xyDocumentor.Core.Docs;
 using xyDocumentor.Core.Renderer;
 using System.IO;
 
+/// <summary>
+/// Super spectecular unit tests for the pdf renderer
+/// </summary>
 public class PdfRendererTests
 {
     [Fact]

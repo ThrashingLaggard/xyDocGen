@@ -4,12 +4,16 @@ using xyDocumentor.Core.Docs;
 
 namespace xyDocumentor.Core
 {
+#nullable enable
     /// <summary>
     /// Renders TypeDoc objects as HTML pages with optional CSS styling.
     /// </summary>
     public static class HtmlRenderer
     {
-        public static string Description { get; set; }
+        /// <summary>
+        /// Add useful infos here
+        /// </summary>
+        public static string? Description { get; set; }
 
 
         /// <summary>

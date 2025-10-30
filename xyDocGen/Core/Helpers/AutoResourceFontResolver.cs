@@ -1,4 +1,5 @@
 ﻿namespace xyDocumentor.Core.Fonts;
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -21,31 +22,39 @@ using xyToolz.Helper.Logging;
 public sealed class AutoResourceFontResolver : IFontResolver
 {
     /// <summary> Add useful information here </summary>
-    public string Description { get; set; }
+    public string? Description { get; set; }
 
     private readonly Assembly _asm;
 
+    /// <summary> Sans family name </summary>
     public const string FamilySans = "XY Sans";
+    /// <summary> Mono family name </summary>
     public const string FamilyMono = "XY Mono";
 
     private const string FaceSansRegular = "XY_SANS_REG";
     private const string FaceSansBold = "XY_SANS_BOLD";
     private const string FaceMonoRegular = "XY_MONO_REG";
-
     private readonly string? _resSansReg;
     private readonly string? _resSansBold;
     private readonly string? _resMonoReg;
 
+    /// <summary> Name of the sans regular resource  </summary>
     public string? SansRegularResourceName => _resSansReg;
+    /// <summary> Name of the sans bold resource  </summary>
     public string? SansBoldResourceName => _resSansBold;
+    /// <summary> Name of the mono regular resource  </summary>
     public string? MonoRegularResourceName => _resMonoReg;
 
+    // buffers for resource names
     private byte[]? _bufSansReg, _bufSansBold, _bufMonoReg;
 
+    /// <summary>
+    /// Get the value from the FamilySans property as default font name 
+    /// </summary>
     public string DefaultFontName => FamilySans;
 
     /// <summary>
-    /// 
+    /// Basic constructor wirh lots of work in it... need to source something out
     /// </summary>
     public AutoResourceFontResolver()
     {
@@ -56,14 +65,9 @@ public sealed class AutoResourceFontResolver : IFontResolver
         foreach (var n in typeof(AutoResourceFontResolver).Assembly.GetManifestResourceNames().Take(10))
             System.Diagnostics.Debug.WriteLine("RES: " + n);
 
-
-
-
         // Consider only .ttf/.otf
-        var fontRes = names
-            .Where(n => n.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase) ||
-                        n.EndsWith(".otf", StringComparison.OrdinalIgnoreCase))
-            .ToArray();
+        string[] fontRes = names.Where(n => n.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase) || 
+                                                                  n.EndsWith(".otf", StringComparison.OrdinalIgnoreCase)).ToArray();
 
         // Heuristics for picking sans/mono/bold faces
         Regex sansRegex = new ("(inter|roboto|open.?sans|noto.?sans(?!.*mono)|dejavu.?sans(?!.*mono)|source.?sans|montserrat|lato|arial|helvetica|liberation.?sans)",

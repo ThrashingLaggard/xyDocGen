@@ -7,6 +7,7 @@ using xyDocumentor.Core.Pdf;
 
 namespace xyDocumentor.Core.Renderer
 {
+#nullable enable
     /// <summary>
     /// A layouted, multi-page PDF renderer with headings, TOC, member tables, bookmarks,
     /// wrapping, and automatic page breaks. Minimal dependencies: PdfSharpCore only.
@@ -16,7 +17,7 @@ namespace xyDocumentor.Core.Renderer
         /// <summary>
         /// Add usefull information
         /// </summary>
-        public static string Description { get; set; }
+        public static string? Description { get; set; }
 
         /// <summary>
         /// Create a new PdfDocument with basic placeholder information and set compression
@@ -150,7 +151,7 @@ namespace xyDocumentor.Core.Renderer
             ctx.Writer.Spacer(6);
         }
 
-        private static string BuildSummarySnippet(string summary)
+        private static string? BuildSummarySnippet(string summary)
         {
             if (string.IsNullOrWhiteSpace(summary)) return null;
             var s = summary.Trim();

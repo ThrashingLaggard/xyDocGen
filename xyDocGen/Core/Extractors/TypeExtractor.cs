@@ -12,6 +12,7 @@ using xyToolz.Helper.Logging;
 
 namespace xyDocumentor.Core.Extractors
 {
+#nullable enable
     /// <summary>
     /// Extracts types (classes, structs, interfaces, records, enums) and their members from C# syntax trees 
     /// </summary>
@@ -21,7 +22,7 @@ namespace xyDocumentor.Core.Extractors
         /// <summary>
         /// Get or set usefull information
         /// </summary>
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         private readonly bool _includeNonPublic;
 
@@ -79,10 +80,6 @@ namespace xyDocumentor.Core.Extractors
         /// <summary>
         /// Handles class/struct/interface/record extraction, including members and nested types by creating the corresponding TypeDocs and MemberDocs
         /// </summary>
-        /// <param name="tds_TypeNode_"></param>
-        /// <param name="namespace_"></param>
-        /// <param name="filePath_"></param>
-        /// <param name="parentType_"></param>
         /// <returns></returns>
         public TypeDoc? HandleType(TypeDeclarationSyntax typeNode, string? namespaceName, string filePath, TypeDoc? parentType = null)
         {
@@ -394,7 +391,14 @@ namespace xyDocumentor.Core.Extractors
 
             foreach (string file in relevantFiles)
             {
-                string text = await xyFiles.LoadFileAsync(file);
+                string text = await xyFiles.LoadFileAsync(file)??"";
+
+                if (string.IsNullOrEmpty(text))
+                {
+                    xyLog.Log($"No content found in {file}");
+                    continue;
+                }
+
                 SyntaxTree tree = CSharpSyntaxTree.ParseText(text);
                 CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
 

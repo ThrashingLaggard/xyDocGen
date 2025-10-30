@@ -1,7 +1,12 @@
+namespace xyDocumentor.Tests;
+
 using Xunit;
 using xyDocumentor.Core;
 using xyDocumentor.Core.Docs;
 
+/// <summary>
+/// Critically acclaimed tests for the html renderer
+/// </summary>
 public class HtmlRendererTests
 {
     [Fact]

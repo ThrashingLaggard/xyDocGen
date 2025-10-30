@@ -3,6 +3,8 @@ using System.Linq;
 
 namespace xyDocumentor.Core.Docs
 {
+    #nullable enable
+
     /// <summary>
     /// Represents detailed information about a single parameter of a method or constructor.
     /// This expanded record provides structured information for robust documentation generation.

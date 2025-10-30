@@ -5,6 +5,9 @@ using xyDocumentor.Core.Helpers;
 
 namespace xyDocumentor.Tests
 {
+    /// <summary>
+    /// Awesome Tests for the even more awesome Utils class
+    /// </summary>
     public class UtilsTests
     {
 

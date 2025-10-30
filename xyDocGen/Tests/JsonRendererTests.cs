@@ -2,6 +2,9 @@ using Xunit;
 using xyDocumentor.Core;
 using xyDocumentor.Core.Docs;
 
+/// <summary>
+/// Great tests for the JsonRenderer
+/// </summary>
 public class JsonRendererTests
 {
     [Fact]

@@ -1,3 +1,5 @@
+namespace xyDocumentor.Tests;
+
 using Xunit;
 using System.IO;
 using System.Text;

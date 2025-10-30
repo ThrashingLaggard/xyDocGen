@@ -8,6 +8,7 @@ using xyToolz.QOL;
 
 namespace xyDocumentor.Core.Renderer
 {
+#nullable enable
     /// <summary>
     /// Provides static methods to generate structured code documentation
     /// in Markdown format.
@@ -118,6 +119,8 @@ namespace xyDocumentor.Core.Renderer
         /// </summary>
         /// <param name="sb_MarkdownBuilder_">The StringBuilder to append to.</param>
         /// <param name="td_TargetType_">The TypeDoc object containing the data.</param>
+        /// <param name="level_"></param>
+        /// <param name="dic_AnchorMap_"></param>
         private static void RenderMetadata(StringBuilder sb_MarkdownBuilder_, TypeDoc td_TargetType_, int level_,Dictionary<string, string> dic_AnchorMap_)
         {
             sb_MarkdownBuilder_.AppendLine($"{xy.Repeat("#",(ushort)(level_ +1))} Metadata");
@@ -160,7 +163,6 @@ namespace xyDocumentor.Core.Renderer
         /// </summary>
         /// <param name="sb_MarkdownBuilder_">The StringBuilder to append to.</param>
         /// <param name="td_Type_">The TypeDoc object containing the data.</param>
-        /// <param name=""></param>
         /// <param name="level_"></param>
         /// <param name="dic_AnchorMap_">Not yet used</param>
         private static void RenderDescriptionFromXmlSummaryInTypeDoc(StringBuilder sb_MarkdownBuilder_, TypeDoc td_Type_, int level_, Dictionary<string, string> dic_AnchorMap_)
@@ -177,6 +179,7 @@ namespace xyDocumentor.Core.Renderer
         /// </summary>
         /// <param name="sb_Markdownbuilder_">The StringBuilder to append to.</param>
         /// <param name="td_TargetObject_">The TypeDoc object containing the data.</param>
+        /// <param name="level_"></param>
         /// <param name="dic_AnchorMap_"></param>
         private static void RenderAllMembers(StringBuilder sb_Markdownbuilder_, TypeDoc td_TargetObject_, int level_, Dictionary<string, string> dic_AnchorMap_)
         {
@@ -194,6 +197,8 @@ namespace xyDocumentor.Core.Renderer
         /// <param name="sb_MarkdownBuilder_">The StringBuilder to append to.</param>
         /// <param name="title_">The title for the member table (e.g., "Methods").</param>
         /// <param name="listedMembers_">The list of MemberDoc objects to be rendered.</param>
+        /// <param name="level"></param>
+        /// <param name="dic_AnchorMap_"></param>
         private static void RenderMembersAsTable(StringBuilder sb_MarkdownBuilder_, string title_, IReadOnlyList<MemberDoc> listedMembers_, int level, Dictionary<string, string> dic_AnchorMap_)
         {
             //// If the list is empty or null, nothing is rendered.
@@ -346,6 +351,7 @@ namespace xyDocumentor.Core.Renderer
         /// <param name="sb_MarkdownRenderer">The StringBuilder to append to.</param>
         /// <param name="td_TargetType_">The TypeDoc object containing the data.</param>
         /// <param name="level_">The heading level for the Markdown output.</param>
+        /// <param name="dic_AnchorMap_"></param>
         private static void RenderNestedTypes(StringBuilder sb_MarkdownRenderer, TypeDoc td_TargetType_, int level_, Dictionary<string, string> dic_AnchorMap_)
         {
             // FlattenNested() returns the type itself and all nested types.
@@ -400,7 +406,7 @@ namespace xyDocumentor.Core.Renderer
         }
 
         /// <summary>
-        ///  Strips generic type parameters like "<T,U>" (simple textual approach)
+        ///  Strips generic type parameters like "T,U" (simple textual approach)
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>

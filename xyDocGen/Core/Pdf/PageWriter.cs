@@ -18,26 +18,51 @@ using XStringFormats = PdfSharpCore.Drawing.XStringFormats;
 
 namespace xyDocumentor.Core.Pdf
 {
+#nullable enable
     /// <summary>
     /// Writes content to a pdf page according to the given RenderContext and PdfTheme
     /// </summary>
     public sealed class PageWriter : IDisposable
     {
-        public string Description { get; set; }
+        /// <summary>Add useful infos here </summary>
+        public string? Description { get; set; }
+        
+        /// <summary> PdfPage to write on </summary>
         public PdfPage Page { get; private set; }
+
+        /// <summary> XGrafix element </summary>
         public XGraphics Gfx { get; private set; }
+        
+        /// <summary> Height value </summary>
         public double Y { get; private set; }
+        
+        /// <summary> Data storage </summary>
         public RenderContext Ctx { get; }
+        
+        /// <summary>
+        /// Get the pdf theme from the RenderContext
+        /// </summary>
         public PdfTheme Theme => Ctx.Theme;
+
+        /// <summary>
+        /// Draw Header and Footer
+        /// </summary>
         public bool DrawHeaderFooter { get; set; } = true;
 
-        // Optional: override header text (e.g., parent type)
+        /// <summary>
+        /// Optional: override header text (e.g., parent type)
+        /// </summary>
         public string? PageHeaderOverride { get; set; }
 
         internal readonly double _left, _top, _right, _bottom, _contentWidth;
 
         private readonly XTextFormatter _formatter;
 
+        /// <summary>
+        /// Basic constructor
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="page"></param>
         public PageWriter(RenderContext ctx, PdfPage page)
         {
             Ctx = ctx;
@@ -61,8 +86,17 @@ namespace xyDocumentor.Core.Pdf
             if (DrawHeaderFooter) DrawHeaderFooterArea();
         }
 
-        public void Spacer(double pt) => Y += pt;
+        /// <summary>
+        /// Define how much space comes between the [lines/...????]
+        /// </summary>
+        /// <param name="points"></param>
+        public void Spacer(double points) => Y += points;
 
+        /// <summary>
+        /// Draw the header and write the enclosed text
+        /// </summary>
+        /// <param name="level"></param>
+        /// <param name="text"></param>
         public void DrawHeading(int level, string text)
         {
             var (font, color, spacing) = level switch
@@ -78,6 +112,10 @@ namespace xyDocumentor.Core.Pdf
             Spacer(level == 1 ? 8 : 6);
         }
 
+        /// <summary>
+        /// Draw the sub header and write the txt in it
+        /// </summary>
+        /// <param name="text"></param>
         public void DrawSubheading(string text)
         {
             EnsureSpace(Theme.FontH4, text);
@@ -87,6 +125,11 @@ namespace xyDocumentor.Core.Pdf
             Spacer(4);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="items"></param>
         public void DrawDefinitionList(string title, IEnumerable<(string Key, string Value)> items)
         {
             // Subheading stays as-is
@@ -167,7 +210,11 @@ namespace xyDocumentor.Core.Pdf
             Spacer(2); // was 4
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="value"></param>
         public void DrawBulletLine(string title, string value)
         {
             EnsureSpace(Theme.FontNormal, $"{title}: {value}");
@@ -176,6 +223,11 @@ namespace xyDocumentor.Core.Pdf
             Spacer(4);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="font"></param>
         public void DrawParagraph(string text, XFont? font = null)
         {
             font ??= Theme.FontNormal;
@@ -184,6 +236,11 @@ namespace xyDocumentor.Core.Pdf
             Spacer(Theme.ParagraphSpacing);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="columns"></param>
+        /// <param name="rows"></param>
         public void DrawTable(TableColumnSpec[] columns, IEnumerable<string[]> rows)
         {
             double gap = Theme.TableColGap;
@@ -270,6 +327,12 @@ namespace xyDocumentor.Core.Pdf
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="pageNumber"></param>
+        /// <returns></returns>
         public XRect DrawTocLine(string title, int pageNumber)
         {
             var font = Theme.FontNormal;
@@ -471,7 +534,7 @@ namespace xyDocumentor.Core.Pdf
         }
 
 
-        public void DrawHairline(double alpha = 0.35)
+        internal void DrawHairline(double alpha = 0.35)
         {
             var pen = new XPen(XColor.FromArgb((int)(alpha * 255), 0, 0, 0), 0.5);
             Gfx.DrawLine(pen, _left, Y, _right, Y);
@@ -568,6 +631,7 @@ namespace xyDocumentor.Core.Pdf
             if (DrawHeaderFooter) DrawHeaderFooterArea();
         }
 
+        /// <summary> Dispose of the XGraphix instance in the Gfx property </summary>
         public void Dispose()
         {
             Gfx?.Dispose();
