@@ -17,6 +17,9 @@ namespace xyDocumentor.Tests
         private readonly string _tmpRoot;
         private readonly string _tmpOut;
 
+        /// <summary>
+        /// Shitty constructor for this test-class?....
+        /// </summary>
         public StringAnalyzerTests()
         {
             // Create temp folders for predictable, isolated tests
@@ -24,10 +27,14 @@ namespace xyDocumentor.Tests
             _tmpOut = CreateTempDir("out");
         }
 
+        /// <summary>
+        /// Dispose this
+        /// </summary>
         public void Dispose()
         {
             TryDelete(_tmpRoot);
             TryDelete(_tmpOut);
+            this.Dispose();
         }
 
         private static string CreateTempDir(string suffix)
@@ -45,6 +52,9 @@ namespace xyDocumentor.Tests
 
         private static string[] A(params string[] args) => args;
 
+        /// <summary>
+        /// Check for parsing success
+        /// </summary>
         [Fact]
         public void Parse_Minimal_WithRootOut_ShouldSucceed()
         {
@@ -63,6 +73,9 @@ namespace xyDocumentor.Tests
             Assert.False(opt.BuildTree);
         }
 
+        /// <summary>
+        /// Check if output goes into the default output directory
+        /// </summary>
         [Fact]
         public void Parse_DefaultOut_WhenFolderSubfolder_NotGiven_ShouldBeRootDocsApi()
         {
@@ -75,6 +88,9 @@ namespace xyDocumentor.Tests
             Assert.Equal("md", opt.Format);
         }
 
+        /// <summary>
+        /// Crys in case of unknown format string
+        /// </summary>
         [Fact]
         public void Parse_FormatValidation_ShouldFail_OnUnsupported()
         {
@@ -86,6 +102,9 @@ namespace xyDocumentor.Tests
             Assert.Null(opt);
         }
 
+        /// <summary>
+        /// Checks if semicolon and commas get rendered
+        /// </summary>
         [Fact]
         public void Parse_Exclude_Semicolon_And_Comma()
         {
@@ -100,6 +119,9 @@ namespace xyDocumentor.Tests
             Assert.Contains("CustomFolder", opt.ExcludedParts, StringComparer.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// Check if the private flag disables private content
+        /// </summary>
         [Fact]
         public void Parse_Private_Flag_ShouldDisable_NonPublic()
         {
@@ -110,6 +132,9 @@ namespace xyDocumentor.Tests
             Assert.False(opt.IncludeNonPublic);
         }
 
+        /// <summary>
+        /// Check for flags
+        /// </summary>
         [Fact]
         public void Parse_Show_Index_Tree_Flags()
         {
@@ -123,6 +148,9 @@ namespace xyDocumentor.Tests
             Assert.True(opt.BuildTree);
         }
 
+        /// <summary>
+        /// Test = syntax
+        /// </summary>
         [Fact]
         public void Parse_EqualsSyntax_ShouldWork()
         {
@@ -136,6 +164,9 @@ namespace xyDocumentor.Tests
             Assert.Contains(".artifacts", opt.ExcludedParts, StringComparer.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// Check for error after missing argument
+        /// </summary>
         [Fact]
         public void Parse_MissingValue_After_Flag_ShouldFail()
         {
@@ -147,6 +178,10 @@ namespace xyDocumentor.Tests
             Assert.Null(opt);
         }
 
+
+        /// <summary>
+        /// Check bahaviour with unknown option
+        /// </summary>
         [Fact]
         public void Parse_UnknownOption_ShouldFail_WithHelpfulMessage()
         {
@@ -158,17 +193,11 @@ namespace xyDocumentor.Tests
             Assert.Null(opt);
         }
 
-        [Fact]
-        public void Parse_Help_Info_ShouldSetFlags()
-        {
-            var ok = StringAnalyzer.TryParseOptions(
-                A("--root", _tmpRoot, "--help", "--info"), out var opt, out var err);
 
-            Assert.True(ok, err);
-            Assert.True(opt.Help);
-            Assert.True(opt.Info);
-        }
 
+        /// <summary>
+        /// Check the priority of parameter flags
+        /// </summary>
         [Fact]
         public void Parse_Folder_Subfolder_And_Out_Priority()
         {

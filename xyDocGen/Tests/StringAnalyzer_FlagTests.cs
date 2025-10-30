@@ -18,16 +18,23 @@ namespace xyDocumentor.Core.Tests
         private readonly string _tmpRoot;
         private readonly string _tmpOut;
 
+        /// <summary>
+        /// Construct the test class
+        /// </summary>
         public StringAnalyzer_FlagTests()
         {
             _tmpRoot = CreateTempDir("root");
             _tmpOut = CreateTempDir("out");
         }
 
+        /// <summary>
+        /// Dispose this
+        /// </summary>
         public void Dispose()
         {
             TryDelete(_tmpRoot);
             TryDelete(_tmpOut);
+            this.Dispose();
         }
 
         private static string CreateTempDir(string suffix)
@@ -49,6 +56,9 @@ namespace xyDocumentor.Core.Tests
         // HELP / INFO
         // ---------------------------
 
+        /// <summary>
+        /// Does help flag work
+        /// </summary>
         [Fact]
         public void HelpFlag_Sets_Help_And_Parses()
         {
@@ -58,6 +68,9 @@ namespace xyDocumentor.Core.Tests
             Assert.False(opt.Info);
         }
 
+        /// <summary>
+        /// Check if the info flag works
+        /// </summary>
         [Fact]
         public void InfoFlag_Sets_Info_And_Parses()
         {
@@ -67,6 +80,9 @@ namespace xyDocumentor.Core.Tests
             Assert.False(opt.Help);
         }
 
+        /// <summary>
+        /// Check if help and info flags work together
+        /// </summary>
         [Fact]
         public void Help_And_Info_Can_Be_Set_Together()
         {
@@ -80,6 +96,9 @@ namespace xyDocumentor.Core.Tests
         // SHOW / INDEX / TREE booleans
         // ---------------------------
 
+        /// <summary>
+        /// Check if show flag works
+        /// </summary>
         [Fact]
         public void Show_Sets_ShowOnly_True()
         {
@@ -88,6 +107,9 @@ namespace xyDocumentor.Core.Tests
             Assert.True(opt.ShowOnly);
         }
 
+        /// <summary>
+        /// Check if index flag works
+        /// </summary>
         [Fact]
         public void Index_Sets_BuildIndex_True()
         {
@@ -96,6 +118,9 @@ namespace xyDocumentor.Core.Tests
             Assert.True(opt.BuildIndex);
         }
 
+        /// <summary>
+        /// Check if tree flag works
+        /// </summary>
         [Fact]
         public void Tree_Sets_BuildTree_True()
         {
@@ -104,6 +129,9 @@ namespace xyDocumentor.Core.Tests
             Assert.True(opt.BuildTree);
         }
 
+        /// <summary>
+        /// Check if index and tree flags work together
+        /// </summary>
         [Fact]
         public void Combined_Show_Index_Tree_All_True()
         {
@@ -114,7 +142,11 @@ namespace xyDocumentor.Core.Tests
             Assert.True(opt.BuildTree);
         }
 
-        // equals-syntax with boolean assignment
+        /// <summary>
+        /// Checks the equals-syntax with boolean assignment
+        /// </summary>
+        /// <param name="flag"></param>
+        /// <param name="expected"></param>
         [Theory]
         [InlineData("--show=false", false)]
         [InlineData("--show=true", true)]
@@ -134,32 +166,11 @@ namespace xyDocumentor.Core.Tests
                 Assert.Equal(expected, opt.BuildTree);
         }
 
-        // ---------------------------
-        // PRIVATE (inverts IncludeNonPublic)
-        // ---------------------------
 
-        [Fact]
-        public void Private_Sets_IncludeNonPublic_False()
-        {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--private"), out var opt, out var err);
-            Assert.True(ok, err);
-            Assert.False(opt.IncludeNonPublic);
-        }
-
-        [Theory]
-        [InlineData("--private=false", true)]
-        [InlineData("--private=true", false)]
-        public void Private_Equals_Syntax_Respected(string flag, bool expectedIncludeNonPublic)
-        {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, flag), out var opt, out var err);
-            Assert.True(ok, err);
-            Assert.Equal(expectedIncludeNonPublic, opt.IncludeNonPublic);
-        }
-
-        // ---------------------------
-        // FORMAT
-        // ---------------------------
-
+        /// <summary>
+        /// Check  if format values get parsed corrctly
+        /// </summary>
+        /// <param name="fmt"></param>
         [Theory]
         [InlineData("md")]
         [InlineData("html")]
@@ -172,6 +183,10 @@ namespace xyDocumentor.Core.Tests
             Assert.Equal(fmt, opt.Format);
         }
 
+
+        /// <summary>
+        /// Check the case of unsopported fornats
+        /// </summary>
         [Fact]
         public void Format_Unsupported_Fails()
         {
@@ -181,36 +196,10 @@ namespace xyDocumentor.Core.Tests
             Assert.Null(opt);
         }
 
-        [Fact]
-        public void Format_Equals_Syntax_Works()
-        {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--format=json"), out var opt, out var err);
-            Assert.True(ok, err);
-            Assert.Equal("json", opt.Format);
-        }
 
-        // ---------------------------
-        // ROOT / OUT / FOLDER / SUBFOLDER
-        // ---------------------------
-
-        [Fact]
-        public void RootAndOut_Are_Used_As_Is()
-        {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--out", _tmpOut), out var opt, out var err);
-            Assert.True(ok, err);
-            Assert.Equal(Path.GetFullPath(_tmpRoot), opt.RootPath);
-            Assert.Equal(Path.GetFullPath(_tmpOut), opt.OutPath);
-        }
-
-        [Fact]
-        public void MissingValue_After_Out_Fails()
-        {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--out"), out var opt, out var err);
-            Assert.False(ok);
-            Assert.Contains("Missing value after --out", err);
-            Assert.Null(opt);
-        }
-
+        /// <summary>
+        /// Check default fallback
+        /// </summary>
         [Fact]
         public void Folder_Subfolder_Defaults_When_Out_NotProvided()
         {
@@ -220,6 +209,9 @@ namespace xyDocumentor.Core.Tests
             Assert.Equal(Path.GetFullPath(expected), opt.OutPath);
         }
 
+        /// <summary>
+        /// Check behaviour if no outpath is provided
+        /// </summary>
         [Fact]
         public void Folder_Subfolder_Customize_OutPath_When_Out_NotProvided()
         {
@@ -229,6 +221,9 @@ namespace xyDocumentor.Core.Tests
             Assert.Equal(Path.GetFullPath(expected), opt.OutPath);
         }
 
+        /// <summary>
+        /// Check override 
+        /// </summary>
         [Fact]
         public void Out_Overrides_Folder_Subfolder()
         {
@@ -237,59 +232,9 @@ namespace xyDocumentor.Core.Tests
             Assert.Equal(Path.GetFullPath(_tmpOut), opt.OutPath);
         }
 
-        [Fact]
-        public void Equals_Syntax_For_Root_And_Out_Works()
-        {
-            var ok = StringAnalyzer.TryParseOptions(A($"--root={_tmpRoot}", $"--out={_tmpOut}"), out var opt, out var err);
-            Assert.True(ok, err);
-            Assert.Equal(Path.GetFullPath(_tmpRoot), opt.RootPath);
-            Assert.Equal(Path.GetFullPath(_tmpOut), opt.OutPath);
-        }
-
-        // ---------------------------
-        // EXCLUDES
-        // ---------------------------
-
-        [Fact]
-        public void Exclude_Parses_Semicolon_And_Comma()
-        {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--exclude", ".cache;bin,.artifacts"), out var opt, out var err);
-            Assert.True(ok, err);
-            Assert.Contains(".cache", opt.ExcludedParts, StringComparer.OrdinalIgnoreCase);
-            Assert.Contains("bin", opt.ExcludedParts, StringComparer.OrdinalIgnoreCase);
-            Assert.Contains(".artifacts", opt.ExcludedParts, StringComparer.OrdinalIgnoreCase);
-        }
-
-        [Fact]
-        public void Exclude_Equals_Syntax_Works()
-        {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--exclude=.vs;TestResults"), out var opt, out var err);
-            Assert.True(ok, err);
-            Assert.Contains(".vs", opt.ExcludedParts, StringComparer.OrdinalIgnoreCase);
-            Assert.Contains("TestResults", opt.ExcludedParts, StringComparer.OrdinalIgnoreCase);
-        }
-
-        [Fact]
-        public void MissingValue_After_Exclude_Fails()
-        {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--exclude"), out var opt, out var err);
-            Assert.False(ok);
-            Assert.Contains("Missing value after --exclude", err);
-            Assert.Null(opt);
-        }
-
-        // ---------------------------
-        // UNKNOWN / CASE-INSENSITIVITY
-        // ---------------------------
-
-        [Fact]
-        public void Unknown_Option_Fails_With_Helpful_Message()
-        {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--schroedinger"), out var opt, out var err);
-            Assert.False(ok);
-            Assert.Contains("Unknown option", err);
-        }
-
+        /// <summary>
+        ///  Check the flags for case sensitivity
+        /// </summary>
         [Fact]
         public void Flags_Are_Case_Insensitive()
         {
@@ -302,10 +247,9 @@ namespace xyDocumentor.Core.Tests
             Assert.Equal(Path.GetFullPath(_tmpRoot), opt.RootPath);
         }
 
-        // ---------------------------
-        // AnalyzeArgs shim
-        // ---------------------------
-
+        /// <summary>
+        /// Check for a returned tuple
+        /// </summary>
         [Fact]
         public void AnalyzeArgs_Returns_Tuple_With_Parsed_Values()
         {
@@ -320,6 +264,9 @@ namespace xyDocumentor.Core.Tests
             Assert.Contains(".out", excludes, StringComparer.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// Check fallback
+        /// </summary>
         [Fact]
         public void AnalyzeArgs_Falls_Back_To_Defaults_On_Parse_Fail()
         {

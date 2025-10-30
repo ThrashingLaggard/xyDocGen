@@ -11,6 +11,9 @@ namespace xyDocumentor.Tests
     public class UtilsTests
     {
 
+        /// <summary>
+        /// Check for any left brackets
+        /// </summary>
         [Fact]
         public void CleanDoc_ShouldRemoveBrackets()
         {
