@@ -1,3 +1,6 @@
+namespace xyDocumentor.Tests;
+
+
 using Xunit;
 using xyDocumentor.Core;
 using xyDocumentor.Core.Docs;
