@@ -10,6 +10,9 @@ using System.IO;
 /// </summary>
 public class PdfRendererTests
 {
+    /// <summary>
+    /// Check for the creation of PDF files
+    /// </summary>
     [Fact]
     public void RenderToFile_Creates_Pdf_File()
     {
@@ -26,10 +29,10 @@ public class PdfRendererTests
             if (File.Exists(tmp)) File.Delete(tmp);
         }
     }
-}
 
-public class PdfRendererNestedTests
-{
+    /// <summary>
+    /// Check for thrown exceptions
+    /// </summary>
     [Fact]
     public void RenderToFile_DoesNotThrow_With_Nested_Types()
     {

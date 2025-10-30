@@ -4,8 +4,16 @@ using xyDocumentor.Core.Parser;
 
 namespace xyDocumentor.Tests
 {
+#nullable enable
+
+    /// <summary>
+    /// Very nice tests for the project parser
+    /// </summary>
     public class ProjectParserTests
     {
+        /// <summary>
+        /// Check if the parser returns types
+        /// </summary>
         [Fact]
         public void ParseProject_Should_ReturnTypes()
         {

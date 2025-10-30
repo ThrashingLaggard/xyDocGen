@@ -82,10 +82,10 @@ namespace xyDocumentor.Core.Renderer
         private static void RenderTypeRecursive(RenderContext ctx, TypeDoc t, int level, List<TocEntry> toc)
         { 
             // Remember top Y before drawing the heading (for the link destination)
-            double yTop = ctx.Writer.Y;
+            double yTop = ctx.Writer?.Y?? 4 ;
 
             // Heading
-            ctx.Writer.DrawHeading(level, $"{t.DisplayName}  [{t.Kind}]");
+            ctx.Writer?.DrawHeading(level, $"{t.DisplayName}  [{t.Kind}]");
             if (level <= 2) ctx.CurrentSectionTitle = t.DisplayName;
 
             // Build richer TOC text (all optional, safe fallbacks)
@@ -97,13 +97,13 @@ namespace xyDocumentor.Core.Renderer
             {
                 Title = $"{t.DisplayName} ({t.Kind})",
                 Signature = signature,
-                Description = descr,
+                Description = descr?? "---",
                 PageNumber = ctx.PageNumber,
-                Page = ctx.Writer.Page,
+                Page = ctx.Writer?.Page,
                 Y = yTop
             });
 
-            ctx.Writer.Spacer(6);
+            ctx.Writer?.Spacer(6);
 
             // Metadata block
             var meta = new[]
@@ -112,20 +112,20 @@ namespace xyDocumentor.Core.Renderer
                 ("Visibility", string.IsNullOrWhiteSpace(t.Modifiers) ? "(n/a)" : t.Modifiers),
                 ("Source", t.FilePath ?? "(n/a)")
             };
-            ctx.Writer.DrawDefinitionList("Metadata", meta);
+            ctx.Writer?.DrawDefinitionList("Metadata", meta);
 
             // Attributes / Base
             if (t.Attributes.Any())
-                ctx.Writer.DrawBulletLine("Attributes", string.Join(", ", t.Attributes));
+                ctx.Writer?.DrawBulletLine("Attributes", string.Join(", ", t.Attributes));
             if (t.BaseTypes.Any())
-                ctx.Writer.DrawBulletLine("Base/Interfaces", string.Join(", ", t.BaseTypes));
+                ctx.Writer?.DrawBulletLine("Base/Interfaces", string.Join(", ", t.BaseTypes));
 
-            ctx.Writer.Spacer(4);
+            ctx.Writer?.Spacer(4);
 
             // Summary
             var summaryText = string.IsNullOrWhiteSpace(t.Summary) ? "(No description available)" : t.Summary.Trim();
-            ctx.Writer.DrawSubheading("Description");
-            ctx.Writer.DrawParagraph(summaryText);
+            ctx.Writer?.DrawSubheading("Description");
+            ctx.Writer?.DrawParagraph(summaryText);
 
             // Members table(s)
             RenderMembers(ctx, "Constructors", t.Constructors);
@@ -137,7 +137,7 @@ namespace xyDocumentor.Core.Renderer
             // Nested types
             foreach (var nested in t.NestedInnerTypes())
             {
-                ctx.Writer.PageHeaderOverride = t.DisplayName; // helpful header on nested pages
+                ctx.Writer!.PageHeaderOverride = t.DisplayName; // helpful header on nested pages
                 // Bookmark + TOC
                 AddBookmark(ctx.Document, ctx.Writer.Page, $"{nested.DisplayName} ({nested.Kind})");
                 toc.Add(new TocEntry { Title = $"{new string(' ', Math.Max(0, level - 1) * 2)}• {nested.DisplayName} ({nested.Kind})", PageNumber = ctx.PageNumber });
@@ -146,9 +146,9 @@ namespace xyDocumentor.Core.Renderer
             }
 
             // Small divider between sibling types (if any follow on same page)
-            ctx.Writer.Spacer(6);
-            ctx.Writer.DrawHairline();
-            ctx.Writer.Spacer(6);
+            ctx.Writer?.Spacer(6);
+            ctx.Writer?.DrawHairline();
+            ctx.Writer?.Spacer(6);
         }
 
         private static string? BuildSummarySnippet(string summary)
@@ -187,8 +187,8 @@ namespace xyDocumentor.Core.Renderer
         private static void RenderMembers(RenderContext ctx, string title, List<MemberDoc> members)
         {
             if (members == null || members.Count == 0) return;
-            ctx.Writer.Spacer(6);
-            ctx.Writer.DrawSubheading(title);
+            ctx.Writer?.Spacer(6);
+            ctx.Writer?.DrawSubheading(title);
 
             // Table columns: Kind | Signature (mono) | Summary
             var cols = new[]
@@ -205,7 +205,7 @@ namespace xyDocumentor.Core.Renderer
                 string.IsNullOrWhiteSpace(m.Summary) ? "" : m.Summary.Trim()
             });
 
-            ctx.Writer.DrawTable(cols, rows);
+            ctx.Writer?.DrawTable(cols, rows);
         }
 
 
@@ -225,8 +225,8 @@ namespace xyDocumentor.Core.Renderer
         // -----------------------------
         private static void RenderToc(RenderContext ctx, string title, List<TocEntry> entries)
         {
-            ctx.Writer.DrawHeading(1, title);
-            ctx.Writer.Spacer(8);
+            ctx.Writer?.DrawHeading(1, title);
+            ctx.Writer?.Spacer(8);
 
             // Fixed narrow width for the left "(Kind)" slice.
             // Adjust a bit if your font feels cramped (e.g. 24–28).
@@ -251,13 +251,13 @@ namespace xyDocumentor.Core.Renderer
                 }
 
                 // Draw one TOC line with a fixed, narrow kind column
-                var rect = ctx.Writer.DrawTocLineWrapped(kind, leftText, e.PageNumber, KIND_WIDTH_PT, KIND_GAP_PT);
+                PdfSharpCore.Drawing.XRect rect = ctx.Writer!.DrawTocLineWrapped(kind, leftText, e.PageNumber, KIND_WIDTH_PT, KIND_GAP_PT);
 
                 // Make it clickable if we have a target
                 if (e.Page != null)
                 {
                     PdfLinkingHelpers.AddGoToLink(
-                        ctx.Writer.Page, rect.X, rect.Y, rect.Width, rect.Height,
+                        ctx.Writer?.Page, rect.X, rect.Y, rect.Width, rect.Height,
                         e.Page, e.Y
                     );
                 }

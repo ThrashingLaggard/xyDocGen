@@ -9,13 +9,17 @@ using xyToolz.Filesystem;
 
 namespace xyDocumentor.Core.Renderer
 {
+#nullable enable
+
     /// <summary>
     /// Renders a directory structure as tree text
     /// </summary>
     public static class FileTreeRenderer
     {
-
-        public static string Description { get; set; }
+        /// <summary>
+        /// Add custom infos
+        /// </summary>
+        public static string? Description { get; set; }
 
         /// <summary>
         /// Recursive method to render the tree structure for better representation of the project
@@ -66,9 +70,9 @@ namespace xyDocumentor.Core.Renderer
         /// Else(Most of the time): ├─ 
         /// </returns>
         static string ChangePrefixIfIndexIsAtLastTreeLevel(DirectoryInfo[] di_SubDirectories, FileInfo[] fi_Files, int i) => !((di_SubDirectories.Length + i) == ((di_SubDirectories.Length + fi_Files.Length) -1)) ?"├─" : "└─";
-            
 
-        
+
+
 
         /// <summary>
         /// Builds PROJECT-STRUCTURE.md, a visual tree representation of the file system.
@@ -78,6 +82,7 @@ namespace xyDocumentor.Core.Renderer
         /// <param name="rootPath"></param>
         /// <param name="outPath"></param>
         /// <param name="excludedParts"></param>
+        /// <param name="writeToDisk"></param>
         /// <param name="prefix"></param>
         /// <returns></returns>
         public static async Task<StringBuilder> BuildProjectTree(StringBuilder treeBuilder, string format, string rootPath, string outPath, HashSet<string> excludedParts, bool writeToDisk, string prefix = "")
@@ -93,7 +98,7 @@ namespace xyDocumentor.Core.Renderer
 
             if (writeToDisk)
             {
-                string targetPath = Path.Combine(outPath, "PROJECT-STRUCTURE.md");
+                string targetPath = Path.Combine(outPath, fileName);
                 await xyFiles.SaveToFile(treeBuilder.ToString(), targetPath);
             }
 
@@ -159,19 +164,35 @@ namespace xyDocumentor.Core.Renderer
             StringBuilder indexBuilder = await BuildProjectIndex(flattenedTypes, format, outPath);
             indexBuilder.Clear();
             StringBuilder projectBuilder = await BuildProjectTree(indexBuilder, format, rootPath, outPath, excludedParts);
-            indexBuilder = null;
+            indexBuilder = null!;
+            projectBuilder = null!;
         }
 
   
 
-        // Bequemer Overload (bestehende Aufrufe bleiben gültig)
+        /// <summary>
+        /// Build project index
+        /// </summary>
+        /// <param name="flattenedtypes"></param>
+        /// <param name="format"></param>
+        /// <param name="outpath"></param>
+        /// <returns></returns>
         public static Task<StringBuilder> BuildProjectIndex(IEnumerable<TypeDoc> flattenedtypes, string format, string outpath)
             => BuildProjectIndex(flattenedtypes, format, outpath, writeToDisk: true);
 
 
      
 
-        // Bequemer Overload
+        /// <summary>
+        /// Build the project tree
+        /// </summary>
+        /// <param name="treeBuilder"></param>
+        /// <param name="format"></param>
+        /// <param name="rootPath"></param>
+        /// <param name="outPath"></param>
+        /// <param name="excludedParts"></param>
+        /// <param name="prefix"></param>
+        /// <returns></returns>
         public static Task<StringBuilder> BuildProjectTree(StringBuilder treeBuilder, string format, string rootPath, string outPath, HashSet<string> excludedParts, string prefix = "")
             => BuildProjectTree(treeBuilder, format, rootPath, outPath, excludedParts, writeToDisk: true, prefix);
 

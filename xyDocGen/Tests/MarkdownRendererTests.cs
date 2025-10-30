@@ -21,10 +21,11 @@ public class MarkdownRendererTests
         Assert.StartsWith("## ", md.TrimStart());
         Assert.Contains("TestClass", md);
     }
-}
 
-public class MarkdownRendererNestedTests
-{
+
+    /// <summary>
+    /// Check if nested types get rendered right
+    /// </summary>
     [Fact]
     public void Render_Includes_Nested_Types()
     {
@@ -42,5 +43,6 @@ public class MarkdownRendererNestedTests
         Assert.Contains("**class** `Outer`", md);
         Assert.Contains("**class** `Outer.Inner`", md);  // nested class
         Assert.Contains("**enum** `Outer.Inner.E`", md); // nested enum
+
     }
 }

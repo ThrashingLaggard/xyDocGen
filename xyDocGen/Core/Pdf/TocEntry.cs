@@ -2,6 +2,8 @@
 
 namespace xyDocumentor.Core.Pdf
 {
+#nullable enable
+
     /// <summary>
     /// Represents a specific dataset in a content table
     /// </summary>
@@ -13,14 +15,19 @@ namespace xyDocumentor.Core.Pdf
         public string Title { get; set; } = "";
         
         /// <summary>
-        /// Add usefull information
+        /// Add useful information for internal use
         /// </summary>
         public string? Infos { get; set; }
 
-
+        /// <summary>
+        /// The member's signature
+        /// </summary>
         public string? Signature { get; set; }     // i.e., generic signature
         
-        public string Description { get; set; } // i.e., summary snippet
+        /// <summary>
+        /// The description for this entry
+        /// </summary>
+        public string? Description { get; set; } // i.e., summary snippet
 
 
 

@@ -6,8 +6,14 @@ using System.Text;
 using System.Collections.Generic;
 using xyDocumentor.Core.Renderer;
 
+/// <summary>
+/// Hyper sick tests for the FileTreeRenderer
+/// </summary>
 public class FileTreeRendererTests
 {
+    /// <summary>
+    /// Test if the renderer produces entries and respects excludes
+    /// </summary>
     [Fact]
     public void RenderTree_Produces_Entries_And_Respects_Excludes()
     {

@@ -105,9 +105,9 @@ namespace xyDocumentor.Core.Pdf
                 2 => (Theme.FontH2, Theme.ColorPrimary, 8d),
                 _ => (Theme.FontH3, Theme.ColorDark, 6d),
             };
-            EnsureSpace(font, text, lineSpacing: Theme.LineSpacingHeading);
-            Gfx.DrawString(text, font, new XSolidBrush(color), new XRect(_left, Y, _contentWidth, Theme.LineHeight(font)), XStringFormats.TopLeft);
-            Y += Theme.LineHeight(font) + spacing;
+            EnsureSpace(font!, text, lineSpacing: Theme.LineSpacingHeading);
+            Gfx.DrawString(text, font, new XSolidBrush(color), new XRect(_left, Y, _contentWidth, Theme.LineHeight(font!)), XStringFormats.TopLeft);
+            Y += Theme.LineHeight(font!) + spacing;
             DrawHairline();
             Spacer(level == 1 ? 8 : 6);
         }
@@ -118,9 +118,9 @@ namespace xyDocumentor.Core.Pdf
         /// <param name="text"></param>
         public void DrawSubheading(string text)
         {
-            EnsureSpace(Theme.FontH4, text);
-            Gfx.DrawString(text, Theme.FontH4, XBrushes.Black, new XRect(_left, Y, _contentWidth, Theme.LineHeight(Theme.FontH4)), XStringFormats.TopLeft);
-            Y += Theme.LineHeight(Theme.FontH4) / 2;
+            EnsureSpace(Theme.FontH4!, text);
+            Gfx.DrawString(text, Theme.FontH4, XBrushes.Black, new XRect(_left, Y, _contentWidth, Theme.LineHeight(Theme.FontH4!)), XStringFormats.TopLeft);
+            Y += Theme.LineHeight(Theme.FontH4!) / 2;
             DrawHairline(alpha: 0.25);
             Spacer(4);
         }
@@ -158,8 +158,8 @@ namespace xyDocumentor.Core.Pdf
 
 
             const double lineHeightFactor = 1.5;// 0.90/ 0.85 /0.95
-            double keyLH = Theme.LineHeight(keyFont) * lineHeightFactor;
-            double valLH = Theme.LineHeight(valFont) * lineHeightFactor;
+            double keyLH = Theme.LineHeight(keyFont!) * lineHeightFactor;
+            double valLH = Theme.LineHeight(valFont!) * lineHeightFactor;
             double rowLH = Math.Max(keyLH, valLH); // same baseline step for both columns
 
             foreach (var (k, v) in items)
@@ -169,8 +169,8 @@ namespace xyDocumentor.Core.Pdf
 
                 // Wrap both sides using the actual column widths
                 // (Use the gfx-based WrapText so measurement matches drawing)
-                var keyLines = WrapText(keyText, keyFont, keyWidth, Gfx);
-                var valLines = WrapText(valText, valFont, valWidth, Gfx);
+                var keyLines = WrapText(keyText, keyFont!, keyWidth, Gfx);
+                var valLines = WrapText(valText, valFont!, valWidth, Gfx);
 
                 int linesCount = Math.Max(keyLines.Length, valLines.Length);
                 double rowHeight = linesCount * rowLH;
@@ -217,9 +217,9 @@ namespace xyDocumentor.Core.Pdf
         /// <param name="value"></param>
         public void DrawBulletLine(string title, string value)
         {
-            EnsureSpace(Theme.FontNormal, $"{title}: {value}");
+            EnsureSpace(Theme.FontNormal!, $"{title}: {value}");
             var text = $"{title}: {value}";
-            DrawParagraph(text, new XRect(_left, Y, _contentWidth, 0), Theme.FontNormal);
+            DrawParagraph(text, new XRect(_left, Y, _contentWidth, 0), Theme.FontNormal!);
             Spacer(4);
         }
 
@@ -231,8 +231,8 @@ namespace xyDocumentor.Core.Pdf
         public void DrawParagraph(string text, XFont? font = null)
         {
             font ??= Theme.FontNormal;
-            EnsureSpace(font, text);
-            DrawParagraph(text, new XRect(_left, Y, _contentWidth, 0), font);
+            EnsureSpace(font!, text);
+            DrawParagraph(text, new XRect(_left, Y, _contentWidth, 0), font!);
             Spacer(Theme.ParagraphSpacing);
         }
 
@@ -251,7 +251,7 @@ namespace xyDocumentor.Core.Pdf
             var widths = CalcColumnPixelWidths(columns.Select(c => c.WidthRatio).ToArray(), availableWidth);
 
             // Header
-            var headerHeight = Theme.LineHeight(Theme.FontSmallBold);
+            var headerHeight = Theme.LineHeight(Theme.FontSmallBold!);
             EnsureSpace(headerHeight + 4);
             double x = _left;
             for (int c = 0; c < columns.Length; c++)
@@ -283,9 +283,9 @@ namespace xyDocumentor.Core.Pdf
                     innerWidths.Add(innerWidth);
 
                     var cellText = row.Length > c ? row[c] ?? "" : "";
-                    var lines = WrapText(cellText, font, innerWidth - 0.5, Gfx);
+                    var lines = WrapText(cellText, font!, innerWidth - 0.5, Gfx);
                     wrappedCells.Add(lines);
-                    rowHeight = Math.Max(rowHeight, lines.Length * Theme.LineHeight(font));
+                    rowHeight = Math.Max(rowHeight, lines.Length * Theme.LineHeight(font!));
                 }
 
                 EnsureSpace(rowHeight + 4);
@@ -303,7 +303,7 @@ namespace xyDocumentor.Core.Pdf
                     var clipRect = new XRect(innerRect.X - 0.5, innerRect.Y, innerRect.Width + 1.0, innerRect.Height + 0.5);
                     
                     Gfx.IntersectClip(clipRect);
-                    DrawLines(wrappedCells[c], font, innerRect);
+                    DrawLines(wrappedCells[c], font!, innerRect);
                     Gfx.Restore(state);
                     
                     x += widths[c] + gap;
@@ -335,8 +335,8 @@ namespace xyDocumentor.Core.Pdf
         /// <returns></returns>
         public XRect DrawTocLine(string title, int pageNumber)
         {
-            var font = Theme.FontNormal;
-            double lineHeight = Theme.LineHeight(font);
+            XFont? font = Theme.FontNormal;
+            double lineHeight = Theme.LineHeight(font!);
 
             // Left and right text parts: title and page number
             string left = $"{title}";
@@ -470,7 +470,7 @@ namespace xyDocumentor.Core.Pdf
         public XRect DrawTocLineWrapped(string kind, string leftText, int pageNumber, double kindWidth, double gap = 3.0)
         {
             var font = Theme.FontNormal;
-            double lineHeight = Theme.LineHeight(font);
+            double lineHeight = Theme.LineHeight(font!);
 
             // Right side (page number)
             string right = pageNumber.ToString();
@@ -481,7 +481,7 @@ namespace xyDocumentor.Core.Pdf
             if (avail < 20) avail = 20; // guard against extremely narrow cases
 
             // Word-wrap the main text into lines that fit the available width
-            var linesArr = WrapText(leftText ?? string.Empty, font, avail, Gfx); // uses your gfx-based wrap
+            var linesArr = WrapText(leftText ?? string.Empty, font!, avail, Gfx); // uses your gfx-based wrap
             var lines = linesArr.Length == 0 ? new List<string> { string.Empty } : new List<string>(linesArr);
 
             // Compute dot leaders for the first line only
@@ -502,7 +502,7 @@ namespace xyDocumentor.Core.Pdf
             var kindState = Gfx.Save();
             Gfx.IntersectClip(kindRect);
 
-            string kindFitted = FitWithEllipsis(kind ?? string.Empty, font, Math.Max(1, kindWidth - 1));
+            string kindFitted = FitWithEllipsis(kind ?? string.Empty, font!, Math.Max(1, kindWidth - 1));
             Gfx.DrawString(kindFitted, font, XBrushes.Gray, kindRect, XStringFormats.TopRight);
 
             Gfx.Restore(kindState);
@@ -566,8 +566,8 @@ namespace xyDocumentor.Core.Pdf
             var baseFooter = Theme.FontSmall;
 
             // scale ~85%; clamp to a sane minimum
-            double headerSize = Math.Max(6.0, baseHeader.Size * 0.85);
-            double footerSize = Math.Max(6.0, baseFooter.Size * 0.85);
+            double headerSize = Math.Max(6.0, baseHeader!.Size * 0.85);
+            double footerSize = Math.Max(6.0, baseFooter!.Size * 0.85);
 
             var headerFont = new XFont(baseHeader.FontFamily.Name, headerSize, baseHeader.Style);
             var footerFont = new XFont(baseFooter.FontFamily.Name, footerSize, baseFooter.Style);

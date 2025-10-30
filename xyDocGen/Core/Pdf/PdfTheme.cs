@@ -5,6 +5,7 @@ using XFont = PdfSharpCore.Drawing.XFont;
 
 namespace xyDocumentor.Core.Pdf
 {
+#nullable enable
     /// <summary>
     /// Visual theme for PDF output (margins, spacing, colors, fonts).
     /// Fonts are resolved by your IFontResolver (e.g., AutoResourceFontResolver),
@@ -17,35 +18,66 @@ namespace xyDocumentor.Core.Pdf
             if (GlobalFontSettings.FontResolver == null)
                 GlobalFontSettings.FontResolver = new AutoResourceFontResolver();
         }
+        /// <summary>
+        /// Your custom infos here:
+        /// </summary>
+        public string? Description { get; set; }
 
-        public string Description { get; set; }
-
-        // Margins
+        /// <summary> Value for left margin; standard is 54  </summary>
         public double MarginLeft { get; init; } = 54;  // 0.75"
+        /// <summary> Value for right margin; standard is 54  </summary>
         public double MarginRight { get; init; } = 54;
-        public double MarginTop { get; init; } = 36;  
+
+        /// <summary> Value for the top margin; standard is 36 </summary>
+        public double MarginTop { get; init; } = 36;
+
+        /// <summary> Value for the bottom margin; standard is 36  </summary>
         public double MarginBottom { get; init; } = 36;
+
+        /// <summary> Value for the top of the page header; standard is 36  </summary>
         public double PageHeaderTop { get; init; } = 36;
 
-        // Spacing
+        /// <summary> Value for the spacing in paragraphs; standard is 6  </summary>
         public double ParagraphSpacing { get; init; } = 6;
+        /// <summary> Value for the spacing between colums in the table; standard is 10  </summary>
         public double TableColGap { get; init; } = 10;
+
+        /// <summary> Value for the line  spacing ; standard is 1.0  </summary>
         public double LineSpacingHeading { get; init; } = 1.0;
 
-        // Colors
+        /// <summary> Pimary color (40,40,40) </summary>
         public XColor ColorPrimary { get; init; } = XColor.FromArgb(40, 40, 40);
+        /// <summary> Dark color (30,30,30)</summary>
         public XColor ColorDark { get; init; } = XColor.FromArgb(30, 30, 30);
 
         // Fonts (resolved by the global IFontResolver)
-        public XFont FontH1 { get; init; }
-        public XFont FontH2 { get; init; }
-        public XFont FontH3 { get; init; }
-        public XFont FontH4 { get; init; }
-        public XFont FontNormal { get; init; }
-        public XFont FontNormalBold { get; init; }
-        public XFont FontSmall { get; init; }
-        public XFont FontSmallBold { get; init; }
-        public XFont FontMono { get; init; }
+        /// <summary>
+        /// Biggest Heading
+        /// </summary>
+        public XFont? FontH1 { get; init; }
+        /// <summary>
+        /// Second biggest heading
+        /// </summary>
+        public XFont? FontH2 { get; init; }
+        /// <summary>
+        /// Third biggest header
+        /// </summary>
+        public XFont? FontH3 { get; init; }
+        /// <summary>
+        /// Fourth biggest heading
+        /// </summary>
+        public XFont? FontH4 { get; init; }
+
+        /// <summary> Normal Font  </summary>
+        public XFont? FontNormal { get; init; }
+        /// <summary> Normal bold Font  </summary>
+        public XFont? FontNormalBold { get; init; }
+        /// <summary> Small Font  </summary>
+        public XFont? FontSmall { get; init; }
+        /// <summary> Small bold Font  </summary>
+        public  XFont? FontSmallBold { get; init; }
+        /// <summary> Monospace Font  </summary>
+        public XFont? FontMono { get; init; }
 
         /// <summary>
         /// Creates a default theme using logical families provided by the resolver:

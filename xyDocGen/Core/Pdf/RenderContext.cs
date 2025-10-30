@@ -5,14 +5,20 @@ using xyDocumentor.Core.Pdf;
 
 namespace xyDocumentor.Core.Pdf
 {
+#nullable enable
     /// <summary>
     /// Conveniently stores information for better oversight
     /// </summary>
     public class RenderContext
     {
+        /// <summary>
+        /// Name of this section
+        /// </summary>
         public string? CurrentSectionTitle { get; set; }
-
-        public string Description{ get; set; }
+        /// <summary>
+        /// Add custom infos
+        /// </summary>
+        public string? Description{ get; set; }
         /// <summary>
         /// 
         /// </summary>
@@ -24,7 +30,7 @@ namespace xyDocumentor.Core.Pdf
         /// <summary>
         /// 
         /// </summary>
-        public PageWriter Writer { get; set; }
+        public PageWriter? Writer { get; set; }
         /// <summary>
         /// 
         /// </summary>
@@ -40,7 +46,7 @@ namespace xyDocumentor.Core.Pdf
         {
             Document = pdf_Document_;
             Theme = pdf_Theme_;
-            Writer = pwr_Writer_ ?? default;
+            Writer = pwr_Writer_ ?? null; 
 
 
 

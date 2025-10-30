@@ -7,6 +7,9 @@ using xyDocumentor.Core.Docs;
 /// </summary>
 public class JsonRendererTests
 {
+    /// <summary>
+    /// Check for important section header in rendered stuff
+    /// </summary>
     [Fact]
     public void Render_Returns_Json_With_Name_And_Kind()
     {

@@ -9,6 +9,9 @@ using xyDocumentor.Core.Docs;
 /// </summary>
 public class HtmlRendererTests
 {
+    /// <summary>
+    /// Check if  html scaffolding gets added to the top level
+    /// </summary>
     [Fact]
     public void Render_Toplevel_Adds_Html_Scaffold()
     {
@@ -19,6 +22,9 @@ public class HtmlRendererTests
         Assert.Contains("MyClass", html);
     }
 
+    /// <summary>
+    /// Check if nested typed render their own html scaffold
+    /// </summary>
     [Fact]
     public void Render_Nested_Does_Not_Add_Html_Scaffold()
     {
