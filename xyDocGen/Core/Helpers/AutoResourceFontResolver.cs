@@ -1,11 +1,13 @@
 ﻿namespace xyDocumentor.Core.Fonts;
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using PdfSharpCore.Fonts;
+using xyToolz.Helper.Logging;
 
 /// <summary>
 /// PdfSharpCore font resolver that auto-detects embedded font resources (EmbeddedResource).
@@ -18,6 +20,7 @@ using PdfSharpCore.Fonts;
 /// </summary>
 public sealed class AutoResourceFontResolver : IFontResolver
 {
+    /// <summary> Add useful information here </summary>
     public string Description { get; set; }
 
     private readonly Assembly _asm;
@@ -41,6 +44,9 @@ public sealed class AutoResourceFontResolver : IFontResolver
 
     public string DefaultFontName => FamilySans;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public AutoResourceFontResolver()
     {
         // List all embedded resources in the executing assembly
@@ -60,11 +66,11 @@ public sealed class AutoResourceFontResolver : IFontResolver
             .ToArray();
 
         // Heuristics for picking sans/mono/bold faces
-        var sansRegex = new Regex("(inter|roboto|open.?sans|noto.?sans(?!.*mono)|dejavu.?sans(?!.*mono)|source.?sans|montserrat|lato|arial|helvetica|liberation.?sans)",
+        Regex sansRegex = new ("(inter|roboto|open.?sans|noto.?sans(?!.*mono)|dejavu.?sans(?!.*mono)|source.?sans|montserrat|lato|arial|helvetica|liberation.?sans)",
                                   RegexOptions.IgnoreCase);
-        var monoRegex = new Regex("(comic.?mono|comic.?sans|comic|monospace|cascadia|fira.?mono|dejavu.?sans.?mono|noto.?sans.?mono|inconsolata|source.?code|courier|consolas|menlo|mono|code)",
+        Regex monoRegex = new("(comic.?mono|comic.?sans|comic|monospace|cascadia|fira.?mono|dejavu.?sans.?mono|noto.?sans.?mono|inconsolata|source.?code|courier|consolas|menlo|mono|code)",
                                   RegexOptions.IgnoreCase);
-        var boldRegex = new Regex("(bold|semi.?bold|demi|black)", RegexOptions.IgnoreCase);
+        Regex boldRegex = new ("(bold|semi.?bold|demi|black)", RegexOptions.IgnoreCase);
 
         // Pick a sans regular
         _resSansReg = fontRes.FirstOrDefault(n => sansRegex.IsMatch(n))
@@ -73,10 +79,9 @@ public sealed class AutoResourceFontResolver : IFontResolver
         // Try to find a matching bold for the chosen sans (same stem + bold marker)
         if (_resSansReg != null)
         {
-            var stem = Stem(_resSansReg);
-            _resSansBold = fontRes.FirstOrDefault(n =>
-                n != _resSansReg &&
-                Stem(n) == stem && boldRegex.IsMatch(n))
+            string stem = GetFontStem(_resSansReg);
+            _resSansBold = fontRes.FirstOrDefault(n => n != _resSansReg &&
+                GetFontStem(n) == stem && boldRegex.IsMatch(n))
                 ?? fontRes.FirstOrDefault(n => boldRegex.IsMatch(n)); // generic bold as a fallback
         }
 
@@ -103,6 +108,13 @@ public sealed class AutoResourceFontResolver : IFontResolver
             throw new FileNotFoundException("No embedded fonts found. Add .ttf/.otf under Resources/Fonts and mark them as <EmbeddedResource>.");
     }
 
+    /// <summary>
+    /// Define the typeface to be used
+    /// </summary>
+    /// <param name="familyName"></param>
+    /// <param name="isBold"></param>
+    /// <param name="isItalic"></param>
+    /// <returns></returns>
     public FontResolverInfo ResolveTypeface(string familyName, bool isBold, bool isItalic)
     {
         var fam = (familyName ?? "").Trim().ToLowerInvariant();
@@ -120,36 +132,79 @@ public sealed class AutoResourceFontResolver : IFontResolver
         return new FontResolverInfo(FaceSansRegular);
     }
 
+    /// <summary>
+    /// Get font by name
+    /// </summary>
+    /// <param name="faceName"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
     public byte[] GetFont(string faceName)
     {
   
         return faceName switch
         {
-            FaceSansRegular => _bufSansReg ??= LoadBytes(_asm, _resSansReg!),
-            FaceSansBold => _bufSansBold ??= LoadBytes(_asm, _resSansBold ?? _resSansReg!),
-            FaceMonoRegular => _bufMonoReg ??= LoadBytes(_asm, _resMonoReg ?? _resSansReg!),
+            FaceSansRegular => _bufSansReg ??= GetBytesFromAssemblyManifest(_asm, _resSansReg!),
+            FaceSansBold => _bufSansBold ??= GetBytesFromAssemblyManifest(_asm, _resSansBold ?? _resSansReg!),
+            FaceMonoRegular => _bufMonoReg ??= GetBytesFromAssemblyManifest(_asm, _resMonoReg ?? _resSansReg!),
             // Comic Sans MS is missing here
             _ => throw new ArgumentException($"Unknown face name: {faceName}", nameof(faceName))
         };
     }
 
-    private static byte[] LoadBytes(Assembly asm, string resourceName)
+    /// <summary>
+    /// Read the data from the target manifest resource in this assembly 
+    /// </summary>
+    /// <param name="asm"></param>
+    /// <param name="manifestName"></param>
+    /// <returns>byte[] filled with manifest data</returns>
+    /// <exception cref="FileNotFoundException"></exception>
+    private static byte[] GetBytesFromAssemblyManifest(Assembly asm, string manifestName)
     {
-        using var s = asm.GetManifestResourceStream(resourceName)
-            ?? throw new FileNotFoundException(
-                $"Embedded font not found: {resourceName}\n" +
-                "Check <EmbeddedResource> items and the project's default namespace.");
-        using var ms = new MemoryStream();
-        s.CopyTo(ms);
-        return ms.ToArray();
+        // Read the target resource from this assembly
+        using Stream DataStreamFromManifestResource = asm.GetManifestResourceStream(manifestName)?? 
+            throw new FileNotFoundException($"Embedded font not found: {manifestName} \nCheck <EmbeddedResource> items and the project's default namespace.");
+        
+        // Copy the data into a MemoryStream 
+        using MemoryStream ms_RessourceStream = new ();         DataStreamFromManifestResource.CopyTo(ms_RessourceStream);
+
+        // Convert and return it
+        byte[]  bytesFromResourceStream =ms_RessourceStream.ToArray();      
+        return bytesFromResourceStream;
     }
 
-    private static string Stem(string resourceName)
+    /// <summary>
+    ///  Extracts a font's family stem from a filename
+    ///  Removes style tokens like Regular/Bold/Italic/Medium/etc. 
+    /// </summary>
+    /// <param name="fontFileName_"></param>
+    /// <returns></returns>
+    private static string GetFontStem(string fontFileName_)
     {
-        // Extract a family stem (remove style tokens like Regular/Bold/Italic/Medium/etc.)
-        var file = resourceName.Split('.').Reverse().Skip(1).FirstOrDefault() ?? resourceName; // filename without extension
-        return Regex.Replace(file, "(regular|bold|italic|oblique|medium|semi.?bold|black|light|thin|extra|ultra)",
-                             "", RegexOptions.IgnoreCase)
-                    .Replace("_", "").Replace("-", "").ToLowerInvariant();
+        string fontStem = fontFileName_;
+        string styleTokensToRemove = "(regular|bold|italic|oblique|medium|semi.?bold|black|light|thin|extra|ultra)";
+        string emptyStringForReplacement="";
+       
+        // Split the filename up by the dot and reverse the order 
+        IEnumerable<string> splitUpReversedFontFileName = fontFileName_.Split('.').Reverse();
+
+        // Get the second last word from the the filename
+        if (splitUpReversedFontFileName.Skip(1).FirstOrDefault() is string stemFromFileName)
+        {
+            // Override the whole name with only the stem
+            fontStem = stemFromFileName;
+        }
+        else
+        {
+            // Shouldn't be reached i guess
+            xyLog.Log($"No second entry in the enumerable {fontFileName_}!!!    \nPlease contact supervisor and stay calm!");
+        }
+
+        // Remove style tokens, low lines & hyphens from the stem and garantuee it's in lower case:
+        string afterRemovingStyleTokens = Regex.Replace(fontStem, styleTokensToRemove, emptyStringForReplacement, RegexOptions.IgnoreCase);
+        string removedLowLinesAndDashes = afterRemovingStyleTokens.Replace("_", "").Replace("-", "");
+        string loweredStem = removedLowLinesAndDashes.ToLowerInvariant();
+              
+        return loweredStem;
+
     }
 }

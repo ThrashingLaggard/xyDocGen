@@ -8,6 +8,7 @@ namespace xyDocumentor.Core.Docs
     /// </summary>
     public static class TypeDocExtensions
     {
+        /// <summary> Add useful information here </summary>
         public static string Description { get; set; }
 
         private static readonly Dictionary<TypeDoc, List<TypeDoc>> NestedMapping = new();

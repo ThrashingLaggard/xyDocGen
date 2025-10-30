@@ -6,19 +6,6 @@
 
 
 
-- Remarks mit auslesen und ausgeben
-- Format mit als Unterordner hinzufügen.....
---> Ggf mehrere Formate auf einmal generieren
-
-
-
-
-
-
-
-
-
-
 
 https://github.com/ThrashingLaggard/xyDocGen.git
 

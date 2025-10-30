@@ -27,19 +27,6 @@ namespace xyDocumentor.Core.Helpers
         // Fallback string
         private const string NO_XML_SUMMARY_FALLBACK = "(No XML-Summary)";
         private readonly static xyMessageFactory xyMsgFactory = new();
-        /// <summary>
-        /// Flattens all attributes of a type/member into a simple list of names
-        /// </summary>
-        /// <param name="listedAttributesFromMember_"> List of SyntaxNodes</param>
-        /// <returns></returns>
-        //public static IEnumerable<string> FlattenAttributes(SyntaxList<AttributeListSyntax> listedAttributesFromMember_)
-        //{
-        //    // Refactored: Use SelectMany and Select for concise flattening
-        //    return listedAttributesFromMember_
-        //        .SelectMany(list => list.Attributes)
-        //        .Select(attribute => attribute.Name.ToString())
-        //        .ToList();
-        //}
 
         /// <summary>
         /// Does almost the same as the normal version but with more variables and two  foreaches instead of selects: 
@@ -214,9 +201,7 @@ namespace xyDocumentor.Core.Helpers
             return md_Member;
         }
 
-        // <summary>
-        /// Extracts documentation for generic type parameters from the XML &lt;typeparam&gt; tags.
-        /// </summary>
+        ///<summary> Extracts documentation for generic type parameters from the XML &lt;typeparam&gt; tags </summary>
         private static IDictionary<string, string> ExtractXmlTypeParameterSummaries(MemberDeclarationSyntax parentNode)
         {
             var summaries = new Dictionary<string, string>();
