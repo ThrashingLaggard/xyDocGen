@@ -1,5 +1,4 @@
 ﻿Interne Anpassungen:
-- Remarks mit auslesen und ausgeben
 
 - Befehle für output in Dictionary speichern?
 
@@ -7,8 +6,9 @@
 
 
 
-- Format mit als Unterordner hinzufügen.....????
---> Ggf mehrere Formate auf einmal?
+- Remarks mit auslesen und ausgeben
+- Format mit als Unterordner hinzufügen.....
+--> Ggf mehrere Formate auf einmal generieren
 
 
 

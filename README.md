@@ -18,7 +18,7 @@ xydocgen               =====>>>>>               xydocgen      --root [current wo
 dotnet xydocgen --root . --out docs/api --exclude .git;bin;obj;node_modules;.vs;TestResults
 
 (add this keyword to exclude non public)
-xydocgen  --privat 
+xydocgen  --private 
 
 (Choose your output flavour)
 xydocgen --format [json/pdf/html/md]
@@ -37,19 +37,21 @@ xydocgen --help
 ## Planned features & improvements
 
 + Parameters
-  - Adding parameters to output index and/or tree into the console
-  - Adding parameters to only output the index or only the tree
-  - By using the --info flag output this readme file
-  - Adding a flag to only output the target(s) in the console
+	- Adding parameters to output index and/or tree into the console
+	- Adding parameters to only output the index or only the tree
+	- By using the --info flag output this readme file
+	- Adding a flag to only output the target(s) in the console
 
+
+ 
 + Upgrades 
-- Reading and outputting the remarks
-- Upgrading the visual result of the outputs
+	- Reading and outputting the remarks
+	- Upgrading the visual result of the outputs
+	- Generate documentation in multiple formats at once
 
 + Changing the structure:
-  - Moving the output of index and tree into the first level 
-  
-
+	- Moving the output of index and tree into the first level 
+    - subfolder for each format
 
   
 ## Installation
@@ -81,6 +83,3 @@ The api folder is useless and needs to be removed, if there is no replacement fr
 ThrashingLaggard
 https://github.com/ThrashingLaggard
 
-## Contact
-Ideas or questions:
-xytlagg@gmail.com

@@ -191,12 +191,12 @@
 		</PackageReference>
 <!--
 		<PackageReference Include="SharpZipLib" Version="1.4.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
--->
 
 
 		<PackageReference Include="System.Collections.Immutable" Version="9.0.10" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
 		  <IncludeAssets>compile</IncludeAssets>
 		</PackageReference>
+-->
 		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="9.0.10" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
 		  <IncludeAssets>compile</IncludeAssets>
 		</PackageReference>
