@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using xyDocumentor.Core.Models;
+using xyToolz.Helper.Logging;
 
 /// <summary>
 /// Deterministic, testable CLI parser for xyDocumentor.
@@ -22,7 +23,7 @@ internal static class StringAnalyzer
     public static bool TryParseOptions(string[] args, out CliOptions opts, out string error)
     {
         error = "";
-        var tokens = args?.ToList() ?? new List<string>();
+        List<string> tokens = args?.ToList() ??[];
         var dictEq = BuildEqMap(tokens); // for --key=value
         var i = 0;
 
@@ -30,8 +31,8 @@ internal static class StringAnalyzer
         string rootPath = null;
         string outPath = null;  // Benutzer kann --out setzen; wir wandeln später in outBase um
         string folder = "docs";
-        List<string> listedFormats = new() { "pdf" };
-        List<string> listedSubfolders = new() { "api" };
+        List<string> listedFormats = ["pdf"];
+        List<string> listedSubfolders = ["api"];
         bool includeNonPublic = true; // default: include non-public (unless --private)
         var excludes = CliOptions.DefaultExcludes();
 
@@ -60,13 +61,13 @@ internal static class StringAnalyzer
                     case "--subfolder":
                         listedSubfolders = NormalizeList(eqValue);
                         if (listedSubfolders.Count == 0)
-                            listedSubfolders = new() { "api" };
+                            listedSubfolders = ["api"];
                         break;
 
                     case "--format":
                         listedFormats = NormalizeFormats(eqValue);
                         if (listedFormats.Count == 0)
-                            listedFormats = new() { "md" };
+                            listedFormats = ["md"];
                         foreach (var f in listedFormats)
                         {
                             if (!AllowedFormats.Contains(f, StringComparer.OrdinalIgnoreCase))
@@ -177,7 +178,7 @@ internal static class StringAnalyzer
         // 1 Subfolder für alle Formate erlauben; sonst 1:1 verlangen
         if (listedSubfolders.Count == 1 && listedFormats.Count > 1)
         {
-            listedSubfolders = Enumerable.Repeat(listedSubfolders[0], listedFormats.Count).ToList();
+            listedSubfolders = [.. Enumerable.Repeat(listedSubfolders[0], listedFormats.Count)];
         }
         else if (listedSubfolders.Count != listedFormats.Count)
         {
@@ -301,22 +302,20 @@ internal static class StringAnalyzer
     }
 
     private static List<string> NormalizeFormats(string s)
-    => NormalizeList(s)
+    => [.. NormalizeList(s)
         .Select(x => x.ToLowerInvariant())
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .ToList();
+        .Distinct(StringComparer.OrdinalIgnoreCase)];
 
     private static List<string> NormalizeList(string s)
     {
-        if (string.IsNullOrWhiteSpace(s)) return new List<string>();
-        return s.Split(new[] { ';', ',' }, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-                .ToList();
+        if (string.IsNullOrWhiteSpace(s)) return [];
+        return [.. s.Split([ ';', ',' ], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)];
     }
 
     private static IEnumerable<string> SplitList(string s)
     {
         if (string.IsNullOrWhiteSpace(s)) yield break;
-        foreach (var part in s.Split(new[] { ';', ',' }, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+        foreach (var part in s.Split([';', ','], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
             yield return part;
     }
 
@@ -361,20 +360,18 @@ internal static class StringAnalyzer
     }
 
     // Backwards-compatible API (only used by older code paths). Prefer TryParseOptions above.
-    internal static (string root, string outPath, string format, bool includeNonPublic, HashSet<string> excludedParts)AnalyzeArgs(List<string> externalArguments_, string[] args_)
+    internal static (string root, string outPath, string format, bool includeNonPublic, HashSet<string> excludedParts)AnalyzeArgs(string[] args_)
     {
         if (!TryParseOptions(args_, out var o, out string parseError))
         {
             // Fallback: alter Default-Pfad mit 'docs/api'
             var defRoot = GetDefaultRoot();
+            xyLog.Log(parseError);
             return (defRoot, Path.Combine(defRoot, "docs", "api"), "md", true, CliOptions.DefaultExcludes());
         }
 
-        // Backcompat: Für Alt-Code, der einen EINZELNEN Zielpfad erwartet,
-        // nimm das (erste) Format und mappe es auf den konkreten Pfad:
-        var selectedFormat = o.Format; // erstes Format oder "md"
-        string legacyOut = null;
-
+        string legacyOut;
+        string selectedFormat = o.Format;
         if (!string.IsNullOrWhiteSpace(selectedFormat) && o.OutputDirs != null
             && o.OutputDirs.TryGetValue(selectedFormat, out var mapped))
         {

@@ -13,8 +13,8 @@ namespace xyDocumentor.Core.Models
     {
         public string RootPath { get; init; } = "";
         public string OutPath { get; set; } // Basis (z. B. <repo>/docs oder --out)
-        public List<string> Formats { get; set; } = new();
-        public List<string> Subfolders { get; set; } = new(); // "md" | "html" | "pdf" | "json"
+        public List<string> Formats { get; set; } = [];
+        public List<string> Subfolders { get; set; } = []; // "md" | "html" | "pdf" | "json"
 
         public Dictionary<string, string> OutputDirs { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
@@ -42,7 +42,7 @@ namespace xyDocumentor.Core.Models
         public bool Info { get; init; } = false; // --info
 
         public static HashSet<string> DefaultExcludes() =>
-            new HashSet<string>(new[] { ".git", "bin", "obj", "node_modules", ".vs", "TestResults" },
+            new([".git", "bin", "obj", "node_modules", ".vs", "TestResults"],
                                 StringComparer.OrdinalIgnoreCase);
     }
 }

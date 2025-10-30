@@ -11,7 +11,7 @@ namespace xyDocumentor.Core.Docs
         /// <summary> Add useful information here </summary>
         public static string Description { get; set; }
 
-        private static readonly Dictionary<TypeDoc, List<TypeDoc>> NestedMapping = new();
+        private static readonly Dictionary<TypeDoc, List<TypeDoc>> NestedMapping = [];
 
         /// <summary>
         /// Returns all nested types stored in the mapping.

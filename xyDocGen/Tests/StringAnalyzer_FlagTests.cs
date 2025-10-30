@@ -1,13 +1,9 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Collections.Generic;
 using Xunit;
-// Make sure the namespace matches where your StringAnalyzer and CliOptions live:
-using xyDocumentor.Core.Helpers;
-using xyDocumentor.Core.Models;
 
-namespace xyDocumentor.Core.Tests
+namespace xyDocumentor.Tests
 {
     /// <summary>
     /// Exhaustive flag coverage for StringAnalyzer.TryParseOptions + AnalyzeArgs.
@@ -32,9 +28,9 @@ namespace xyDocumentor.Core.Tests
         /// </summary>
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             TryDelete(_tmpRoot);
             TryDelete(_tmpOut);
-            this.Dispose();
         }
 
         private static string CreateTempDir(string suffix)
@@ -254,7 +250,7 @@ namespace xyDocumentor.Core.Tests
         public void AnalyzeArgs_Returns_Tuple_With_Parsed_Values()
         {
             var (root, outPath, format, includeNonPublic, excludes) =
-                StringAnalyzer.AnalyzeArgs(new List<string>(), A("--root", _tmpRoot, "--out", _tmpOut, "--format", "json", "--private", "--exclude", ".cache;.out"));
+                StringAnalyzer.AnalyzeArgs(["--root", _tmpRoot, "--out", _tmpOut, "--format", "json", "--private", "--exclude", ".cache;.out"]);
 
             Assert.Equal(Path.GetFullPath(_tmpRoot), root);
             Assert.Equal(Path.GetFullPath(_tmpOut), outPath);
@@ -272,7 +268,7 @@ namespace xyDocumentor.Core.Tests
         {
             // Unknown option triggers parse fail; AnalyzeArgs should still return sane defaults
             var (root, outPath, format, includeNonPublic, excludes) =
-                StringAnalyzer.AnalyzeArgs(new List<string>(), A("--root", _tmpRoot, "--out", _tmpOut, "--unknownFlag"));
+                StringAnalyzer.AnalyzeArgs(["--root", _tmpRoot, "--out", _tmpOut, "--unknownFlag"]);
 
             Assert.False(string.IsNullOrWhiteSpace(root));
             Assert.False(string.IsNullOrWhiteSpace(outPath));

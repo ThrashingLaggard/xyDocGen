@@ -20,7 +20,7 @@ namespace xyDocumentor.Core.Helpers
     /// <summary>
     /// Little helpers in the fight for better oversight
     /// </summary>
-    internal static class Utils
+    internal static partial class Utils
     {
         public static string Description { get; set; }
 
@@ -37,7 +37,7 @@ namespace xyDocumentor.Core.Helpers
         public static List<string> FlattenAttributes(SyntaxList<AttributeListSyntax> listedAttributesFromMember_)
         {
             // Store the results to return them for later use
-            List<string> listedResults = new();
+            List<string> listedResults = [];
 
             // For every SyntaxNode (here: List of Attributes) in the List
             foreach (AttributeListSyntax als_ListOfAttributes in listedAttributesFromMember_)
@@ -67,7 +67,7 @@ namespace xyDocumentor.Core.Helpers
             // Checks for an invalid parameter
             if (baseList_ is null || baseList_.Span.IsEmpty)
             {
-                return Enumerable.Empty<string>();
+                return [];
             }
 
             // Project every type in the externally provided list into a string 
@@ -130,7 +130,7 @@ namespace xyDocumentor.Core.Helpers
 
 
         // Top-Level: static readonly Regex
-        private static readonly Regex TagRemovalRegex = new Regex("<.*?>", RegexOptions.Compiled);
+        private static readonly Regex TagRemovalRegex = MyRegex();
 
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace xyDocumentor.Core.Helpers
                 Summary = ExtractXmlSummaryFromSyntaxNode(mds_Member_),
 
                 Modifiers = modifiers,
-                Attributes = Utils.FlattenAttributes(mds_Member_.AttributeLists).ToList(),
+                Attributes = [.. Utils.FlattenAttributes(mds_Member_.AttributeLists)],
 
                 Remarks = ExtractXmlRemarksFromSyntaxNode(mds_Member_),
 
@@ -202,7 +202,7 @@ namespace xyDocumentor.Core.Helpers
         }
 
         ///<summary> Extracts documentation for generic type parameters from the XML &lt;typeparam&gt; tags </summary>
-        private static IDictionary<string, string> ExtractXmlTypeParameterSummaries(MemberDeclarationSyntax parentNode)
+        private static Dictionary<string, string> ExtractXmlTypeParameterSummaries(MemberDeclarationSyntax parentNode)
         {
             var summaries = new Dictionary<string, string>();
 
@@ -268,7 +268,7 @@ namespace xyDocumentor.Core.Helpers
         /// <summary>
         /// Extracts constraints for generic methods/types (e.g., 'where T : class, new()').
         /// </summary>
-        private static IList<string> ExtractGenericConstraints(MemberDeclarationSyntax mds_MemberNode_)
+        private static List<string> ExtractGenericConstraints(MemberDeclarationSyntax mds_MemberNode_)
         {
             List<string> listedConstraints = [];
 
@@ -426,7 +426,7 @@ namespace xyDocumentor.Core.Helpers
         public static async Task<bool> WriteDataToFilesOrderedByNamespace(IEnumerable<TypeDoc> listedAllTypes_, string outPath_, string format_)
         {
             string content;
-            bool isWrittenCurrent = false;
+            bool isWrittenCurrent;
             bool isWrittenAll = true;
             string cleanedNamespace;
 
@@ -476,6 +476,7 @@ namespace xyDocumentor.Core.Helpers
                 if(isWrittenCurrent is false)
                 {
                     isWrittenAll = isWrittenCurrent;
+                    xyLog.Log($"Wrote the current type {isWrittenCurrent}");
                 }
             }
             return isWrittenAll;
@@ -487,7 +488,7 @@ namespace xyDocumentor.Core.Helpers
         /// </summary>
         public static bool IsExcluded(string path, HashSet<string> excludeParts)
         {
-            var parts = path.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+            var parts = path.Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar]);
             return parts.Any(p => excludeParts.Contains(p));
         }
 
@@ -625,9 +626,14 @@ namespace xyDocumentor.Core.Helpers
                                         .Trim(); // Final trim of the whole block
 
             // Replace multiple spaces with a single space to normalize formatting (e.g., for multi-line summaries).
-            cleanedText = Regex.Replace(cleanedText, @"\s+", " ");
+            cleanedText = CleanRegex().Replace(cleanedText, " ");
 
             return cleanedText;
         }
+
+        [GeneratedRegex("<.*?>", RegexOptions.Compiled)]
+        private static partial Regex MyRegex();
+        [GeneratedRegex(@"\s+")]
+        internal static partial Regex CleanRegex();
     }
 }

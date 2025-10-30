@@ -1,7 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-using PdfSharpCore.Pdf;
+﻿using PdfSharpCore.Pdf;
 using System;
-using xyDocumentor.Core.Pdf;
 
 namespace xyDocumentor.Core.Pdf
 {
