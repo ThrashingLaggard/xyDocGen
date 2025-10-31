@@ -9,7 +9,6 @@
     using System.Threading.Tasks;
     using xyDocumentor.Core.Docs;
     using xyDocumentor.Core.Extractors;
-    using xyDocumentor.Core.Fonts;
     using xyDocumentor.Core.Helpers;
     using xyDocumentor.Core.Renderer;
     using xyToolz.Helper.Logging;
@@ -176,11 +175,11 @@
             // Set the custom resolver ASAP and test it via the INSTANCE, not the static helper
             var fr = GlobalFontSettings.FontResolver = new AutoResourceFontResolver();
 
-            var info = fr.ResolveTypeface(xyDocumentor.Core.Fonts.AutoResourceFontResolver.FamilySans, false, false);
+            var info = fr.ResolveTypeface(AutoResourceFontResolver.FamilySans, false, false);
             System.Diagnostics.Debug.WriteLine("Resolved face via instance resolver: " + info?.FaceName);
 
             // Optional: list embedded resources to verify the fonts are really there
-            foreach (var n in typeof(xyDocumentor.Core.Fonts.AutoResourceFontResolver).Assembly.GetManifestResourceNames())
+            foreach (var n in typeof(AutoResourceFontResolver).Assembly.GetManifestResourceNames())
                 System.Diagnostics.Debug.WriteLine("RES: " + n);
 
 

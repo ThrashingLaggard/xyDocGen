@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
+using xyDocumentor.Core.Helpers;
 
 namespace xyDocumentor.Tests
 {
@@ -34,7 +35,7 @@ namespace xyDocumentor.Tests
         {
             TryDelete(_tmpRoot);
             TryDelete(_tmpOut);
-            this.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         private static string CreateTempDir(string suffix)

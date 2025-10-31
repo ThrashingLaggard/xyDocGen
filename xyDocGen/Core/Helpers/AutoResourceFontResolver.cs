@@ -1,4 +1,4 @@
-﻿namespace xyDocumentor.Core.Fonts;
+﻿namespace xyDocumentor.Core.Helpers;
 #nullable enable
 
 using System;
@@ -19,7 +19,7 @@ using xyToolz.Helper.Logging;
 /// Use the family names below with XFont:
 ///   FamilySans = "XY Sans", FamilyMono = "XY Mono".
 /// </summary>
-public sealed class AutoResourceFontResolver : IFontResolver
+public sealed partial class AutoResourceFontResolver : IFontResolver
 {
     /// <summary> Add useful information here </summary>
     public string? Description { get; set; }
@@ -66,15 +66,13 @@ public sealed class AutoResourceFontResolver : IFontResolver
             System.Diagnostics.Debug.WriteLine("RES: " + n);
 
         // Consider only .ttf/.otf
-        string[] fontRes = names.Where(n => n.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase) || 
-                                                                  n.EndsWith(".otf", StringComparison.OrdinalIgnoreCase)).ToArray();
+        string[] fontRes = [.. names.Where(n => n.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase) || 
+                                                                  n.EndsWith(".otf", StringComparison.OrdinalIgnoreCase))];
 
         // Heuristics for picking sans/mono/bold faces
-        Regex sansRegex = new ("(inter|roboto|open.?sans|noto.?sans(?!.*mono)|dejavu.?sans(?!.*mono)|source.?sans|montserrat|lato|arial|helvetica|liberation.?sans)",
-                                  RegexOptions.IgnoreCase);
-        Regex monoRegex = new("(comic.?mono|comic.?sans|comic|monospace|cascadia|fira.?mono|dejavu.?sans.?mono|noto.?sans.?mono|inconsolata|source.?code|courier|consolas|menlo|mono|code)",
-                                  RegexOptions.IgnoreCase);
-        Regex boldRegex = new ("(bold|semi.?bold|demi|black)", RegexOptions.IgnoreCase);
+        Regex sansRegex = SansRegex();
+        Regex monoRegex = MonoRegex();
+        Regex boldRegex = BoldRegex();
 
         // Pick a sans regular
         _resSansReg = fontRes.FirstOrDefault(n => sansRegex.IsMatch(n))
@@ -93,8 +91,8 @@ public sealed class AutoResourceFontResolver : IFontResolver
         // _resMonoReg = fontRes.FirstOrDefault(n => monoRegex.IsMatch(n));
 
         // Pick a mono regular (Comic bevorzugen)
-        _resMonoReg = fontRes.Where(n => monoRegex.IsMatch(n)).OrderByDescending(n => Regex.IsMatch(n, "comic", RegexOptions.IgnoreCase) ? 
-            2 : Regex.IsMatch(n, "monospace", RegexOptions.IgnoreCase) ? 1 : 0).FirstOrDefault();
+        _resMonoReg = fontRes.Where(n => monoRegex.IsMatch(n)).OrderByDescending(n => MatchComicRegex().IsMatch(n) ? 
+            2 : MatchMonospaceRegex().IsMatch(n) ? 1 : 0).FirstOrDefault();
 
 
 
@@ -211,4 +209,15 @@ public sealed class AutoResourceFontResolver : IFontResolver
         return loweredStem;
 
     }
+
+    [GeneratedRegex("(inter|roboto|open.?sans|noto.?sans(?!.*mono)|dejavu.?sans(?!.*mono)|source.?sans|montserrat|lato|arial|helvetica|liberation.?sans)", RegexOptions.IgnoreCase, "de-DE")]
+    internal static partial Regex SansRegex();
+    [GeneratedRegex("(comic.?mono|comic.?sans|comic|monospace|cascadia|fira.?mono|dejavu.?sans.?mono|noto.?sans.?mono|inconsolata|source.?code|courier|consolas|menlo|mono|code)", RegexOptions.IgnoreCase, "de-DE")]
+    private static partial Regex MonoRegex();
+    [GeneratedRegex("(bold|semi.?bold|demi|black)", RegexOptions.IgnoreCase, "de-DE")]
+    internal static partial Regex BoldRegex();
+    [GeneratedRegex("comic", RegexOptions.IgnoreCase, "de-DE")]
+    internal static partial Regex MatchComicRegex();
+    [GeneratedRegex("monospace", RegexOptions.IgnoreCase, "de-DE")]
+    internal static partial Regex MatchMonospaceRegex();
 }

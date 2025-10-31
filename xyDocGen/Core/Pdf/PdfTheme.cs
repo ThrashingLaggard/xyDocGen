@@ -1,5 +1,5 @@
 ﻿using PdfSharpCore.Fonts;
-using xyDocumentor.Core.Fonts;
+using xyDocumentor.Core.Helpers;
 using XColor = PdfSharpCore.Drawing.XColor;
 using XFont = PdfSharpCore.Drawing.XFont;
 
@@ -86,8 +86,8 @@ namespace xyDocumentor.Core.Pdf
         /// </summary>
         public static PdfTheme CreateDefault()
         {
-            const string Sans = xyDocumentor.Core.Fonts.AutoResourceFontResolver.FamilySans; // "XY Sans"
-            const string Mono = xyDocumentor.Core.Fonts.AutoResourceFontResolver.FamilyMono; // "XY Mono"
+            const string Sans = AutoResourceFontResolver.FamilySans; // "XY Sans"
+            const string Mono = AutoResourceFontResolver.FamilyMono; // "XY Mono"
 
             System.Diagnostics.Debug.WriteLine("Resolver=" + (PdfSharpCore.Fonts.GlobalFontSettings.FontResolver?.GetType().FullName ?? "null"));
 

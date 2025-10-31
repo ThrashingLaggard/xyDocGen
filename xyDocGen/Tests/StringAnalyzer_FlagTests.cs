@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using Xunit;
+using xyDocumentor.Core.Helpers;
 
 namespace xyDocumentor.Tests
 {
