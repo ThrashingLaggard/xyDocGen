@@ -11,7 +11,17 @@ namespace xyDocumentor.RendererAdapter;
 /// </summary>
 public static class RendererFactory
 {
-
+    /// <summary>
+    /// Create a nre Renderer (Adapter) according to the input string
+    /// 
+    ///     "md" or "markdown" 
+    ///     "html" or "hypertext
+    ///     "json" 
+    ///     "pdf"
+    /// </summary>
+    /// <param name="format"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     public static IDocRenderer Create(string format)=> format?.Trim().ToLowerInvariant() 
         switch
         {
