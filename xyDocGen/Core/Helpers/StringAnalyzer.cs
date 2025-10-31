@@ -33,7 +33,7 @@ internal static class StringAnalyzer
         string rootPath = null;
         string outPath = null;  // Benutzer kann --out setzen; wir wandeln später in outBase um
         string folder = "docs";
-        List<string> listedFormats = ["pdf", "md", "html", "json"]; // default should be md
+        List<string> listedFormats = ["pdf", "md", "html", "json"]; 
         List<string> listedSubfolders = [];
         bool includeNonPublic = true; // default: include non-public (unless --private)
         var excludes = CliOptions.DefaultExcludes();
