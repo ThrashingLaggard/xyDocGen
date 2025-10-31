@@ -153,8 +153,8 @@
                 }
             }
 
-            var summary = string.Join(", ", opt.Formats.Select(f => $"{f}→{CliRuntimeHelper.ResolveFormatDir(opt, f.ToLowerInvariant())}"));
-            xyLog.Log($"\n✅ Finished. Types: {flattened.Count()}, Formats: [{summary}]\n");
+            var summary = string.Join(',', opt.Formats.Select(f => $"\n{f}→{CliRuntimeHelper.ResolveFormatDir(opt, f.ToLowerInvariant())}"));
+            xyLog.Log($"✅ Finished. Types: {flattened.Count()}, Formats: {summary}\n");
         }
 
         /// <summary>

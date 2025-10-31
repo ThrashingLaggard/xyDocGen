@@ -23,7 +23,7 @@ namespace xyDocumentor.Core.Renderer
         /// <param name="level_">The starting heading level for the Markdown output (e.g., 1 for #, 2 for ##).</param>
         /// <param name="prebuiltAnchorMap"></param>
         /// <returns>A string containing the generated Markdown documentation.</returns>
-        public static string Render(TypeDoc td_Type, int level_ = 1, Dictionary<string, string> prebuiltAnchorMap = null)
+        public static string Render(TypeDoc td_Type, int level_ = 1, Dictionary<string, string>? prebuiltAnchorMap = null)
         {
             // The StringBuilder is used for efficient string manipulation and building.
             StringBuilder sb_MarkdownBuilder = new();
@@ -95,7 +95,7 @@ namespace xyDocumentor.Core.Renderer
             // Retrieve the anchor ID using the unique name as the key.
             string uniqueName = GetUniqueTypeName(type);
 
-            if (!dic_AnchorMap_.TryGetValue(uniqueName, out string anchorID))
+            if (!dic_AnchorMap_.TryGetValue(uniqueName, out string? anchorID))
             {
                 // Be forgiving: if the key is missing (edge-case), generate and cache deterministically
                 anchorID = GetAnchorIDFromTypeName(uniqueName);
@@ -254,7 +254,7 @@ namespace xyDocumentor.Core.Renderer
             {
                 // Derive the same unique key we use everywhere else
                 string key = GetUniqueTypeName(t);
-                if (!anchorMap.TryGetValue(key, out string anchor))
+                if (!anchorMap.TryGetValue(key, out string? anchor))
                 {
                     anchor = GetAnchorIDFromTypeName(key);
                     anchorMap[key] = anchor; // cache for consistent linking

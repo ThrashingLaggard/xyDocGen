@@ -19,14 +19,10 @@ namespace xyDocumentor.Core.Models
         public Dictionary<string, string> OutputDirs { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
         // Rückwärtskompatibel für alten Code:
+
         public string Format
         {
             get => Formats.FirstOrDefault() ?? "md";
-            set
-            {
-                Formats.Clear();
-                if (!string.IsNullOrWhiteSpace(value)) Formats.Add(value);
-            }
         }
 
         public bool IncludeNonPublic { get; init; } = true;
@@ -43,8 +39,6 @@ namespace xyDocumentor.Core.Models
         public bool Help { get; init; } = false; // --help
         public bool Info { get; init; } = false; // --info
 
-        public static HashSet<string> DefaultExcludes() =>
-            new([".git", "bin", "obj", "node_modules", ".vs", "TestResults"],
-                                StringComparer.OrdinalIgnoreCase);
+        public static HashSet<string> DefaultExcludes() =>new([".git", "bin", "obj", "node_modules", ".vs", "TestResults"],StringComparer.OrdinalIgnoreCase);
     }
 }

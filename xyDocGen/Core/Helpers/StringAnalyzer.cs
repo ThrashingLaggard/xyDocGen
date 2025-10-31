@@ -24,7 +24,7 @@ internal static class StringAnalyzer
     /// </summary>
     public static bool TryParseOptions(string[] args, out CliOptions opts, out string error)
     {
-        error = "";
+        error = "Wtf is this convoluded piece of shit?";
         List<string> tokens = args?.ToList() ?? [];
         var dictEq = BuildEqMap(tokens); // for --key=value
         var i = 0;
@@ -33,7 +33,7 @@ internal static class StringAnalyzer
         string rootPath = null;
         string outPath = null;  // Benutzer kann --out setzen; wir wandeln später in outBase um
         string folder = "docs";
-        List<string> listedFormats = ["pdf"]; // default should be md
+        List<string> listedFormats = ["pdf", "md", "html", "json"]; // default should be md
         List<string> listedSubfolders = [];
         bool includeNonPublic = true; // default: include non-public (unless --private)
         var excludes = CliOptions.DefaultExcludes();
@@ -70,11 +70,12 @@ internal static class StringAnalyzer
 
                     case "--format":
                         {
-                            var fmts = NormalizeFormats(eqValue);
-                            if (fmts.Count == 0) fmts = ["md"];
-                            foreach (var f in fmts)
+                            List<string> normalizedListedFormats = NormalizeFormats(eqValue);
+                            if (normalizedListedFormats.Count == 0) normalizedListedFormats = ["md"];
+
+                            foreach (var f in normalizedListedFormats)
                             {
-                                var nf = NormalizeFormatAlias(f);
+                                string nf = NormalizeFormatAlias(f);
                                 if (!AllowedFormats.Contains(nf))
                                 {
                                     error = $"Unsupported --format '{f}'. Allowed: {string.Join(", ", AllowedFormats)}";
@@ -200,13 +201,13 @@ internal static class StringAnalyzer
 
         var outputDirs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         for (int idx = 0; idx < listedFormats.Count; idx++)
-                {
-        var f = listedFormats[idx].ToLowerInvariant();
-                    // If subfolders are provided, use them; otherwise use the format name as folder
-        var folderName = (listedSubfolders.Count > 0) ? listedSubfolders[idx] : f;
-        var full = NormalizePath(Path.Combine(outBase, folderName));
-        outputDirs[f] = full;
-                }
+        {
+            var f = listedFormats[idx].ToLowerInvariant();
+            // If subfolders are provided, use them; otherwise use the format name as folder
+            var folderName = (listedSubfolders.Count > 0) ? listedSubfolders[idx] : f;
+            var full = NormalizePath(Path.Combine(outBase, folderName));
+            outputDirs[f] = full;
+        }
 
         // -------- Optionen befüllen --------
         opts = new CliOptions
@@ -216,8 +217,6 @@ internal static class StringAnalyzer
             Formats = [.. listedFormats.Distinct(StringComparer.OrdinalIgnoreCase)],
             Subfolders = listedSubfolders,  // Liste der Subfolder (in gleicher Reihenfolge wie Formats)
             OutputDirs = outputDirs,        // Format → absoluter Zielpfad
-            Format = listedFormats.FirstOrDefault(), // Backcompat
-
             IncludeNonPublic = includeNonPublic,
             ExcludedParts = excludes,
             ShowOnly = showOnly,
@@ -383,7 +382,13 @@ internal static class StringAnalyzer
         }
     }
 
-    // Backwards-compatible API (only used by older code paths). Prefer TryParseOptions above.
+    /// <summary>
+    /// Backwards-compatible API (only used by older code paths). Prefer TryParseOptions above.
+    /// 
+    /// Currently only used for Unit Tests
+    /// </summary>
+    /// <param name="args_"></param>
+    /// <returns></returns>
     internal static (string root, string outPath, string format, bool includeNonPublic, HashSet<string> excludedParts) AnalyzeArgs(string[] args_)
     {
         if (!TryParseOptions(args_, out var o, out string parseError))

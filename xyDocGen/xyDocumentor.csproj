@@ -41,9 +41,11 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
 		<PackageReference Include="System.Collections.Immutable" Version="9.0.10" />
 		<PackageReference Include="PdfSharpCore" Version="1.3.67" />
-		<PackageReference Include="xyToolz" Version="1.0.69" />
+		<PackageReference Include="xyToolz" Version="1.0.72" />
 		<PackageReference Include="SharpZipLib" Version="1.4.2" />
-		
+
+
+
 		<!--
 		-->
 
@@ -113,9 +115,7 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="9.0.10" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
 		  <IncludeAssets>compile</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.10" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
-		  <IncludeAssets>compile</IncludeAssets>
-		</PackageReference>
+	
 
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
 		  <IncludeAssets>compile</IncludeAssets>
@@ -190,7 +190,27 @@
 		  <IncludeAssets>compile</IncludeAssets>
 		</PackageReference>
 <!--
-		<PackageReference Include="SharpZipLib" Version="1.4.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+		<PackageReference Include="System.Text.Json" Version="9.0.10" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
+		  <IncludeAssets>compile</IncludeAssets>
+		</PackageReference>
+			<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.10" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
+		  <IncludeAssets>compile</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="System.Text.Encodings.Web" Version="9.0.10" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
+		  <IncludeAssets>compile</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="System.IO.Pipelines" Version="9.0.10" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
+		  <IncludeAssets>compile</IncludeAssets>
+		</PackageReference>
+
+		<PackageReference Include="System.Reflection.Metadata" Version="9.0.10" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
+		  <IncludeAssets>compile</IncludeAssets>
+		</PackageReference>
+
+
+<PackageReference Include="SharpZipLib" Version="1.4.2" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
+
+
 
 
 		<PackageReference Include="System.Collections.Immutable" Version="9.0.10" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
@@ -209,13 +229,6 @@
 		<PackageReference Include="System.IO" Version="4.3.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 		<PackageReference Include="System.IO.FileSystem" Version="4.3.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 		<PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
-		<PackageReference Include="System.IO.Pipelines" Version="9.0.10" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
-		  <IncludeAssets>compile</IncludeAssets>
-		</PackageReference>
-
-		<PackageReference Include="System.Reflection.Metadata" Version="9.0.10" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
-		  <IncludeAssets>compile</IncludeAssets>
-		</PackageReference>
 
 		<PackageReference Include="System.Runtime" Version="4.3.1" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
 		  <IncludeAssets>compile</IncludeAssets>
@@ -227,12 +240,6 @@
 		</PackageReference>
 
 		<PackageReference Include="System.Text.Encoding" Version="4.3.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
-		<PackageReference Include="System.Text.Encodings.Web" Version="9.0.10" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
-		  <IncludeAssets>compile</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="System.Text.Json" Version="9.0.10" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers">
-		  <IncludeAssets>compile</IncludeAssets>
-		</PackageReference>
 
 		<PackageReference Include="System.Threading.Tasks" Version="4.3.0" PrivateAssets="all" ExcludeAssets="runtime;native;contentFiles;build;buildTransitive;analyzers" />
 
@@ -286,6 +293,26 @@
 		<EmbeddedResource Include="Resources/Fonts\**\*.ttf" />
 		<EmbeddedResource Include="Resources/Fonts\**\*.otf" />
 	</ItemGroup>
+
+	<Target Name="TrimNuGetPayload" AfterTargets="Pack">
+		<ItemGroup>
+			<!-- Zielgenau: große/unnütze DLLs entfernen -->
+			<None Remove="$(PackageOutputPath)\**\tools\**\Selenium.*.dll" />
+			<None Remove="$(PackageOutputPath)\**\tools\**\PdfSharp*.dll" />
+			<None Remove="$(PackageOutputPath)\**\tools\**\xunit*.dll" />
+			<None Remove="$(PackageOutputPath)\**\tools\**\FluentAssertions*.dll" />
+
+			<!-- OPTIONAL: falls du wirklich System.* trimmen willst, dann mit Allowlist -->
+			<_SystemToRemove Include="$(PackageOutputPath)\**\tools\**\System.*.dll" />
+
+			<!-- Allowlist: diese dürfen NICHT gelöscht werden -->
+			<_SystemToRemove Remove="$(PackageOutputPath)\**\tools\**\System.Text.Json.dll" />
+			<_SystemToRemove Remove="$(PackageOutputPath)\**\tools\**\System.Text.Encodings.Web.dll" />
+			<!-- ggf. weitere, die du brauchst … -->
+
+			<None Remove="@(_SystemToRemove)" />
+		</ItemGroup>
+	</Target>
 
 
 </Project>

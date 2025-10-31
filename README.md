@@ -1,13 +1,13 @@
 # xyDocumentor
 
 xyDocumentor is an open source CLI tool for generating API documentation from C# projects.  
-It supports Markdown, HTML, PDF, and JSON output.
-Scans all C# files in the specified root directory and all its subfolders.
+It supports Markdown,PDF, JSON , and HTML output.
+
+Scans all C# files in the specified directory and below.
 Extracts all types and nested types, methods, properties, events, fields, etc.
 Collects the XML Comments from the project.
-Generates a tree to visualize the project structure.
-
-
+Generates a tree and index to visualize the project structure.
+Each format is written into its **own subfolder**.
 
 ## Usage example:
 
@@ -36,22 +36,12 @@ xydocgen --help
 
 ## Planned features & improvements
 
-+ Parameters
-	- Adding parameters to output index and/or tree into the console
-	- Adding parameters to only output the index or only the tree
-	- By using the --info flag output this readme file
-	- Adding a flag to only output the target(s) in the console
-
-
+- Removing the Projectname from output folders 
  
 + Upgrades 
 	- Reading and outputting the remarks
 	- Upgrading the visual result of the outputs
-	- Generate documentation in multiple formats at once
 
-+ Changing the structure:
-	- Moving the output of index and tree into the first level 
-    - subfolder for each format
 
   
 ## Installation
@@ -75,8 +65,7 @@ dotnet tool update xydocgen [--local/--global]
 
 ## Problems
 
-There is currently no format subfolder being used and the pdf folders lie in the docs folder
-The api folder is useless and needs to be removed, if there is no replacement from the input
+Output is not very bonita.
 
 
 # Author
