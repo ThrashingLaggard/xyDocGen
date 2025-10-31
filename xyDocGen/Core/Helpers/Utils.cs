@@ -26,7 +26,9 @@ namespace xyDocumentor.Helpers
 
         // Fallback string
         private const string NO_XML_SUMMARY_FALLBACK = "(No XML-Summary)";
-        private readonly static xyMessageFactory xyMsgFactory = new();
+
+        // Cached dominant root namespace (auto-detected once per run)
+        private static string? _cachedDominantRoot = null;
 
         /// <summary>
         /// Does almost the same as the normal version but with more variables and two  foreaches instead of selects: 
@@ -419,6 +421,36 @@ namespace xyDocumentor.Helpers
         }
 
 
+        internal static void PrimeDominantRoot(string? root)
+        {
+            if (!string.IsNullOrWhiteSpace(_cachedDominantRoot)) return;
+            _cachedDominantRoot = root ?? string.Empty;
+        }
+
+
+        /// <summary>
+        /// Detects the dominant root namespace (e.g., "xyDocumentor") only once per run.
+        /// Subsequent calls reuse the cached value.
+        /// </summary>
+        internal static string GetDominantRoot(IEnumerable<TypeDoc> types)
+        {
+            if (!string.IsNullOrEmpty(_cachedDominantRoot))
+                return _cachedDominantRoot!;
+
+            string root = types
+                .Select(t => t.Namespace)
+                .Where(ns => !string.IsNullOrWhiteSpace(ns))
+                .Select(ns => ns!.Split('.', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault())
+                .Where(first => !string.IsNullOrEmpty(first))
+                .GroupBy(first => first)
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault()?.Key;
+
+            _cachedDominantRoot = root ?? string.Empty;
+            return _cachedDominantRoot!;
+        }
+
+
         /// <summary>
         /// Writes each TypeDoc to a file, grouped by namespace, in the requested format.
         /// Supports JSON, HTML, PDF, Markdown.
@@ -428,18 +460,10 @@ namespace xyDocumentor.Helpers
             string content;
             bool isWrittenCurrent;
             bool isWrittenAll = true;
-            string cleanedNamespace;
-
+    
             string lowerFormat = format_.ToLowerInvariant();
-            
-            var dominantRoot = listedAllTypes_
-                .Select(t => t.Namespace)
-                .Where(ns => !string.IsNullOrWhiteSpace(ns))
-                .Select(ns => ns.Split('.', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault())
-                .Where(first => !string.IsNullOrEmpty(first))
-                .GroupBy(first => first)
-                .OrderByDescending(g => g.Count())
-                .FirstOrDefault()?.Key;
+
+            var dominantRoot = GetDominantRoot(listedAllTypes_);
 
             // Iterating through the list 
             foreach (TypeDoc td_TypeInList in listedAllTypes_)

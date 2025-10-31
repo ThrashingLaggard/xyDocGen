@@ -231,9 +231,8 @@ internal static class StringAnalyzer
     }
 
 
-    // ------------------------
-    // Help / Info text
-    // ------------------------
+
+
     public static string BuildHelpText()
     {
         var sb = new StringBuilder();

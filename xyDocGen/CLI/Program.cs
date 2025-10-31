@@ -31,10 +31,10 @@
             try
             {
                 GlobalFontSettings.FontResolver = new AutoResourceFontResolver();
-                
+
                 // 🔍 Optional verification (helps catch missing embedded fonts early)
-                var resolver = GlobalFontSettings.FontResolver;
-                var testFace = resolver.ResolveTypeface(AutoResourceFontResolver.FamilySans, false, false);
+                IFontResolver resolver = GlobalFontSettings.FontResolver;
+                FontResolverInfo testFace = resolver.ResolveTypeface(AutoResourceFontResolver.FamilySans, false, false);
                 if (testFace == null)
                     xyLog.Log("⚠️ Warning: FontResolver returned null for FamilySans. Check embedded font resources.");
 
@@ -48,6 +48,10 @@
                 return 1; // what a failure
             }
         }
+
+
+
+
 
         async static Task MainAsync(string[] args)
         {
@@ -99,6 +103,8 @@
             // Extract types
             var dataFromFiles = await TypeExtractor.TryParseDataFromFile(files, opt.IncludeNonPublic);
             var flattened = TypeDocExtensions.FlattenTypes(dataFromFiles);
+
+            CliRuntimeHelper.EnsureDominantRootCached(flattened);
 
             // Output strategy
             if (opt.ShowOnly)

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using xyDocumentor.Docs;
+using xyDocumentor.Helpers;
 using xyDocumentor.Models;
 using xyDocumentor.Renderer;
 
@@ -80,6 +81,8 @@ namespace xyDocumentor.CLI
         /// </summary>
         public static async Task RenderIndexAndTree(CliOptions opt, System.Collections.Generic.IEnumerable<TypeDoc> flattened)
         {
+            EnsureDominantRootCached(flattened);
+
             bool writeToDisk = !opt.ShowOnly && !(opt.ShowIndexToConsole || opt.ShowTreeToConsole);
 
             foreach (var fmt in opt.Formats.Select(f => f.ToLowerInvariant()))
@@ -100,5 +103,20 @@ namespace xyDocumentor.CLI
                 }
             }
         }
+
+
+        // CliRuntimeHelper.cs – in der Klasse CliRuntimeHelper
+
+        /// <summary>
+        /// Sorgt dafür, dass der dominante Root-Namespace pro Prozesslauf genau einmal ermittelt
+        /// und im Utils-Cache hinterlegt wird (bevor irgendetwas geschrieben/gerendert wird).
+        /// </summary>
+        public static void EnsureDominantRootCached(System.Collections.Generic.IEnumerable<TypeDoc> allTypes)
+        {
+            // Löst die Erkennung aus, wenn noch nicht vorhanden:
+            var root = Utils.GetDominantRoot(allTypes);
+            Utils.PrimeDominantRoot(root);
+        }
+
     }
 }
