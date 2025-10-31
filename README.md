@@ -27,7 +27,7 @@ xydocgen --format [json/pdf/html/md]
 xydocgen --root X://User/TestPrograms/TestRoot--out TestFolder/TestSubFolder 
 
 (Output a list of commands, discard other commands written with it)
-xydocgen --help
+xydocgen --help		
 
 ## Changes
 

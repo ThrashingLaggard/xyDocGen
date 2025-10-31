@@ -17,12 +17,13 @@ using xyToolz.Logging.Helper;
 
 namespace xyDocumentor.Helpers
 {
+#nullable enable
     /// <summary>
     /// Little helpers in the fight for better oversight
     /// </summary>
     internal static partial class Utils
     {
-        public static string Description { get; set; }
+        public static string? Description { get; set; }
 
         // Fallback string
         private const string NO_XML_SUMMARY_FALLBACK = "(No XML-Summary)";
@@ -82,12 +83,12 @@ namespace xyDocumentor.Helpers
         public static string ExtractXmlSummaryFromSyntaxNode(SyntaxNode syn_Node_)
         {
             // Read the trivia syntax element from the target node
-            DocumentationCommentTriviaSyntax trivia = syn_Node_.GetLeadingTrivia().Select(t => t.GetStructure()).OfType<DocumentationCommentTriviaSyntax>().FirstOrDefault();
+            DocumentationCommentTriviaSyntax trivia = syn_Node_.GetLeadingTrivia().Select(t => t.GetStructure()).OfType<DocumentationCommentTriviaSyntax>().FirstOrDefault()!;
 
             if (trivia == null) goto Fallback;
             
             // Read the content from the XmlSummary section
-            XmlElementSyntax xes_XmlSummary = trivia.Content.OfType<XmlElementSyntax>().FirstOrDefault(x => x.StartTag.Name.LocalName.Text.Equals("summary",System.StringComparison.OrdinalIgnoreCase));
+            XmlElementSyntax xes_XmlSummary = trivia.Content.OfType<XmlElementSyntax>().FirstOrDefault(x => x.StartTag.Name.LocalName.Text.Equals("summary",System.StringComparison.OrdinalIgnoreCase))!;
 
             if (xes_XmlSummary == null) goto Fallback;
             
@@ -209,10 +210,7 @@ namespace xyDocumentor.Helpers
             var summaries = new Dictionary<string, string>();
 
             // 1. Roslyn-Kommentarstruktur abrufen.
-            DocumentationCommentTriviaSyntax xmlComment = parentNode.GetLeadingTrivia()
-                                                       .Select(t => t.GetStructure())
-                                                       .OfType<DocumentationCommentTriviaSyntax>()
-                                                       .FirstOrDefault();
+            DocumentationCommentTriviaSyntax xmlComment = parentNode.GetLeadingTrivia().Select(t => t.GetStructure()).OfType<DocumentationCommentTriviaSyntax>().FirstOrDefault()!;
 
             if (xmlComment == null)
                 return summaries;
@@ -234,8 +232,7 @@ namespace xyDocumentor.Helpers
             // A) Verarbeitung der XmlEmptyElementSyntax (<typeparam name="T"/>)
             foreach (XmlEmptyElementSyntax typeparamElement in typeparamElements)
             {
-                XmlNameAttributeSyntax nameAttribute = typeparamElement.Attributes.OfType<XmlNameAttributeSyntax>()
-                                                                       .FirstOrDefault(a => a.Name.LocalName.Text == "name");
+                XmlNameAttributeSyntax nameAttribute = typeparamElement.Attributes.OfType<XmlNameAttributeSyntax>().FirstOrDefault(a => a.Name.LocalName.Text == "name")!;
 
                 if (nameAttribute != null)
                 {
@@ -250,8 +247,7 @@ namespace xyDocumentor.Helpers
             // B) Verarbeitung der XmlElementSyntax (<typeparam name="T">Description</typeparam>)
             foreach (XmlElementSyntax typeparamElement in typeparamContentElements)
             {
-                XmlNameAttributeSyntax nameAttribute = typeparamElement.StartTag.Attributes.OfType<XmlNameAttributeSyntax>()
-                                                                       .FirstOrDefault(a => a.Name.LocalName.Text == "name");
+                XmlNameAttributeSyntax nameAttribute = typeparamElement.StartTag.Attributes.OfType<XmlNameAttributeSyntax>().FirstOrDefault(a => a.Name.LocalName.Text == "name")!;
 
                 if (nameAttribute == null)
                     continue;
@@ -306,7 +302,7 @@ namespace xyDocumentor.Helpers
             // 1. Hole die XML-Zusammenfassungen für alle Parameter
             IDictionary<string, string> xmlSummaries = ExtractXmlParamSummaries(mds_MemberNode_);
 
-            ParameterListSyntax parameterList = null;
+            ParameterListSyntax? parameterList = null;
 
             // 2. Finde die ParameterList basierend auf dem Typ des Members
             if (mds_MemberNode_ is MethodDeclarationSyntax m)
@@ -327,7 +323,7 @@ namespace xyDocumentor.Helpers
                 string paramType = roslynParam.Type?.ToString() ?? "var"; // Sicherstellen, dass Type existiert
 
                 // Versuche, die Beschreibung aus der XML-Dokumentation zu holen
-                xmlSummaries.TryGetValue(paramName, out string paramSummary);
+                xmlSummaries.TryGetValue(paramName, out string? paramSummary);
 
                 // Erstelle das ParameterDoc-Objekt
                 paramDocs.Add(new ParameterDoc
@@ -437,7 +433,7 @@ namespace xyDocumentor.Helpers
             if (!string.IsNullOrEmpty(_cachedDominantRoot))
                 return _cachedDominantRoot!;
 
-            string root = types
+            string? root = types
                 .Select(t => t.Namespace)
                 .Where(ns => !string.IsNullOrWhiteSpace(ns))
                 .Select(ns => ns!.Split('.', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault())
@@ -468,7 +464,6 @@ namespace xyDocumentor.Helpers
             // Iterating through the list 
             foreach (TypeDoc td_TypeInList in listedAllTypes_)
             {
-                /// Neu: Namespace bereinigen und erstes Segment (Root-Namespace) strippen
                 var ns = td_TypeInList.Namespace ?? string.Empty;
                 ns = ns.Replace('<', '_').Replace('>', '_');
 
@@ -582,10 +577,7 @@ namespace xyDocumentor.Helpers
             var summaries = new Dictionary<string, string>();
 
             // 1. Retrieve the XML documentation comment structure (if it exists) from the leading trivia.
-            DocumentationCommentTriviaSyntax xmlComment = parentNode.GetLeadingTrivia()
-                                       .Select(t => t.GetStructure())
-                                       .OfType<DocumentationCommentTriviaSyntax>()
-                                       .FirstOrDefault();
+            DocumentationCommentTriviaSyntax xmlComment = parentNode.GetLeadingTrivia().Select(t => t.GetStructure()).OfType<DocumentationCommentTriviaSyntax>().FirstOrDefault()!;
 
             if (xmlComment == null)
                 return summaries;
@@ -597,8 +589,7 @@ namespace xyDocumentor.Helpers
             foreach (XmlElementSyntax paramElement in paramElements)
             {
                 // 3. Extract the 'name' attribute from the start tag to get the parameter identifier.
-                XmlNameAttributeSyntax nameAttribute = paramElement.StartTag.Attributes.OfType<XmlNameAttributeSyntax>()
-                                                .FirstOrDefault(a => a.Name.LocalName.Text == "name");
+                XmlNameAttributeSyntax nameAttribute = paramElement.StartTag.Attributes.OfType<XmlNameAttributeSyntax>().FirstOrDefault(a => a.Name.LocalName.Text == "name")!;
 
                 if (nameAttribute == null)
                     continue;

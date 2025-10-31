@@ -94,7 +94,7 @@ namespace xyDocumentor.Extractors
                 Namespace = namespaceName ?? "Global (Default)",
                 Modifiers = typeNode.Modifiers.ToString().Trim(),
                 Attributes = Utils.FlattenAttributes(typeNode.AttributeLists),
-                BaseTypes = Utils.ExtractBaseTypes(typeNode.BaseList).ToList(),
+                BaseTypes = [.. Utils.ExtractBaseTypes(typeNode.BaseList!)],
                 Summary = Utils.ExtractXmlSummaryFromSyntaxNode(typeNode),
                 FilePath = filePath,
                 Parent = parentType?.Name ?? string.Empty
