@@ -49,7 +49,7 @@ internal static class StringAnalyzer
     public static bool TryParseOptions(string[] args, out CliOptions opts, out string error)
     {
         // Default error placeholder; will be overridden with a specific message on actual error.
-        error = "Wtf is this convoluded piece of shit?";
+        error = "Invalid arguments. Use --help to see available options.";
 
         // Tokenize input safely; allow null args (empty list).
         List<string> tokens = args?.ToList() ?? [];

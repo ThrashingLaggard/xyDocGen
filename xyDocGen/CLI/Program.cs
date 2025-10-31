@@ -22,6 +22,7 @@
 
         /// <summary>
         /// Mimimi, i dont want to be async, or else im not a valid starting point for the program, mimimi!
+        /// Entry point. Keeps async flow inside <see cref="MainAsync"/> to simplify error handling and testing.
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
