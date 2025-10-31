@@ -1,15 +1,18 @@
 ﻿namespace xyDocumentor.CLI
 {
     using Microsoft.CodeAnalysis;
+    using Microsoft.EntityFrameworkCore.Metadata.Internal;
     using PdfSharpCore.Fonts;
     using System;
     using System.IO;
     using System.Linq;
+    using System.Runtime.Intrinsics.X86;
     using System.Text;
     using System.Threading.Tasks;
     using xyDocumentor.Core.Docs;
     using xyDocumentor.Core.Extractors;
     using xyDocumentor.Core.Helpers;
+    using xyDocumentor.Core.Models;
     using xyDocumentor.Core.Renderer;
     using xyToolz.Helper.Logging;
 
@@ -19,6 +22,47 @@
     /// </summary>
     public partial class Program
     {
+
+        /// <summary>
+        /// Builds the absolute directory path for a given format,
+        /// ensuring the path exists and uses normalized separators.
+        /// This keeps each format's output isolated under OutPath/format
+        /// </summary>
+        private static string FormatDir(string baseOutPath, string fmt)
+        {
+            if (string.IsNullOrWhiteSpace(baseOutPath))
+                baseOutPath = Environment.CurrentDirectory;
+
+            // Fallback: ensure format is safe to use as folder name
+            fmt = fmt?.Trim().ToLowerInvariant() ?? "unknown";
+
+            // Combine and normalize path
+            var combined = Path.Combine(baseOutPath, fmt);
+            var full = Path.GetFullPath(combined);
+
+            // Create the directory if needed
+            if (!Directory.Exists(full))
+                Directory.CreateDirectory(full);
+
+            return full;
+        }
+
+
+        /// <summary>Resolve the absolute output directory for a given format.</summary>
+        private static string ResolveFormatDir(CliOptions opt, string fmt)
+            => opt.OutputDirs != null && opt.OutputDirs.TryGetValue(fmt, out var mapped) && !string.IsNullOrWhiteSpace(mapped)
+               ? mapped
+               : FormatDir(opt.OutPath, fmt);
+
+        /// <summary>Return path to README.md near the given root; fallback to current directory.</summary>
+        private static string FindReadme(string root)
+        {
+            var candidate1 = Path.Combine(root ?? Environment.CurrentDirectory, "README.md");
+            var candidate2 = Path.Combine(Environment.CurrentDirectory, "README.md");
+            if (File.Exists(candidate1)) return candidate1;
+            if (File.Exists(candidate2)) return candidate2;
+            return null;
+        }
 
         /// <summary>
         /// Mimimi, i dont want to be async, or else im not a valid starting point for the program, mimimi!
@@ -148,7 +192,12 @@
             }
             if (opt.Info)
             {
-                xyLog.Log(StringAnalyzer.BuildInfoText());
+                // Print README.md to the console as requested by your README.
+                var readmePath = FindReadme(opt.RootPath);
+                if (readmePath is not null && File.Exists(readmePath))
+                    Console.WriteLine(File.ReadAllText(readmePath));
+                else
+                    Console.WriteLine("README.md not found near root.");
                 return;
             }
 
@@ -178,9 +227,9 @@
             var info = fr.ResolveTypeface(AutoResourceFontResolver.FamilySans, false, false);
             System.Diagnostics.Debug.WriteLine("Resolved face via instance resolver: " + info?.FaceName);
 
-            // Optional: list embedded resources to verify the fonts are really there
-            foreach (var n in typeof(AutoResourceFontResolver).Assembly.GetManifestResourceNames())
-                System.Diagnostics.Debug.WriteLine("RES: " + n);
+            //// Optional: list embedded resources to verify the fonts are really there
+            //foreach (var n in typeof(AutoResourceFontResolver).Assembly.GetManifestResourceNames())
+            //    System.Diagnostics.Debug.WriteLine("RES: " + n);
 
 
             // Output strategy
@@ -198,29 +247,51 @@
             }
             else
             {
-                bool written = await Utils.WriteDataToFilesOrderedByNamespace(dataFromFiles, opt.OutPath, opt.Format);
-                if (!written) xyLog.Log("⚠️ One or more files could not be written.");
+                //bool written = await Utils.WriteDataToFilesOrderedByNamespace(dataFromFiles, opt.OutPath, opt.Format);
+                //if (!written) xyLog.Log("⚠️ One or more files could not be written.");
+
+                foreach (var fmt in opt.Formats.Select(f => f.ToLowerInvariant()))
+                {
+                    // Use YOUR helper to resolve the correct per-format directory.
+                    var formatDir = ResolveFormatDir(opt, fmt);
+                    Directory.CreateDirectory(formatDir);
+                
+                    // Write type files into that per-format directory using YOUR Utils.
+                    bool written = await Utils.WriteDataToFilesOrderedByNamespace(dataFromFiles, formatDir, fmt);
+                    if (!written) xyLog.Log($"⚠️ One or more files could not be written for format '{fmt}'.");
+                }
             }
 
-            // Index/Tree only if requested
-            if (opt.BuildIndex || opt.BuildTree)
-            {
+            // Index/Tree only if requested — per-format, in the top level of each format folder.
+           if (opt.BuildIndex || opt.BuildTree)
+           {
                 bool writeToDisk = !opt.ShowOnly;
-
-                if (opt.BuildIndex)
+                
+                foreach (var fmt in opt.Formats.Select(f => f.ToLowerInvariant()))
                 {
-                    var index = await FileTreeRenderer.BuildProjectIndex(flattened, opt.Format, opt.OutPath, writeToDisk);
-                    if (opt.ShowOnly) Console.WriteLine(index.ToString());
+                    var formatDir = ResolveFormatDir(opt, fmt); // e.g., <OutPath>/<fmt> or mapping
+                    if (writeToDisk) Directory.CreateDirectory(formatDir);
+                    
+                    // BuildProjectIndex/Tree are YOUR existing helpers; we only change the OUT PATH
+                    // to the per-format directory so that "index" and "tree" land at the top level
+                    // INSIDE the format folder (README requirement).
+                    if (opt.BuildIndex)
+                    {
+                        var index = await FileTreeRenderer.BuildProjectIndex(flattened, fmt, formatDir, writeToDisk);
+                        if (opt.ShowOnly) Console.WriteLine(index.ToString());
+                    }
+                    
+                    if (opt.BuildTree)
+                    {
+                        var tree = await FileTreeRenderer.BuildProjectTree(
+                        new StringBuilder(), fmt, opt.RootPath, formatDir, opt.ExcludedParts, writeToDisk);
+                        if (opt.ShowOnly) Console.WriteLine(tree.ToString());
+                    }
                 }
+           }
 
-                if (opt.BuildTree)
-                {
-                    var tree = await FileTreeRenderer.BuildProjectTree(new StringBuilder(), opt.Format, opt.RootPath, opt.OutPath, opt.ExcludedParts, writeToDisk);
-                    if (opt.ShowOnly) Console.WriteLine(tree.ToString());
-                }
-            }
-
-            xyLog.Log($"\n✅ Finished. Types: {flattened.Count()}, Format: {opt.Format}, Output: {opt.OutPath}\n");
+            var summary = string.Join(", ", opt.Formats.Select(f => $"{f}→{ResolveFormatDir(opt, f.ToLowerInvariant())}"));
+            xyLog.Log($"\n✅ Finished. Types: {flattened.Count()}, Formats: [{summary}]\n");
         }
 
         /// <summary>

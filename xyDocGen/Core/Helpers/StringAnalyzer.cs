@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 using xyDocumentor.Core.Models;
 using xyToolz.Helper.Logging;
@@ -15,7 +16,7 @@ internal static class StringAnalyzer
 {
     public static string Description { get; set; }
 
-    private static readonly HashSet<string> AllowedFormats = new(StringComparer.OrdinalIgnoreCase) { "md", "html", "pdf", "json" };
+    private static readonly HashSet<string> AllowedFormats = new(StringComparer.OrdinalIgnoreCase) { "md", "markdown", "html", "pdf", "json" };
 
     /// <summary>
     /// Parse args into CliOptions. Returns false with an error if invalid.
@@ -23,7 +24,7 @@ internal static class StringAnalyzer
     public static bool TryParseOptions(string[] args, out CliOptions opts, out string error)
     {
         error = "";
-        List<string> tokens = args?.ToList() ??[];
+        List<string> tokens = args?.ToList() ?? [];
         var dictEq = BuildEqMap(tokens); // for --key=value
         var i = 0;
 
@@ -39,6 +40,8 @@ internal static class StringAnalyzer
         bool showOnly = false;
         bool buildIndex = false;
         bool buildTree = false;
+        bool showIndexToConsole = false;
+        bool showTreeToConsole = false;
         bool help = false;
         bool info = false;
 
@@ -65,18 +68,22 @@ internal static class StringAnalyzer
                         break;
 
                     case "--format":
-                        listedFormats = NormalizeFormats(eqValue);
-                        if (listedFormats.Count == 0)
-                            listedFormats = ["md"];
-                        foreach (var f in listedFormats)
                         {
-                            if (!AllowedFormats.Contains(f, StringComparer.OrdinalIgnoreCase))
+                            var fmts = NormalizeFormats(eqValue);
+                            if (fmts.Count == 0) fmts = ["md"];
+                            foreach (var f in fmts)
                             {
-                                error = $"Unsupported --format '{f}'. Allowed: {string.Join(", ", AllowedFormats)}";
-                                opts = null; return false;
+                                var nf = NormalizeFormatAlias(f);
+                                if (!AllowedFormats.Contains(nf))
+                                {
+                                    error = $"Unsupported --format '{f}'. Allowed: {string.Join(", ", AllowedFormats)}";
+                                    opts = null; return false;
+                                }
+                                if (!listedFormats.Any(x => x.Equals(nf, StringComparison.OrdinalIgnoreCase)))
+                                    listedFormats.Add(nf);
                             }
+                            break;
                         }
-                        break;
 
                     case "--exclude":
                         foreach (var part in SplitList(eqValue))
@@ -90,6 +97,8 @@ internal static class StringAnalyzer
                             KeyName(key), boolVal,
                             ref showOnly, ref buildIndex, ref buildTree, ref help, ref info, ref includeNonPublic
                         );
+                        if (KeyName(key).Equals("--show-index", StringComparison.OrdinalIgnoreCase)) showIndexToConsole = boolVal;
+                        if (KeyName(key).Equals("--show-tree", StringComparison.OrdinalIgnoreCase)) showTreeToConsole = boolVal;
                         break;
                 }
                 i++; continue;
@@ -122,14 +131,17 @@ internal static class StringAnalyzer
                 case "--format":
                     if (!TryReadNext(tokens, ref i, out var fmt))
                     { error = "Missing value after --format."; opts = null; return false; }
-                    listedFormats = NormalizeFormats(fmt);
-                    foreach (var f in listedFormats)
+                    var fmtList = NormalizeFormats(fmt);
+                    foreach (var f in fmtList)
                     {
-                        if (!AllowedFormats.Contains(f, StringComparer.OrdinalIgnoreCase))
+                        var nf = NormalizeFormatAlias(f);
+                        if (!AllowedFormats.Contains(nf))
                         {
                             error = $"Unsupported --format '{f}'. Allowed: {string.Join(", ", AllowedFormats)}";
                             opts = null; return false;
                         }
+                        if (!listedFormats.Any(x => x.Equals(nf, StringComparison.OrdinalIgnoreCase)))
+                            listedFormats.Add(nf);
                     }
                     continue;
 
@@ -200,7 +212,7 @@ internal static class StringAnalyzer
         {
             RootPath = rootPath,
             OutPath = outBase,             // Basis (z. B. <repo>/docs oder --out)
-            Formats = listedFormats,
+            Formats = [.. listedFormats.Distinct(StringComparer.OrdinalIgnoreCase)],
             Subfolders = listedSubfolders,  // Liste der Subfolder (in gleicher Reihenfolge wie Formats)
             OutputDirs = outputDirs,        // Format → absoluter Zielpfad
             Format = listedFormats.FirstOrDefault(), // Backcompat
@@ -208,6 +220,8 @@ internal static class StringAnalyzer
             IncludeNonPublic = includeNonPublic,
             ExcludedParts = excludes,
             ShowOnly = showOnly,
+            ShowIndexToConsole = showIndexToConsole,
+            ShowTreeToConsole = showTreeToConsole,
             BuildIndex = buildIndex,
             BuildTree = buildTree,
             Help = help,
@@ -301,15 +315,15 @@ internal static class StringAnalyzer
         return false;
     }
 
+    private static string NormalizeFormatAlias(string f) => string.Equals(f, "markdown", StringComparison.OrdinalIgnoreCase) ? "md" : f.ToLowerInvariant();
+
     private static List<string> NormalizeFormats(string s)
-    => [.. NormalizeList(s)
-        .Select(x => x.ToLowerInvariant())
-        .Distinct(StringComparer.OrdinalIgnoreCase)];
+    => [.. NormalizeList(s).Select(x => NormalizeFormatAlias(x)).Distinct(StringComparer.OrdinalIgnoreCase)];
 
     private static List<string> NormalizeList(string s)
     {
         if (string.IsNullOrWhiteSpace(s)) return [];
-        return [.. s.Split([ ';', ',' ], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)];
+        return [.. s.Split([';', ','], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)];
     }
 
     private static IEnumerable<string> SplitList(string s)
@@ -360,7 +374,7 @@ internal static class StringAnalyzer
     }
 
     // Backwards-compatible API (only used by older code paths). Prefer TryParseOptions above.
-    internal static (string root, string outPath, string format, bool includeNonPublic, HashSet<string> excludedParts)AnalyzeArgs(string[] args_)
+    internal static (string root, string outPath, string format, bool includeNonPublic, HashSet<string> excludedParts) AnalyzeArgs(string[] args_)
     {
         if (!TryParseOptions(args_, out var o, out string parseError))
         {

@@ -34,6 +34,8 @@ namespace xyDocumentor.Core.Models
 
         // Feature flags
         public bool ShowOnly { get; init; } = false; // --show
+        public bool ShowIndexToConsole { get; init; } = false; // --show-index
+        public bool ShowTreeToConsole { get; init; } = false; // --show-tree
         public bool BuildIndex { get; init; } = true; // --index
         public bool BuildTree { get; init; } = true; // --tree
 

@@ -637,3 +637,5 @@ namespace xyDocumentor.Core.Helpers
         internal static partial Regex CleanRegex();
     }
 }
+
+

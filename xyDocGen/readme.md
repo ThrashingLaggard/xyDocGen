@@ -1,4 +1,4 @@
-﻿# xyDocumentor
+# xyDocumentor
 
 xyDocumentor is an open source CLI tool for generating API documentation from C# projects.  
 It supports Markdown, HTML, PDF, and JSON output.
@@ -11,55 +11,75 @@ Generates a tree to visualize the project structure.
 
 ## Usage example:
 
-(easy input)										   (standard result values)
+(Sample for easiest input to generate everything according to the standard settings)
 xydocgen               =====>>>>>               xydocgen      --root [current working directory]     --folder docs     --subfolder api     --exclude .git;bin;obj;node_modules;.vs;TestResults     --format md     
 
 (Use dotnet at the start when installed locally)
 dotnet xydocgen --root . --out docs/api --exclude .git;bin;obj;node_modules;.vs;TestResults
 
-(add this to exclude non public)
-dotnet xydocgen  --privat 
+(add this keyword to exclude non public)
+xydocgen  --private 
 
-(Choose your flavour)
+(Choose your output flavour)
 xydocgen --format [json/pdf/html/md]
 
+(Another Sample)
 xydocgen --root X://User/TestPrograms/TestRoot--out TestFolder/TestSubFolder 
 
-(Output a list of commands, MUST be the first argument if used (others will then be ignored))
+(Output a list of commands, discard other commands written with it)
 xydocgen --help
 
+## Changes
 
-## Installation
-
-### Local:
-(dotnet new tool-manifest)
-(dotnet tool install --local xyDocGen --version 1.0.xx)
-
-### Global:
-(dotnet tool install --global xyDocGen --version 1.0.xx)
-
-
+- Now every format has its own folder
+- Generate multiple formats in one go
 
 ## Planned features & improvements
 
-- Reading and outputting the remarks
-- Upgrading the visual result of the outputs
-- 
-- Format mit als Unterordner hinzufügen.....????
++ Parameters
+	- Adding parameters to output index and/or tree into the console
+	- Adding parameters to only output the index or only the tree
+	- By using the --info flag output this readme file
+	- Adding a flag to only output the target(s) in the console
 
 
-- 
+ 
++ Upgrades 
+	- Reading and outputting the remarks
+	- Upgrading the visual result of the outputs
+	- Generate documentation in multiple formats at once
+
++ Changing the structure:
+	- Moving the output of index and tree into the first level 
+    - subfolder for each format
+
+  
+## Installation
+
+### Local:
+dotnet new tool-manifest
+dotnet tool install --local xyDocGen --version 1.0.xx
+
+### Global:
+dotnet tool install --global xyDocGen --version 1.0.xx
+
+
+## Update
+
+### Checking the Version of installed dotnet tools
+dotnet list tool [--local/--global]
+
+### Updating the Version
+dotnet tool update xydocgen [--local/--global]
+
+
+## Problems
+
+There is currently no format subfolder being used and the pdf folders lie in the docs folder
+The api folder is useless and needs to be removed, if there is no replacement from the input
+
+
 # Author
 ThrashingLaggard
 https://github.com/ThrashingLaggard
 
-
-
-
-
-
-
-
-## Contact
-Ideas or questions:
-xytlagg@gmail.com
