@@ -4,7 +4,7 @@ using Xunit;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
-using xyDocumentor.Core.Renderer;
+using xyDocumentor.Renderer;
 
 /// <summary>
 /// Hyper sick tests for the FileTreeRenderer

@@ -4,13 +4,13 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using xyDocumentor.Core.Docs;
-using xyDocumentor.Core.Helpers;
+using xyDocumentor.Docs;
+using xyDocumentor.Helpers;
 using xyToolz.Filesystem;
 using xyToolz.Helper.Logging;
 
 
-namespace xyDocumentor.Core.Extractors
+namespace xyDocumentor.Extractors
 {
 #nullable enable
     /// <summary>

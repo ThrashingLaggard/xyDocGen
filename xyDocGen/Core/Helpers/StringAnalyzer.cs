@@ -1,11 +1,11 @@
-﻿namespace xyDocumentor.Core.Helpers;
+﻿namespace xyDocumentor.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Intrinsics.X86;
 using System.Text;
-using xyDocumentor.Core.Models;
+using xyDocumentor.Models;
 using xyToolz.Helper.Logging;
 
 /// <summary>

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace xyDocumentor.Core.Docs
+namespace xyDocumentor.Docs
 {
     /// <summary>
     /// Helper methods for the TypeDoc record

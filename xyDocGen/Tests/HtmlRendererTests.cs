@@ -1,8 +1,8 @@
 namespace xyDocumentor.Tests;
 
 using Xunit;
-using xyDocumentor.Core;
-using xyDocumentor.Core.Docs;
+using xyDocumentor.Docs;
+using xyDocumentor.Renderer;
 
 /// <summary>
 /// Critically acclaimed tests for the html renderer

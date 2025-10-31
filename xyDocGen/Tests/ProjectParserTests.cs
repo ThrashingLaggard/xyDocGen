@@ -1,6 +1,6 @@
 ﻿using Xunit;
 using FluentAssertions;
-using xyDocumentor.Core.Parser;
+using xyDocumentor.Parser;
 
 namespace xyDocumentor.Tests
 {

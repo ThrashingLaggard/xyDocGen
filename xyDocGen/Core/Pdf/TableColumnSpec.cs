@@ -1,6 +1,6 @@
 ﻿using PdfSharpCore.Drawing;
 
-namespace xyDocumentor.Core.Pdf
+namespace xyDocumentor.Pdf
 {
 #nullable enable
 

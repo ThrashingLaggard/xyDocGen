@@ -1,4 +1,4 @@
-﻿namespace xyDocumentor.Core.Helpers;
+﻿namespace xyDocumentor.Helpers;
 #nullable enable
 
 using System;

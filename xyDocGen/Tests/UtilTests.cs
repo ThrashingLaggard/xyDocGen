@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
 using System;
 using Xunit;
-using xyDocumentor.Core.Helpers;
+using xyDocumentor.Helpers;
 
 namespace xyDocumentor.Tests
 {

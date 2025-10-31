@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using xyDocumentor.Core.Docs;
+using xyDocumentor.Docs;
 using xyToolz.QOL;
 
-namespace xyDocumentor.Core.Renderer
+namespace xyDocumentor.Renderer
 {
 #nullable enable
     /// <summary>

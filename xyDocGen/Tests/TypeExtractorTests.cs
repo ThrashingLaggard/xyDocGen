@@ -2,8 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using System.Linq;
 using Xunit;
-using xyDocumentor.Core;
-using xyDocumentor.Core.Extractors;
+using xyDocumentor.Extractors;
 
 /// <summary>
 /// Useless Test

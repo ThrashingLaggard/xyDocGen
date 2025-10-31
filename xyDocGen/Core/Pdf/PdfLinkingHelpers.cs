@@ -3,7 +3,7 @@ using PdfSharpCore.Drawing;              // XRect
 using PdfSharpCore.Pdf;                  // PdfDocument, PdfPage, PdfRectangle
 using PdfSharpCore.Pdf.Annotations;
 
-namespace xyDocumentor.Core.Pdf
+namespace xyDocumentor.Pdf
 {
     /// <summary>
     /// Internal PDF linking helpers (PdfSharpCore).

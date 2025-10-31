@@ -9,13 +9,13 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using xyDocumentor.Core.Docs;
-using xyDocumentor.Core.Renderer;
+using xyDocumentor.Docs;
+using xyDocumentor.Renderer;
 using xyToolz.Filesystem;
 using xyToolz.Helper.Logging;
 using xyToolz.Logging.Helper;
 
-namespace xyDocumentor.Core.Helpers
+namespace xyDocumentor.Helpers
 {
     /// <summary>
     /// Little helpers in the fight for better oversight
@@ -431,15 +431,35 @@ namespace xyDocumentor.Core.Helpers
             string cleanedNamespace;
 
             string lowerFormat = format_.ToLowerInvariant();
+            
+            var dominantRoot = listedAllTypes_
+                .Select(t => t.Namespace)
+                .Where(ns => !string.IsNullOrWhiteSpace(ns))
+                .Select(ns => ns.Split('.', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault())
+                .Where(first => !string.IsNullOrEmpty(first))
+                .GroupBy(first => first)
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault()?.Key;
 
             // Iterating through the list 
             foreach (TypeDoc td_TypeInList in listedAllTypes_)
             {
-                // Ensuring there is a value even if there is no namespace and cleaning an existing one's name
-                cleanedNamespace = td_TypeInList.Namespace is not null ? td_TypeInList.Namespace.Replace('<', '_').Replace('>', '_') : "_";
+                /// Neu: Namespace bereinigen und erstes Segment (Root-Namespace) strippen
+                var ns = td_TypeInList.Namespace ?? string.Empty;
+                ns = ns.Replace('<', '_').Replace('>', '_');
 
-                // Creating a folder for each namespace
-                string namespaceFolder = Path.Combine(outPath_, cleanedNamespace);
+                // in Segmente teilen
+                var parts = ns.Split('.', StringSplitOptions.RemoveEmptyEntries);
+
+                if (!string.IsNullOrEmpty(dominantRoot) &&parts.Length > 1 &&string.Equals(parts[0], dominantRoot, StringComparison.Ordinal))
+                {
+                    parts = parts.Skip(1).ToArray();
+                }
+                // Relativer Namespace-Pfad (z. B. "Core/Helpers")
+                var relNsPath = parts.Length > 0 ? Path.Combine(parts) : "_";
+
+                // Zielordner bauen
+                var namespaceFolder = Path.Combine(outPath_, relNsPath);
                 Directory.CreateDirectory(namespaceFolder);
 
                 string cleanedDisplayName = td_TypeInList.DisplayName.Replace(' ', '_').Replace('<', '_').Replace('>', '_');
@@ -450,27 +470,27 @@ namespace xyDocumentor.Core.Helpers
                 switch (lowerFormat)
                 {
                     case "json":
-                        fileName += ".json";
+                        var filePath = EnsureUniquePath(fileName, ".json");
                         content = JsonRenderer.Render(td_TypeInList);
-                        isWrittenCurrent = await xyFiles.SaveToFile(content, fileName);
+                        isWrittenCurrent = await xyFiles.SaveToFile(content, filePath);
                         break;
 
                     case "html":
-                        fileName += ".html";
+                        filePath = EnsureUniquePath(fileName, ".html");
                         content = HtmlRenderer.Render(td_TypeInList, cssPath: null);
-                        isWrittenCurrent = await xyFiles.SaveToFile(content, fileName);
+                        isWrittenCurrent = await xyFiles.SaveToFile(content, filePath);
                         break;
 
                     case "pdf":
-                        fileName += ".pdf";
-                        PdfRenderer.RenderToFile(td_TypeInList, fileName);
+                        filePath = EnsureUniquePath(fileName, ".pdf");
+                        PdfRenderer.RenderToFile(td_TypeInList, filePath);
                         isWrittenCurrent = true;
                         break;
 
                     default: // Markdown
-                        fileName += ".md";
+                        filePath = EnsureUniquePath(fileName, ".md");
                         content = MarkdownRenderer.Render(td_TypeInList);
-                        isWrittenCurrent = await xyFiles.SaveToFile(content, fileName);
+                        isWrittenCurrent = await xyFiles.SaveToFile(content, filePath);
                         break;
                 }
                 if(isWrittenCurrent is false)
@@ -480,6 +500,15 @@ namespace xyDocumentor.Core.Helpers
                 }
             }
             return isWrittenAll;
+        }
+
+        private static string EnsureUniquePath(string baseWithoutExt, string ext)
+        {
+            var path = baseWithoutExt + ext;
+            int i = 1;
+            while (File.Exists(path))
+                path = $"{baseWithoutExt}~{i++}{ext}";
+            return path;
         }
 
 

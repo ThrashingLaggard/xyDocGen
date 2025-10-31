@@ -2,8 +2,8 @@ namespace xyDocumentor.Tests;
 
 
 using Xunit;
-using xyDocumentor.Core;
-using xyDocumentor.Core.Docs;
+using xyDocumentor.Docs;
+using xyDocumentor.Renderer;
 
 /// <summary>
 /// Great tests for the JsonRenderer

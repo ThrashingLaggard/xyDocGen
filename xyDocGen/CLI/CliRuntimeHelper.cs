@@ -3,9 +3,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using xyDocumentor.Core.Docs;
-using xyDocumentor.Core.Models;
-using xyDocumentor.Core.Renderer;
+using xyDocumentor.Docs;
+using xyDocumentor.Models;
+using xyDocumentor.Renderer;
 
 namespace xyDocumentor.CLI
 {

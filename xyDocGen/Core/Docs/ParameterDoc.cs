@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace xyDocumentor.Core.Docs
+namespace xyDocumentor.Docs
 {
     #nullable enable
 

@@ -16,7 +16,7 @@ using XRect = PdfSharpCore.Drawing.XRect;
 using XSolidBrush = PdfSharpCore.Drawing.XSolidBrush;
 using XStringFormats = PdfSharpCore.Drawing.XStringFormats;
 
-namespace xyDocumentor.Core.Pdf
+namespace xyDocumentor.Pdf
 {
 #nullable enable
     /// <summary>

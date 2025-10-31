@@ -6,11 +6,10 @@
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
-    using xyDocumentor.Core.Docs;
-    using xyDocumentor.Core.Extractors;
-    using xyDocumentor.Core.Helpers;
-    using xyDocumentor.Core.Models;
-    using xyDocumentor.Core.Renderer;
+    using xyDocumentor.Docs;
+    using xyDocumentor.Extractors;
+    using xyDocumentor.Helpers;
+    using xyDocumentor.Renderer;
     using xyToolz.Helper.Logging;
 
 

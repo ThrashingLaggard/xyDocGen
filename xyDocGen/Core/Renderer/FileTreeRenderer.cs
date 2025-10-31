@@ -3,10 +3,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using xyDocumentor.Core.Docs;
+using xyDocumentor.Docs;
 using xyToolz.Filesystem;
 
-namespace xyDocumentor.Core.Renderer
+namespace xyDocumentor.Renderer
 {
 #nullable enable
 

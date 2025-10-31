@@ -1,9 +1,9 @@
 ﻿using PdfSharpCore.Fonts;
-using xyDocumentor.Core.Helpers;
+using xyDocumentor.Helpers;
 using XColor = PdfSharpCore.Drawing.XColor;
 using XFont = PdfSharpCore.Drawing.XFont;
 
-namespace xyDocumentor.Core.Pdf
+namespace xyDocumentor.Pdf
 {
 #nullable enable
     /// <summary>

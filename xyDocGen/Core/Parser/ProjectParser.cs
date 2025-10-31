@@ -5,10 +5,10 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using xyDocumentor.Core.Docs;
-using xyDocumentor.Core.Helpers;
+using xyDocumentor.Docs;
+using xyDocumentor.Helpers;
 
-namespace xyDocumentor.Core.Parser
+namespace xyDocumentor.Parser
 {
     /// <summary>
     /// Parses C# files in a directory and returns all TypeDocs

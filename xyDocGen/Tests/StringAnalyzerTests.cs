@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
-using xyDocumentor.Core.Helpers;
+using xyDocumentor.Helpers;
 
 namespace xyDocumentor.Tests
 {

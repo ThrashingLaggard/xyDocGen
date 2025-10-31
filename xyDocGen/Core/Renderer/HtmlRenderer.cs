@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Text;
-using xyDocumentor.Core.Docs;
 
-namespace xyDocumentor.Core
+using xyDocumentor.Docs;
+
+namespace xyDocumentor.Renderer
 {
 #nullable enable
     /// <summary>

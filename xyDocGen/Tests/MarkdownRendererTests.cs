@@ -1,8 +1,8 @@
 namespace  xyDocumentor.Tests;
 
 using Xunit;
-using xyDocumentor.Core.Docs;
-using xyDocumentor.Core.Renderer;
+using xyDocumentor.Docs;
+using xyDocumentor.Renderer;
 
 /// <summary>
 /// Test for the md renderer

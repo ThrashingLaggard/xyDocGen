@@ -2,10 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using xyDocumentor.Core.Docs;
-using xyDocumentor.Core.Pdf;
+using xyDocumentor.Docs;
+using xyDocumentor.Pdf;
 
-namespace xyDocumentor.Core.Renderer
+namespace xyDocumentor.Renderer
 {
 #nullable enable
     /// <summary>

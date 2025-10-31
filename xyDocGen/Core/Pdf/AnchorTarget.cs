@@ -1,4 +1,4 @@
-﻿namespace xyDocumentor.Core.Pdf
+﻿namespace xyDocumentor.Pdf
 {
     using PdfSharpCore.Pdf;
 
