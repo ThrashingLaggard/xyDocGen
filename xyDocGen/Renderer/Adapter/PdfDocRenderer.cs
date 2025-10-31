@@ -4,8 +4,6 @@ using xyDocumentor.Interfaces;
 
 namespace xyDocumentor.Renderer.Adapter;
 
-namespace xyDocumentor.Renderer.Adapters;
-
 /// <summary>
 /// Adapter that renders to a temporary file and returns its content so it fits <see cref="IDocRenderer"/>.
 /// </summary>

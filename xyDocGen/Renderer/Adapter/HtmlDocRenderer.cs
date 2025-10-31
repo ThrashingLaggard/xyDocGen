@@ -3,7 +3,6 @@ using xyDocumentor.Interfaces;
 
 namespace xyDocumentor.Renderer.Adapter;
 
-namespace xyDocumentor.Renderer.Adapters;
 
 /// <summary>
 /// Adapter for <see cref="HtmlRenderer"/>.

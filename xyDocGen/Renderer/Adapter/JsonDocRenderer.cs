@@ -3,8 +3,6 @@ using xyDocumentor.Interfaces;
 
 namespace xyDocumentor.Renderer.Adapter;
 
-namespace xyDocumentor.Renderer.Adapters;
-
 internal sealed class JsonDocRenderer : IDocRenderer
 {
     public string Description { get; set; } = "JSON renderer";
