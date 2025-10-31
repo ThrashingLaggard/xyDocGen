@@ -58,9 +58,19 @@ public sealed partial class AutoResourceFontResolver : IFontResolver
     /// </summary>
     public AutoResourceFontResolver()
     {
-        // List all embedded resources in the executing assembly
-         _asm = typeof(AutoResourceFontResolver).Assembly;
+        _asm = typeof(AutoResourceFontResolver).Assembly;
         var names = _asm.GetManifestResourceNames();
+
+        if (names.Length == 0)
+        {
+            // Fallback: try the entry assembly (CLI)
+            var entry = Assembly.GetEntryAssembly();
+            if (entry != null)
+            {
+                names = entry.GetManifestResourceNames();
+                _asm = entry;
+            }
+        }
 
         foreach (var n in typeof(AutoResourceFontResolver).Assembly.GetManifestResourceNames().Take(10))
             System.Diagnostics.Debug.WriteLine("RES: " + n);

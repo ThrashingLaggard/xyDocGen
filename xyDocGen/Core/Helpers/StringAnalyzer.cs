@@ -9,7 +9,8 @@ using xyDocumentor.Core.Models;
 using xyToolz.Helper.Logging;
 
 /// <summary>
-/// Deterministic, testable CLI parser for xyDocumentor.
+/// Parses CLI arguments for xyDocGen. Supports multi-format output,
+/// per-format subfolders, and console display modes (--show, --show-index, --show-tree).
 /// Supports "--flag", "--flag=value" and "--flag value".
 /// </summary>
 internal static class StringAnalyzer
@@ -32,8 +33,8 @@ internal static class StringAnalyzer
         string rootPath = null;
         string outPath = null;  // Benutzer kann --out setzen; wir wandeln später in outBase um
         string folder = "docs";
-        List<string> listedFormats = ["pdf"];
-        List<string> listedSubfolders = ["api"];
+        List<string> listedFormats = ["pdf"]; // default should be md
+        List<string> listedSubfolders = [];
         bool includeNonPublic = true; // default: include non-public (unless --private)
         var excludes = CliOptions.DefaultExcludes();
 
@@ -64,7 +65,7 @@ internal static class StringAnalyzer
                     case "--subfolder":
                         listedSubfolders = NormalizeList(eqValue);
                         if (listedSubfolders.Count == 0)
-                            listedSubfolders = ["api"];
+                            listedSubfolders = [];
                         break;
 
                     case "--format":
@@ -186,26 +187,26 @@ internal static class StringAnalyzer
             opts = null; return false;
         }
 
-        // -------- (E) 1:1-Abbildung & Mapping Format → Zielpfad --------
-        // 1 Subfolder für alle Formate erlauben; sonst 1:1 verlangen
+
         if (listedSubfolders.Count == 1 && listedFormats.Count > 1)
         {
             listedSubfolders = [.. Enumerable.Repeat(listedSubfolders[0], listedFormats.Count)];
         }
-        else if (listedSubfolders.Count != listedFormats.Count)
+        else if (listedSubfolders.Count != 0 && listedSubfolders.Count != listedFormats.Count)
         {
-            error = $"Number of --subfolder entries ({listedSubfolders.Count}) must be 1 or equal to number of formats ({listedFormats.Count}).";
+            error = $"Number of --subfolder entries ({listedSubfolders.Count}) must be 0, 1, or equal to number of formats ({listedFormats.Count}).";
             opts = null; return false;
         }
 
         var outputDirs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         for (int idx = 0; idx < listedFormats.Count; idx++)
-        {
-            var f = listedFormats[idx].ToLowerInvariant();
-            var sub = listedSubfolders[idx];
-            var full = NormalizePath(Path.Combine(outBase, sub));
-            outputDirs[f] = full;
-        }
+                {
+        var f = listedFormats[idx].ToLowerInvariant();
+                    // If subfolders are provided, use them; otherwise use the format name as folder
+        var folderName = (listedSubfolders.Count > 0) ? listedSubfolders[idx] : f;
+        var full = NormalizePath(Path.Combine(outBase, folderName));
+        outputDirs[f] = full;
+                }
 
         // -------- Optionen befüllen --------
         opts = new CliOptions
@@ -237,31 +238,40 @@ internal static class StringAnalyzer
     public static string BuildHelpText()
     {
         var sb = new StringBuilder();
-        sb.AppendLine("xydocgen  —  generate documentation from C# sources");
+        sb.AppendLine("xyDocGen — generate documentation from C# source files");
         sb.AppendLine();
         sb.AppendLine("Usage:");
         sb.AppendLine("  xydocgen --root <path> --out <folder> --format <md|html|pdf|json> [options]");
         sb.AppendLine();
+        sb.AppendLine("Examples:");
+        sb.AppendLine("  xydocgen --root src --out docs --format md,html,pdf --index --tree");
+        sb.AppendLine("  xydocgen --root src --out docs --format md --show-index");
+        sb.AppendLine("  xydocgen --root src --out docs --format pdf --private");
+        sb.AppendLine();
         sb.AppendLine("Options:");
-        sb.AppendLine("  --help                                      Show this help and exit");
-        sb.AppendLine("  --info                                      Show current status info and exit");
-        sb.AppendLine("  --root <path>                           Source root (default: current project dir)");
-        sb.AppendLine("  --out <path>                             Output directory (overrides --folder/--subfolder)");
-        sb.AppendLine("  --folder <name>                       Default: 'docs'");
-        sb.AppendLine("  --subfolder <name>                  Default: 'api'");
-        sb.AppendLine("  --format <md|html|pdf|json>  Default: 'md'");
-        sb.AppendLine("  --exclude <a;b;c>                      Extra directories to exclude; delimiter ';' or ','");
-        sb.AppendLine("  --private                                  Exclude non-public members (i.e., IncludeNonPublic=false)");
-        sb.AppendLine("  --index                                    Build namespace index (INDEX.md)");
-        sb.AppendLine("  --tree                                      Build project structure (PROJECT-STRUCTURE.md)");
-        sb.AppendLine("  --show                                     Print Markdown to console only (no files written)");
+        sb.AppendLine("  --help                                         Show this help and exit");
+        sb.AppendLine("  --info                                         Show current configuration and README.md");
+        sb.AppendLine("  --root <path>                              Source root (default: current project dir)");
+        sb.AppendLine("  --out <path>                               Base output directory (overrides --folder)");
+        sb.AppendLine("  --folder <name>                          Default: 'docs'");
+        sb.AppendLine("  --subfolder <a;b;c>                     Optional; per-format subfolders (1:1 with formats)");
+        sb.AppendLine("  --format <md|html|pdf|json>     Default: 'md' (supports multiple, comma/semicolon separated)");
+        sb.AppendLine("  --exclude <a;b;c>                        Additional directories to exclude");
+        sb.AppendLine("  --private                                    Exclude non-public members from documentation");
+        sb.AppendLine("  --index                                       Build namespace index (INDEX.md)");
+        sb.AppendLine("  --tree                                        Build project structure (PROJECT-STRUCTURE.md)");
+        sb.AppendLine("  --show                                        Print documentation to console (no files written)");
+        sb.AppendLine("  --show-index                              Print namespace index to console only");
+        sb.AppendLine("  --show-tree                               Print project tree to console only");
+        sb.AppendLine();
+        sb.AppendLine("Notes:");
+        sb.AppendLine("- You can specify multiple formats: --format md,html,pdf");
+        sb.AppendLine("- '--show-*' options suppress file output and print directly to console.");
+        sb.AppendLine();
         return sb.ToString();
     }
 
-    public static string BuildInfoText()
-    {
-        return "xyDocGen — reduced the package size by removing transistive packages.";
-    }
+
 
     // ------------------------
     // Helpers
@@ -381,7 +391,7 @@ internal static class StringAnalyzer
             // Fallback: alter Default-Pfad mit 'docs/api'
             var defRoot = GetDefaultRoot();
             xyLog.Log(parseError);
-            return (defRoot, Path.Combine(defRoot, "docs", "api"), "md", true, CliOptions.DefaultExcludes());
+            return (defRoot, Path.Combine(defRoot, "docs"), "md", true, CliOptions.DefaultExcludes());
         }
 
         string legacyOut;
@@ -394,7 +404,7 @@ internal static class StringAnalyzer
         else
         {
             // Fallback: OutPath + erster Subfolder (falls kein Mapping verfügbar)
-            var sub = o.Subfolders?.FirstOrDefault() ?? "api";
+            var sub = o.Subfolders?.FirstOrDefault() ?? o.Format;
             legacyOut = Path.Combine(o.OutPath ?? GetDefaultRoot(), sub);
         }
 
