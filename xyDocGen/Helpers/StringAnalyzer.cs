@@ -60,16 +60,12 @@ internal static class StringAnalyzer
         // Cursor for scanning tokens left-to-right.
         var i = 0;
 
-        // -----------------------
-        // Local accumulators (defaults)
-        // -----------------------
-
         // Inbound paths (root of source and base out directory).
-        string rootPath = null;
-        string outPath = null;  // User may pass --out; we later resolve a normalized base "outBase".
+        string? rootPath = null;
+        string? outPath = null;  // User may pass --out; we later resolve a normalized base "outBase".
 
         // Default folder used if --out is not provided (e.g., <root>/docs).
-        string folder = "docs";
+        string folder = "api";
 
         // Default formats to generate. Multiple formats are supported and may be expanded later.
         List<string> listedFormats = ["pdf", "md", "html", "json"];
@@ -149,7 +145,7 @@ internal static class StringAnalyzer
                                 if (!AllowedFormats.Contains(nf))
                                 {
                                     error = $"Unsupported --format '{f}'. Allowed: {string.Join(", ", AllowedFormats)}";
-                                    opts = null; return false;
+                                    opts = null!; return false;
                                 }
 
                                 // Append only if not already present (case-insensitive).
@@ -190,28 +186,28 @@ internal static class StringAnalyzer
                 case "--root":
                     // Require the next token as the value for --root.
                     if (!TryReadNext(tokens, ref i, out rootPath))
-                    { error = "Missing value after --root."; opts = null; return false; }
+                    { error = "Missing value after --root."; opts = null!; return false; }
                     continue;
 
                 case "--out":
                     if (!TryReadNext(tokens, ref i, out outPath))
-                    { error = "Missing value after --out."; opts = null; return false; }
+                    { error = "Missing value after --out."; opts = null!; return false; }
                     continue;
 
                 case "--folder":
                     if (!TryReadNext(tokens, ref i, out folder))
-                    { error = "Missing value after --folder."; opts = null; return false; }
+                    { error = "Missing value after --folder."; opts = null!; return false; }
                     continue;
 
                 case "--subfolder":
                     if (!TryReadNext(tokens, ref i, out string rawSubs))
-                    { error = "Missing value after --subfolder."; opts = null; return false; }
+                    { error = "Missing value after --subfolder."; opts = null!; return false; }
                     listedSubfolders = NormalizeList(rawSubs);
                     continue;
 
                 case "--format":
                     if (!TryReadNext(tokens, ref i, out var fmt))
-                    { error = "Missing value after --format."; opts = null; return false; }
+                    { error = "Missing value after --format."; opts = null!; return false; }
 
                     // Same normalization logic as above, but for the space-separated form.
                     var fmtList = NormalizeFormats(fmt);
@@ -221,7 +217,7 @@ internal static class StringAnalyzer
                         if (!AllowedFormats.Contains(nf))
                         {
                             error = $"Unsupported --format '{f}'. Allowed: {string.Join(", ", AllowedFormats)}";
-                            opts = null; return false;
+                            opts = null!; return false;
                         }
                         if (!listedFormats.Any(x => x.Equals(nf, StringComparison.OrdinalIgnoreCase)))
                             listedFormats.Add(nf);
@@ -230,7 +226,7 @@ internal static class StringAnalyzer
 
                 case "--exclude":
                     if (!TryReadNext(tokens, ref i, out var exStr))
-                    { error = "Missing value after --exclude."; opts = null; return false; }
+                    { error = "Missing value after --exclude."; opts = null!; return false; }
                     foreach (var part in SplitList(exStr))
                         excludes.Add(part);
                     continue;
@@ -246,7 +242,7 @@ internal static class StringAnalyzer
                 default:
                     // Unknown flag → hard error (fail fast and hint at --help).
                     error = $"Unknown option '{key}'. Use --help.";
-                    opts = null; return false;
+                    opts = null!; return false;
             }
         }
 
@@ -273,7 +269,7 @@ internal static class StringAnalyzer
         if (!Directory.Exists(rootPath))
         {
             error = $"Root path does not exist: '{rootPath}'.";
-            opts = null; return false;
+            opts = null!; return false;
         }
 
         // -----------------------
@@ -290,7 +286,7 @@ internal static class StringAnalyzer
         else if (listedSubfolders.Count != 0 && listedSubfolders.Count != listedFormats.Count)
         {
             error = $"Number of --subfolder entries ({listedSubfolders.Count}) must be 0, 1, or equal to number of formats ({listedFormats.Count}).";
-            opts = null; return false;
+            opts = null!; return false;
         }
 
         // Build a map of format → absolute output directory (per-format subfolder under outBase).
@@ -375,9 +371,21 @@ internal static class StringAnalyzer
 
 
 
-    // ------------------------
-    // Helpers
-    // ------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     /// <summary>
@@ -404,7 +412,7 @@ internal static class StringAnalyzer
     {
         // token might be "--key" or "--key=value"
         var k = KeyName(token);
-        return eqMap.TryGetValue(k, out value);
+        return eqMap.TryGetValue(k, out value!);
     }
 
 
@@ -448,7 +456,7 @@ internal static class StringAnalyzer
             i += 2; // consume flag + value
             return true;
         }
-        value = null;
+        value = null!;
         i++; // Consume just the flag; caller will treat as "missing value".
         return false;
     }

@@ -24,7 +24,6 @@
         /// Mimimi, i dont want to be async, or else im not a valid starting point for the program, mimimi!
         /// </summary>
         /// <param name="args"></param>
-        /// 
         /// <returns></returns>
         public static int Main(string[] args)
         {
