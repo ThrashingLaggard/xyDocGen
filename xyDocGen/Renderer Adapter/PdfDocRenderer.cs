@@ -1,8 +1,9 @@
 ﻿using System.IO;
 using xyDocumentor.Docs;
 using xyDocumentor.Interfaces;
+using xyDocumentor.Renderer;
 
-namespace xyDocumentor.Renderer.Adapter;
+namespace xyDocumentor.RendererAdapter;
 
 /// <summary>
 /// Adapter that renders to a temporary file and returns its content so it fits <see cref="IDocRenderer"/>.

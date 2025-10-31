@@ -1,7 +1,8 @@
 ﻿using xyDocumentor.Docs;
 using xyDocumentor.Interfaces;
+using xyDocumentor.Renderer;
 
-namespace xyDocumentor.Renderer.Adapter;
+namespace xyDocumentor.RendererAdapter;
 
 
 /// <summary>
