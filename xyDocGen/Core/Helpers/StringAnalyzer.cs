@@ -254,7 +254,7 @@ internal static class StringAnalyzer
         sb.AppendLine("  --out <path>                               Base output directory (overrides --folder)");
         sb.AppendLine("  --folder <name>                          Default: 'docs'");
         sb.AppendLine("  --subfolder <a;b;c>                     Optional; per-format subfolders (1:1 with formats)");
-        sb.AppendLine("  --format <md|html|pdf|json>     Default: 'md' (supports multiple, comma/semicolon separated)");
+        sb.AppendLine("  --format <md|html|pdf|json>     Default: 'pdf,md,html,json' (supports multiple, comma/semicolon separated)");
         sb.AppendLine("  --exclude <a;b;c>                        Additional directories to exclude");
         sb.AppendLine("  --private                                    Exclude non-public members from documentation");
         sb.AppendLine("  --index                                       Build namespace index (INDEX.md)");

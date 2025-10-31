@@ -33,10 +33,9 @@ xydocgen --help
 
 - Now every format has its own folder
 - Generate multiple formats in one go
+- removed projectname from foldernames
 
 ## Planned features & improvements
-
-- Removing the Projectname from output folders 
  
 + Upgrades 
 	- Reading and outputting the remarks
