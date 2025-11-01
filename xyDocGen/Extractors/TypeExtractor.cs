@@ -37,46 +37,7 @@ namespace xyDocumentor.Extractors
             xyLog.Log($"Created instance (Include Non-Public = {_includeNonPublic})");
         }
 
-        /// <summary>
-        /// Extrahiert Parameterdetails und deren XML-Dokumentation.
-        /// </summary>
-        private static IList<ParameterDoc> ExtractParameters(ParameterListSyntax parameterList, MemberDeclarationSyntax parentNode)
-        {
-            IList<ParameterDoc> parameters = [];
-            IDictionary<string, string> paramSummaries = Utils.ExtractXmlParamSummaries(parentNode);
-
-            foreach (ParameterSyntax param in parameterList.Parameters)
-            {
-                string? defaultValueExpression = param.Default?.Value?.ToString();
-
-                // Mal schauen, was es noch für lustige Keywords gibt
-                bool isRef = param.Modifiers.Any(t => t.IsKind(SyntaxKind.RefKeyword));
-                bool isOut = param.Modifiers.Any(t => t.IsKind(SyntaxKind.OutKeyword));
-                bool isIn = param.Modifiers.Any(t => t.IsKind(SyntaxKind.InKeyword));
-                bool isParams = param.Modifiers.Any(t => t.IsKind(SyntaxKind.ParamsKeyword));
-               
-                bool isRefReadonly = param.Modifiers.Any(t => t.IsKind(SyntaxKind.RefKeyword))
-                                    && param.Modifiers.Any(t => t.IsKind(SyntaxKind.ReadOnlyKeyword));
-
-                paramSummaries.TryGetValue(param.Identifier.Text, out string? summary);
-
-                parameters.Add(new ParameterDoc
-                {
-                    Name = param.Identifier.Text,
-                    TypeDisplayName = param.Type?.ToString() ?? "var",
-                    Summary = summary ?? string.Empty,
-                    DefaultValueExpression = defaultValueExpression,
-                    IsOptional = defaultValueExpression is not null, 
-                    IsRef = isRef,
-                    IsOut = isOut,
-                    IsIn = isIn,
-                    IsParams = isParams,
-                    IsRefReadonly = isRefReadonly
-                });
-            }
-            return parameters;
-        }
-
+    
         /// <summary>
         /// Handles class/struct/interface/record extraction, including members and nested types by creating the corresponding TypeDocs and MemberDocs
         /// </summary>
@@ -94,8 +55,8 @@ namespace xyDocumentor.Extractors
                 Namespace = namespaceName ?? "Global (Default)",
                 Modifiers = typeNode.Modifiers.ToString().Trim(),
                 Attributes = Utils.FlattenAttributes(typeNode.AttributeLists),
-                BaseTypes = [.. Utils.ExtractBaseTypes(typeNode.BaseList!)],
-                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(typeNode),
+                BaseTypes = [.. Extractor.ExtractBaseTypes(typeNode.BaseList!)],
+                Summary = Extractor.ExtractXmlSummaryFromSyntaxNode(typeNode),
                 FilePath = filePath,
                 Parent = parentType?.Name ?? string.Empty
             };
@@ -130,8 +91,8 @@ namespace xyDocumentor.Extractors
                             memberDoc = memberDoc with
                             {
                                 ReturnType = methodNode.ReturnType.ToString(),
-                                Parameters = ExtractParameters(methodNode.ParameterList, methodNode),
-                                ReturnSummary = Utils.ExtractXmlReturnSummary(methodNode)
+                                Parameters = Extractor.ExtractParameters(methodNode.ParameterList, methodNode),
+                                ReturnSummary = Extractor.ExtractXmlReturnSummary(methodNode)
                             };
                             typeDoc.Methods.Add(memberDoc);
                         }
@@ -143,7 +104,7 @@ namespace xyDocumentor.Extractors
                         {
                             memberDoc = memberDoc with
                             {
-                                Parameters = ExtractParameters(ctorNode.ParameterList, ctorNode)
+                                Parameters = Extractor.ExtractParameters(ctorNode.ParameterList, ctorNode)
                             };
                             typeDoc.Constructors.Add(memberDoc);
                         }
@@ -157,7 +118,7 @@ namespace xyDocumentor.Extractors
                             memberDoc = memberDoc with
                             {
                                 ReturnType = propertyNode.Type.ToString(),
-                                ReturnSummary = Utils.ExtractXmlReturnSummary(propertyNode)
+                                ReturnSummary = Extractor.ExtractXmlReturnSummary(propertyNode)
                             };
                             typeDoc.Properties.Add(memberDoc);
                         }
@@ -222,7 +183,7 @@ namespace xyDocumentor.Extractors
                 Modifiers = modifiers.Trim(),
                 Attributes = Utils.FlattenAttributes(enumDeclaration_.AttributeLists),
                 BaseTypes = new List<string>(),
-                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(enumDeclaration_),
+                Summary = Extractor.ExtractXmlSummaryFromSyntaxNode(enumDeclaration_),
                 FilePath = filePath_,
                 Parent = parentType_?.Name ?? string.Empty,
             };
@@ -234,8 +195,8 @@ namespace xyDocumentor.Extractors
                 {
                     Kind = "enum-member",
                     Signature = member.Identifier.Text + (member.EqualsValue != null ? $" = {member.EqualsValue.Value}" : string.Empty),
-                    Summary = Utils.ExtractXmlSummaryFromSyntaxNode(member),
-                    Remarks = Utils.ExtractXmlRemarksFromSyntaxNode(member),
+                    Summary = Extractor.ExtractXmlSummaryFromSyntaxNode(member),
+                    Remarks = Extractor.ExtractXmlRemarksFromSyntaxNode(member),
                     Attributes = Utils.FlattenAttributes(member.AttributeLists) 
                 });
             }
@@ -269,9 +230,9 @@ namespace xyDocumentor.Extractors
             // Die Signatur eines Delegates ist im Prinzip der Rückgabetyp, der Name und die Parameter.
             string signature = $"{delegateNode.ReturnType} {delegateNode.Identifier}{delegateNode.TypeParameterList}{delegateNode.ParameterList}";
 
-            IList<ParameterDoc> delegateParameters = ExtractParameters(delegateNode.ParameterList, delegateNode);
+            IList<ParameterDoc> delegateParameters = Extractor.ExtractParameters(delegateNode.ParameterList, delegateNode);
             string returnType = delegateNode.ReturnType.ToString();
-            string returnSummary = Utils.ExtractXmlReturnSummary(delegateNode);
+            string returnSummary = Extractor.ExtractXmlReturnSummary(delegateNode);
 
 
             TypeDoc td_Delegate = new TypeDoc
@@ -281,7 +242,7 @@ namespace xyDocumentor.Extractors
                 Namespace = namespaceName ?? "Global",
                 Modifiers = modifiers.Trim(),
                 Attributes = Utils.FlattenAttributes(delegateNode.AttributeLists),
-                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(delegateNode),
+                Summary = Extractor.ExtractXmlSummaryFromSyntaxNode(delegateNode),
                 FilePath = filePath,
                 BaseTypes = new List<string> { signature }
                
@@ -294,7 +255,7 @@ namespace xyDocumentor.Extractors
                 Signature = signature,
                 Modifiers = modifiers.Trim(),
                 Summary = td_Delegate.Summary, // Wiederverwendung der Summary
-                Remarks = Utils.ExtractXmlRemarksFromSyntaxNode(delegateNode),
+                Remarks = Extractor.ExtractXmlRemarksFromSyntaxNode(delegateNode),
                 Parameters = delegateParameters,
                 ReturnType = returnType,
                 ReturnSummary = returnSummary
@@ -353,8 +314,8 @@ namespace xyDocumentor.Extractors
                     Kind = kind_,
                     Signature = signature_,
                     Modifiers = mds_Member_.Modifiers.ToString().Trim(),
-                    Summary = Utils.ExtractXmlSummaryFromSyntaxNode(mds_Member_),
-                    Remarks = Utils.ExtractXmlRemarksFromSyntaxNode(mds_Member_),
+                    Summary = Extractor.ExtractXmlSummaryFromSyntaxNode(mds_Member_),
+                    Remarks = Extractor.ExtractXmlRemarksFromSyntaxNode(mds_Member_),
                      Attributes = Utils.FlattenAttributes(mds_Member_.AttributeLists)
                 };
                 return md_Member;

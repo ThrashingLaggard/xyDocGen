@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using xyDocumentor.Docs;
+using xyDocumentor.Extractors;
 using xyDocumentor.Helpers;
 
 namespace xyDocumentor.Parser
@@ -119,8 +120,8 @@ namespace xyDocumentor.Parser
                 Namespace = namespace_ ?? "<global>",
                 Modifiers = modifiers.Trim(),
                 Attributes = (List<string>)Utils.FlattenAttributes(tds_Type_.AttributeLists),
-                BaseTypes = (List<string>)Utils.ExtractBaseTypes(tds_Type_.BaseList),
-                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(tds_Type_),
+                BaseTypes = (List<string>)Extractor.ExtractBaseTypes(tds_Type_.BaseList),
+                Summary = Extractor.ExtractXmlSummaryFromSyntaxNode(tds_Type_),
                 FilePath = filePath_,
                 Parent = parentName_
             };
@@ -162,7 +163,7 @@ namespace xyDocumentor.Parser
                 Modifiers = modifiers.Trim(),
                 Attributes = (List<string>) Utils.FlattenAttributes(en.AttributeLists),
                 BaseTypes = new List<string>(),
-                Summary = Utils.ExtractXmlSummaryFromSyntaxNode(en),
+                Summary = Extractor.ExtractXmlSummaryFromSyntaxNode(en),
                 FilePath = file
             };
 
@@ -183,22 +184,6 @@ namespace xyDocumentor.Parser
             var parts = path.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
             return parts.Any(p => _excludeParts.Contains(p));
         }
-    }
-
-    internal static class SyntaxNodeExtensions
-    {
-        public static SyntaxTokenList GetModifiers(this MemberDeclarationSyntax member) =>
-            member switch
-            {
-                BaseTypeDeclarationSyntax t => t.Modifiers,
-                FieldDeclarationSyntax f => f.Modifiers,
-                EventDeclarationSyntax e => e.Modifiers,
-                EventFieldDeclarationSyntax ef => ef.Modifiers,
-                MethodDeclarationSyntax m => m.Modifiers,
-                ConstructorDeclarationSyntax c => c.Modifiers,
-                PropertyDeclarationSyntax p => p.Modifiers,
-                _ => new SyntaxTokenList()
-            };
     }
 
 }
