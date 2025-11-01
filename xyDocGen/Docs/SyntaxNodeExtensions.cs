@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace xyDocumentor.Parser
+namespace xyDocumentor.Docs
 {
     internal static class SyntaxNodeExtensions
     {
