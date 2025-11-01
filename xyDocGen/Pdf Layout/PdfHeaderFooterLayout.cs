@@ -1,18 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using xyDocumentor.Pdf;
 using XBrushes = PdfSharpCore.Drawing.XBrushes;
 using XColor = PdfSharpCore.Drawing.XColor;
 using XColors = PdfSharpCore.Drawing.XColors;
 using XFont = PdfSharpCore.Drawing.XFont;
-using XGraphics = PdfSharpCore.Drawing.XGraphics;
 using XPen = PdfSharpCore.Drawing.XPen;
 using XRect = PdfSharpCore.Drawing.XRect;
-using XSolidBrush = PdfSharpCore.Drawing.XSolidBrush;
 using XStringFormats = PdfSharpCore.Drawing.XStringFormats;
 
 namespace xyDocumentor.Pdf_Layout
