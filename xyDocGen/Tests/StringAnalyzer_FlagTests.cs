@@ -1,7 +1,8 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using Xunit;
+using xyDocumentor.CLI;
 using xyDocumentor.Helpers;
 
 namespace xyDocumentor.Tests
@@ -59,7 +60,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void HelpFlag_Sets_Help_And_Parses()
         {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--help"), out var opt, out var err);
+            var ok = OptionsParser.TryParseOptions(A("--root", _tmpRoot, "--help"), out var opt, out var err);
             Assert.True(ok, err);
             Assert.True(opt.Help);
             Assert.False(opt.Info);
@@ -71,7 +72,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void InfoFlag_Sets_Info_And_Parses()
         {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--info"), out var opt, out var err);
+            var ok = OptionsParser.TryParseOptions(A("--root", _tmpRoot, "--info"), out var opt, out var err);
             Assert.True(ok, err);
             Assert.True(opt.Info);
             Assert.False(opt.Help);
@@ -83,7 +84,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Help_And_Info_Can_Be_Set_Together()
         {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--help", "--info"), out var opt, out var err);
+            var ok = OptionsParser.TryParseOptions(A("--root", _tmpRoot, "--help", "--info"), out var opt, out var err);
             Assert.True(ok, err);
             Assert.True(opt.Help);
             Assert.True(opt.Info);
@@ -99,7 +100,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Show_Sets_ShowOnly_True()
         {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--show"), out var opt, out var err);
+            var ok = OptionsParser.TryParseOptions(A("--root", _tmpRoot, "--show"), out var opt, out var err);
             Assert.True(ok, err);
             Assert.True(opt.ShowOnly);
         }
@@ -110,7 +111,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Index_Sets_BuildIndex_True()
         {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--index"), out var opt, out var err);
+            var ok = OptionsParser.TryParseOptions(A("--root", _tmpRoot, "--index"), out var opt, out var err);
             Assert.True(ok, err);
             Assert.True(opt.BuildIndex);
         }
@@ -121,7 +122,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Tree_Sets_BuildTree_True()
         {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--tree"), out var opt, out var err);
+            var ok = OptionsParser.TryParseOptions(A("--root", _tmpRoot, "--tree"), out var opt, out var err);
             Assert.True(ok, err);
             Assert.True(opt.BuildTree);
         }
@@ -132,7 +133,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Combined_Show_Index_Tree_All_True()
         {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--show", "--index", "--tree"), out var opt, out var err);
+            var ok = OptionsParser.TryParseOptions(A("--root", _tmpRoot, "--show", "--index", "--tree"), out var opt, out var err);
             Assert.True(ok, err);
             Assert.True(opt.ShowOnly);
             Assert.True(opt.BuildIndex);
@@ -153,7 +154,7 @@ namespace xyDocumentor.Tests
         [InlineData("--tree=true", true)]
         public void Boolean_Equals_Syntax_Respected(string flag, bool expected)
         {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, flag), out var opt, out var err);
+            var ok = OptionsParser.TryParseOptions(A("--root", _tmpRoot, flag), out var opt, out var err);
             Assert.True(ok, err);
             if (flag.StartsWith("--show"))
                 Assert.Equal(expected, opt.ShowOnly);
@@ -175,7 +176,7 @@ namespace xyDocumentor.Tests
         [InlineData("json")]
         public void Format_Supported_Values_Succeed(string fmt)
         {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--format", fmt), out var opt, out var err);
+            var ok = OptionsParser.TryParseOptions(A("--root", _tmpRoot, "--format", fmt), out var opt, out var err);
             Assert.True(ok, err);
             Assert.Equal(fmt, opt.Format);
         }
@@ -187,7 +188,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Format_Unsupported_Fails()
         {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--format", "xml"), out var opt, out var err);
+            var ok = OptionsParser.TryParseOptions(A("--root", _tmpRoot, "--format", "xml"), out var opt, out var err);
             Assert.False(ok);
             Assert.Contains("Unsupported --format", err);
             Assert.Null(opt);
@@ -200,7 +201,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Folder_Subfolder_Defaults_When_Out_NotProvided()
         {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot), out var opt, out var err);
+            var ok = OptionsParser.TryParseOptions(A("--root", _tmpRoot), out var opt, out var err);
             Assert.True(ok, err);
             var expected = Path.Combine(opt.RootPath, "docs", "api");
             Assert.Equal(Path.GetFullPath(expected), opt.OutPath);
@@ -212,7 +213,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Folder_Subfolder_Customize_OutPath_When_Out_NotProvided()
         {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--folder", "DOCS", "--subfolder", "XAPI"), out var opt, out var err);
+            var ok = OptionsParser.TryParseOptions(A("--root", _tmpRoot, "--folder", "DOCS", "--subfolder", "XAPI"), out var opt, out var err);
             Assert.True(ok, err);
             var expected = Path.Combine(opt.RootPath, "DOCS", "XAPI");
             Assert.Equal(Path.GetFullPath(expected), opt.OutPath);
@@ -224,7 +225,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Out_Overrides_Folder_Subfolder()
         {
-            var ok = StringAnalyzer.TryParseOptions(A("--root", _tmpRoot, "--folder", "DOCS", "--subfolder", "XAPI", "--out", _tmpOut), out var opt, out var err);
+            var ok = OptionsParser.TryParseOptions(A("--root", _tmpRoot, "--folder", "DOCS", "--subfolder", "XAPI", "--out", _tmpOut), out var opt, out var err);
             Assert.True(ok, err);
             Assert.Equal(Path.GetFullPath(_tmpOut), opt.OutPath);
         }
@@ -235,7 +236,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Flags_Are_Case_Insensitive()
         {
-            var ok = StringAnalyzer.TryParseOptions(A("--ROOT", _tmpRoot, "--FoRmAt", "HTML", "--TrEe", "--InDeX", "--ShOw"), out var opt, out var err);
+            var ok = OptionsParser.TryParseOptions(A("--ROOT", _tmpRoot, "--FoRmAt", "HTML", "--TrEe", "--InDeX", "--ShOw"), out var opt, out var err);
             Assert.True(ok, err);
             Assert.Equal("html", opt.Format);
             Assert.True(opt.BuildTree);

@@ -56,16 +56,16 @@
         async static Task MainAsync(string[] args)
         {
             // Parse typed options
-            if (!StringAnalyzer.TryParseOptions(args, out var opt, out var err))
+            if (!OptionsParser.TryParseOptions(args, out var opt, out var err))
             {
                 xyLog.Log("❌ " + err);
-                xyLog.Log(StringAnalyzer.BuildHelpText());
+                xyLog.Log(OptionsParser.BuildHelpText());
                 return;
             }
 
             if (opt.Help)
             {
-                xyLog.Log(StringAnalyzer.BuildHelpText());
+                xyLog.Log(OptionsParser.BuildHelpText());
                 return;
             }
             if (opt.Info)

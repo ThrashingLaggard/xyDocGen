@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
+using xyDocumentor.CLI;
 using xyDocumentor.Helpers;
 
 namespace xyDocumentor.Tests
@@ -59,7 +60,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Parse_Minimal_WithRootOut_ShouldSucceed()
         {
-            var ok = StringAnalyzer.TryParseOptions(
+            var ok = OptionsParser.TryParseOptions(
                 A("--root", _tmpRoot, "--out", _tmpOut, "--format", "md"),
                 out var opt, out var err);
 
@@ -80,7 +81,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Parse_DefaultOut_WhenFolderSubfolder_NotGiven_ShouldBeRootDocsApi()
         {
-            var ok = StringAnalyzer.TryParseOptions(
+            var ok = OptionsParser.TryParseOptions(
                 A("--root", _tmpRoot), out var opt, out var err);
 
             Assert.True(ok, err);
@@ -95,7 +96,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Parse_FormatValidation_ShouldFail_OnUnsupported()
         {
-            var ok = StringAnalyzer.TryParseOptions(
+            var ok = OptionsParser.TryParseOptions(
                 A("--root", _tmpRoot, "--format", "txt"), out var opt, out var err);
 
             Assert.False(ok);
@@ -109,7 +110,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Parse_Exclude_Semicolon_And_Comma()
         {
-            var ok = StringAnalyzer.TryParseOptions(
+            var ok = OptionsParser.TryParseOptions(
                 A("--root", _tmpRoot, "--exclude", ".git;bin,CustomFolder"),
                 out var opt, out var err);
 
@@ -126,7 +127,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Parse_Private_Flag_ShouldDisable_NonPublic()
         {
-            var ok = StringAnalyzer.TryParseOptions(
+            var ok = OptionsParser.TryParseOptions(
                 A("--root", _tmpRoot, "--private"), out var opt, out var err);
 
             Assert.True(ok, err);
@@ -139,7 +140,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Parse_Show_Index_Tree_Flags()
         {
-            var ok = StringAnalyzer.TryParseOptions(
+            var ok = OptionsParser.TryParseOptions(
                 A("--root", _tmpRoot, "--show", "--index", "--tree"),
                 out var opt, out var err);
 
@@ -155,7 +156,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Parse_EqualsSyntax_ShouldWork()
         {
-            var ok = StringAnalyzer.TryParseOptions(
+            var ok = OptionsParser.TryParseOptions(
                 A($"--root={_tmpRoot}", $"--out={_tmpOut}", "--format=json", "--exclude=.cache,.artifacts"),
                 out var opt, out var err);
 
@@ -171,7 +172,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Parse_MissingValue_After_Flag_ShouldFail()
         {
-            var ok = StringAnalyzer.TryParseOptions(
+            var ok = OptionsParser.TryParseOptions(
                 A("--root", _tmpRoot, "--out"), out var opt, out var err);
 
             Assert.False(ok);
@@ -186,7 +187,7 @@ namespace xyDocumentor.Tests
         [Fact]
         public void Parse_UnknownOption_ShouldFail_WithHelpfulMessage()
         {
-            var ok = StringAnalyzer.TryParseOptions(
+            var ok = OptionsParser.TryParseOptions(
                 A("--root", _tmpRoot, "--unknown"), out var opt, out var err);
 
             Assert.False(ok);
@@ -204,7 +205,7 @@ namespace xyDocumentor.Tests
         {
             // --out should override folder/subfolder
             var customOut = _tmpOut;
-            var ok = StringAnalyzer.TryParseOptions(
+            var ok = OptionsParser.TryParseOptions(
                 A("--root", _tmpRoot, "--folder", "docsX", "--subfolder", "apiY", "--out", customOut),
                 out var opt, out var err);
 

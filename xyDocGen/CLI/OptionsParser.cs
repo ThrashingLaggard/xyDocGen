@@ -4,13 +4,18 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using xyDocumentor.Helpers;
 using xyDocumentor.Models;
 
 namespace xyDocumentor.CLI
 {
+#nullable enable
+    
     internal class OptionsParser
     {
 
+        /// <summary>  The set of formats this tool understands. Case-insensitive. "markdown" is normalized to "md".</summary>
+        private static readonly HashSet<string> AllowedFormats = new(StringComparer.OrdinalIgnoreCase) { "md", "markdown", "html", "pdf", "json" };
 
         /// <summary>
         /// Parse raw command-line arguments into a strongly-typed <see cref="CliOptions"/>.
@@ -105,7 +110,7 @@ namespace xyDocumentor.CLI
                             // Examples:
                             //   --format md,html  --subfolder api;site
                             //   --format pdf      --subfolder pdf
-                            listedSubfolders = NormalizeList(eqValue);
+                            listedSubfolders = Normalizer.NormalizeList(eqValue);
                             if (listedSubfolders.Count == 0)
                                 listedSubfolders = [];
                             break;
@@ -113,14 +118,14 @@ namespace xyDocumentor.CLI
                         case "--format":
                             {
                                 // Accept aliases & duplicates; normalize to "md|html|pdf|json".
-                                List<string> normalizedListedFormats = NormalizeFormats(eqValue);
+                                List<string> normalizedListedFormats = Normalizer.NormalizeFormats(eqValue);
 
                                 // If user passed empty list (e.g., "--format="), default to md.
                                 if (normalizedListedFormats.Count == 0) normalizedListedFormats = ["md"];
 
                                 foreach (var f in normalizedListedFormats)
                                 {
-                                    string nf = NormalizeFormatAlias(f);
+                                    string nf = Normalizer.NormalizeFormatAlias(f);
                                     if (!AllowedFormats.Contains(nf))
                                     {
                                         error = $"Unsupported --format '{f}'. Allowed: {string.Join(", ", AllowedFormats)}";
@@ -136,7 +141,7 @@ namespace xyDocumentor.CLI
 
                         case "--exclude":
                             // Add extra path parts to exclude (semicolon/comma separated).
-                            foreach (var part in SplitList(eqValue))
+                            foreach (var part in Normalizer.NormalizeList(eqValue))
                                 excludes.Add(part);
                             break;
 
@@ -181,7 +186,7 @@ namespace xyDocumentor.CLI
                     case "--subfolder":
                         if (!TryReadNext(tokens, ref i, out string rawSubs))
                         { error = "Missing value after --subfolder."; opts = null!; return false; }
-                        listedSubfolders = NormalizeList(rawSubs);
+                        listedSubfolders = Normalizer.NormalizeList(rawSubs);
                         continue;
 
                     case "--format":
@@ -189,10 +194,10 @@ namespace xyDocumentor.CLI
                         { error = "Missing value after --format."; opts = null!; return false; }
 
                         // Same normalization logic as above, but for the space-separated form.
-                        var fmtList = NormalizeFormats(fmt);
+                        var fmtList = Normalizer.NormalizeFormats(fmt);
                         foreach (var f in fmtList)
                         {
-                            var nf = NormalizeFormatAlias(f);
+                            var nf = Normalizer.NormalizeFormatAlias(f);
                             if (!AllowedFormats.Contains(nf))
                             {
                                 error = $"Unsupported --format '{f}'. Allowed: {string.Join(", ", AllowedFormats)}";
@@ -206,7 +211,7 @@ namespace xyDocumentor.CLI
                     case "--exclude":
                         if (!TryReadNext(tokens, ref i, out var exStr))
                         { error = "Missing value after --exclude."; opts = null!; return false; }
-                        foreach (var part in SplitList(exStr))
+                        foreach (var part in Normalizer.NormalizeList(exStr))
                             excludes.Add(part);
                         continue;
 
@@ -231,7 +236,7 @@ namespace xyDocumentor.CLI
 
             // If user did not provide a root, compute a sensible default that works in Debug/Release.
             if (string.IsNullOrWhiteSpace(rootPath))
-                rootPath = GetDefaultRoot();
+                rootPath = Utils.GetDefaultRoot();
 
             // Decide base output directory:
             //   - If --out is specified, use it as-is.
@@ -241,8 +246,8 @@ namespace xyDocumentor.CLI
                 : outPath;
 
             // Normalize both paths to absolute canonical forms.
-            outBase = NormalizePath(outBase);
-            rootPath = NormalizePath(rootPath);
+            outBase = Normalizer.NormalizePath(outBase);
+            rootPath = Normalizer.NormalizePath(rootPath);
 
             // Validate the root exists before proceeding; otherwise we cannot enumerate source files.
             if (!Directory.Exists(rootPath))
@@ -272,13 +277,13 @@ namespace xyDocumentor.CLI
             var outputDirs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             for (int idx = 0; idx < listedFormats.Count; idx++)
             {
-                var f = listedFormats[idx].ToLowerInvariant();
+                string f = listedFormats[idx].ToLowerInvariant();
 
                 // If subfolders were provided, use them; else default folder name = format name.
-                var folderName = (listedSubfolders.Count > 0) ? listedSubfolders[idx] : f;
+                string folderName = (listedSubfolders.Count > 0) ? listedSubfolders[idx] : f;
 
                 // Normalize the combined path.
-                var full = NormalizePath(Path.Combine(outBase, folderName));
+                string full = Normalizer.NormalizePath(Path.Combine(outBase, folderName));
                 outputDirs[f] = full;
             }
 
@@ -423,5 +428,37 @@ namespace xyDocumentor.CLI
             i++; // Consume just the flag; caller will treat as "missing value".
             return false;
         }
+
+
+
+        /// <summary>
+        /// Parses booleans in a forgiving way:
+        /// - Blank/null → true (presence-style flags like "--show" treated as true)
+        /// - "1", "true", "yes" (case-insensitive) → true
+        /// - Everything else → false
+        /// </summary>
+        private static bool ParseBool(string s)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return true;
+            return s.Equals("1") || s.Equals("true", StringComparison.OrdinalIgnoreCase) || s.Equals("yes", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Applies a boolean flag to the correct field, including the special semantics of <c>--private</c>.
+        /// Unknown keys are ignored by this helper (validation happens earlier).
+        /// </summary>
+        private static void ApplyBooleanFlag(string key, bool value, ref bool showOnly, ref bool buildIndex, ref bool buildTree, ref bool help, ref bool info, ref bool includeNonPublic)
+        {
+            switch (key)
+            {
+                case "--show": showOnly = value; break;
+                case "--index": buildIndex = value; break;
+                case "--tree": buildTree = value; break;
+                case "--help": help = value; break;
+                case "--info": info = value; break;
+                case "--private": if (value) includeNonPublic = false; break;   // "--private" flips IncludeNonPublic off when true.
+            }
+        }
+
     }
 }

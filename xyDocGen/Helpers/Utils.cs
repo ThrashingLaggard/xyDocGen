@@ -25,6 +25,31 @@ namespace xyDocumentor.Helpers
     {
         public static string? Description { get; set; }
 
+        /// <summary>
+        /// Computes a reasonable default source root:
+        /// - In DEBUG builds, walk up from /bin/Debug/... to approximate the repo root.
+        /// - In RELEASE builds, use the current working directory.
+        /// </summary>
+        internal  static string GetDefaultRoot()
+        {
+#if DEBUG
+            // project directory: /bin/Debug/... → step up to repo root-ish
+            var cwd = Directory.GetCurrentDirectory();
+            var d = Directory.GetParent(cwd);
+            if (d?.Parent?.Parent != null)
+                return d.Parent.Parent.FullName;
+            return cwd;
+#else
+            return Environment.CurrentDirectory;
+#endif
+        }
+
+
+
+
+
+
+
         // Fallback string
         private const string NO_XML_SUMMARY_FALLBACK = "(No XML-Summary)";
 
