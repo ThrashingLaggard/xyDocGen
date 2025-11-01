@@ -12,6 +12,7 @@ using XStringFormats = PdfSharpCore.Drawing.XStringFormats;
 
 namespace xyDocumentor.Pdf_Layout
 {
+#nullable enable
     internal class PdfTocLayout
     {
         public PdfTocLayout(PageWriter pageWriter, PdfTextLayout text, PdfPageFlow pageFlow)

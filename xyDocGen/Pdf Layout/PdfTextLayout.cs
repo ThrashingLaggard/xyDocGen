@@ -8,6 +8,7 @@ using xyDocumentor.Pdf;
 
 namespace xyDocumentor.Pdf_Layout
 {
+#nullable enable
     internal class PdfTextLayout
     {
         public PageWriter _pw { get; }

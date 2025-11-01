@@ -10,6 +10,7 @@ using xyToolz.QOL;
 
 namespace xyDocumentor.Markdown
 {
+#nullable enable
     internal class MdSections
     {
         /// <summary>
