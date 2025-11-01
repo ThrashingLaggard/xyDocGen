@@ -354,6 +354,7 @@ namespace xyDocumentor.CLI
             return sb.ToString();
         }
 
+        /// <summary>
         /// Returns <c>true</c> if the token syntactically looks like a flag (starts with "--").
         /// Positional values do not start with "--".
         /// </summary>

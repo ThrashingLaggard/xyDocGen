@@ -12,7 +12,7 @@ using xyDocumentor.Helpers;
 
 namespace xyDocumentor.Extractors
 {
-
+#nullable enable
     internal partial class Extractor
     {
 

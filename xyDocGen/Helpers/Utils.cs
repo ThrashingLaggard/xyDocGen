@@ -141,7 +141,6 @@ namespace xyDocumentor.Helpers
                 ReturnType = Extractor.ExtractReturnType(mds_Member_),
                 Parameters = (IList<ParameterDoc>)Extractor.ExtractXmlParamSummaries(mds_Member_).ToList(),
 
-      
                 GenericConstraints = Extractor.ExtractGenericConstraints(mds_Member_),
                 TypeParameterSummaries = Extractor.ExtractXmlTypeParameterSummaries(mds_Member_)
             };
@@ -204,7 +203,7 @@ namespace xyDocumentor.Helpers
 
                 if (!string.IsNullOrEmpty(dominantRoot) &&parts.Length > 1 &&string.Equals(parts[0], dominantRoot, StringComparison.Ordinal))
                 {
-                    parts = parts.Skip(1).ToArray();
+                    parts = [.. parts.Skip(1)];
                 }
                 // Relativer Namespace-Pfad (z. B. "Core/Helpers")
                 var relNsPath = parts.Length > 0 ? Path.Combine(parts) : "_";
