@@ -27,8 +27,6 @@ namespace xyDocumentor.CLI
         /// - "--key=value" is preferred over "--key value" when both are present (first one wins).
         /// - Multiple formats and subfolders can be comma/semicolon separated.
         /// - If exactly one subfolder is provided for many formats, it is replicated for all formats.
-        /// - If subfolder count is not 0/1/format-count, parsing fails.
-        /// - If <c>--root</c> is omitted, a sensible default is chosen (see <see cref="GetDefaultRoot"/>).
         /// </summary>
         public static bool TryParseOptions(string[] args, out CliOptions opts, out string error)
         {

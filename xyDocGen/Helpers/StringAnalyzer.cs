@@ -29,10 +29,6 @@ internal static class StringAnalyzer
     public static string? Description { get; set; }
 
   
-
-
-
-
     /// <summary>
     /// Backward-compatible API used by older code paths and unit tests.
     /// Prefer <see cref="TryParseOptions(string[], out CliOptions, out string)"/>
