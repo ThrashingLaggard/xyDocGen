@@ -38,7 +38,8 @@ xydocgen --help
 ## Planned features & improvements
  
 + Upgrades 
-	- Reading and outputting the remarks
+	- Only put  content table in pdf when there are nested types
+	- Outputting the remarks
 	- Upgrading the visual result of the outputs
 
 
