@@ -31,7 +31,7 @@ internal static class StringAnalyzer
   
     /// <summary>
     /// Backward-compatible API used by older code paths and unit tests.
-    /// Prefer <see cref="TryParseOptions(string[], out CliOptions, out string)"/>
+    /// Prefer <see cref="OptionsParser.TryParseOptions(string[], out CliOptions, out string)"/>
     /// Returns a tuple with resolved root, a single effective out-path, the selected (single) format,
     /// whether non-public members should be included, and the exclude set.
     /// </summary>
