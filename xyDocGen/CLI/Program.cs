@@ -2,6 +2,7 @@
 {
     using PdfSharpCore.Fonts;
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Text;
@@ -9,6 +10,7 @@
     using xyDocumentor.Docs;
     using xyDocumentor.Extractors;
     using xyDocumentor.Helpers;
+    using xyDocumentor.Models;
     using xyDocumentor.Renderer;
     using xyToolz.Helper.Logging;
 
@@ -49,6 +51,7 @@
             }
         }
 
+   
 
         async static Task MainAsync(string[] args)
         {
@@ -67,21 +70,7 @@
             }
             if (opt.Info)
             {
-                // Print README.md to the console as requested by your README.
-                var readmePath = CliRuntimeHelper.FindReadme(opt.RootPath);
-                Console.WriteLine("xyDocGen – current configuration:");
-                Console.WriteLine($"  Root: {opt.RootPath}");
-                Console.WriteLine($"  Out : {opt.OutPath}");
-                Console.WriteLine($"  Formats: {string.Join(", ", opt.Formats)}");
-                Console.WriteLine($"  Subfolders: {string.Join(", ", opt.Subfolders)}");
-                if (readmePath is not null && File.Exists(readmePath))
-                {
-                    Console.WriteLine("\n--- README.md ---\n");
-                    Console.WriteLine(File.ReadAllText(readmePath));
-                }
-                else
-                    Console.WriteLine("README.md not found near root.");
-                return;
+                PrintReadmeToConsole(opt);
             }
 
             // Ensure output folder exists (when writing files)
@@ -89,17 +78,17 @@
                 Directory.CreateDirectory(opt.OutPath);
 
             // Enumerate .cs files (respect excludes)
-            var files = Directory.EnumerateFiles(opt.RootPath, "*.cs", SearchOption.AllDirectories)
-                                 .Where(p => !Utils.IsExcluded(p, opt.ExcludedParts));
+            IEnumerable<string> files = Directory.EnumerateFiles(opt.RootPath, "*.cs", SearchOption.AllDirectories).Where(p => !Utils.IsExcluded(p, opt.ExcludedParts));
+
             if (!files.Any())
             {
                 xyLog.Log($"⚠️ No `.cs` files found in '{opt.RootPath}'. Aborting.");
                 return;
             }
 
-            // Extract types
-            var dataFromFiles = await TypeExtractor.TryParseDataFromFile(files, opt.IncludeNonPublic);
-            var flattened = TypeDocExtensions.FlattenTypes(dataFromFiles);
+            // Extract and flatten types
+            List<TypeDoc> dataFromFiles = await TypeExtractor.TryParseDataFromFile(files, opt.IncludeNonPublic);
+            IEnumerable<TypeDoc> flattened = TypeDocExtensions.FlattenTypes(dataFromFiles);
 
             CliRuntimeHelper.EnsureDominantRootCached(flattened);
 
@@ -158,6 +147,36 @@
             var summary = string.Join(',', opt.Formats.Select(f => $"\n{f}→{CliRuntimeHelper.ResolveFormatDir(opt, f.ToLowerInvariant())}"));
             xyLog.Log($"✅ Finished. Types: {flattened.Count()}, Formats: {summary}\n");
         }
+
+
+
+        public static void PrintReadmeToConsole(CliOptions opt)
+        {
+            var readmePath = CliRuntimeHelper.FindReadme(opt.RootPath);
+            Console.WriteLine("xyDocGen – current configuration:");
+            Console.WriteLine($"  Root: {opt.RootPath}");
+            Console.WriteLine($"  Out : {opt.OutPath}");
+            Console.WriteLine($"  Formats: {string.Join(", ", opt.Formats)}");
+            Console.WriteLine($"  Subfolders: {string.Join(", ", opt.Subfolders)}");
+            if (readmePath is not null && File.Exists(readmePath))
+            {
+                Console.WriteLine("\n\n--- README.md ---\n");
+                Console.WriteLine(File.ReadAllText(readmePath));
+            }
+            else
+                Console.WriteLine("README.md not found near root.");
+            return;
+        }
+
+
+
+
+
+
+
+
+
+
 
         /// <summary>
         /// Ahuhu ma Awawawa
