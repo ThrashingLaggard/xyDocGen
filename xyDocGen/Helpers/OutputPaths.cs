@@ -1,17 +1,4 @@
-﻿namespace xyDocumentor.Helpers;
-
-using System.IO;
-
-internal static class OutputPaths
-{
-    public static string FormatDir(string outRoot, string format) =>Path.Combine(outRoot, format.ToLowerInvariant());
-
-    // Index/Tree JE FORMAT innerhalb des jeweiligen Format-Ordners
-    public static string IndexPath(string outRoot, string formatExt) => Path.Combine(FormatDir(outRoot, formatExt), $"index.{formatExt.ToLowerInvariant()}");
-
-    public static string TreePath(string outRoot, string formatExt) => Path.Combine(FormatDir(outRoot, formatExt), $"tree.{formatExt.ToLowerInvariant()}");
-}
-namespace xyDocumentor.Helpers
+﻿namespace xyDocumentor.Helpers
 {
     using System.IO;
 
@@ -21,21 +8,6 @@ namespace xyDocumentor.Helpers
     /// <para>
     /// This static utility class encapsulates the directory and file-naming conventions
     /// used when writing generated files (per format) into structured subfolders.
-    /// </para>
-    /// <para>
-    /// Example layout for an output root of <c>C:\Docs</c>:
-    /// <code>
-    /// C:\Docs\
-    ///   ├── md\
-    ///   │    ├── index.md
-    ///   │    └── tree.md
-    ///   ├── pdf\
-    ///   │    ├── index.pdf
-    ///   │    └── tree.pdf
-    ///   └── html\
-    ///        ├── index.html
-    ///        └── tree.html
-    /// </code>
     /// </para>
     /// </summary>
     internal static class OutputPaths
