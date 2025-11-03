@@ -30,7 +30,6 @@
     public partial class Program
     {
 
-
         /// /// <summary>
         /// Synchronous program entry point required by .NET host.
         /// <para>
@@ -59,7 +58,9 @@
                 IFontResolver resolver = GlobalFontSettings.FontResolver;
                 FontResolverInfo testFace = resolver.ResolveTypeface(AutoResourceFontResolver.FamilySans, false, false);
                 if (testFace == null)
+                {
                     xyLog.Log("⚠️ Warning: FontResolver returned null for FamilySans. Check embedded font resources.");
+                }
 
                 // 3) Hand over to the async workflow and block until it completes.
                 //    Using GetAwaiter().GetResult() preserves original exceptions without AggregateException wrapping.
