@@ -1,10 +1,7 @@
 ﻿namespace xyDocumentor.Helpers;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Intrinsics.X86;
-using System.Text;
 using xyDocumentor.CLI;
 using xyDocumentor.Models;
 using xyToolz.Helper.Logging;

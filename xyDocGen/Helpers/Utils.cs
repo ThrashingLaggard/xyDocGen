@@ -360,6 +360,7 @@ namespace xyDocumentor.Helpers
                 switch (lowerFormat)
                 {
                     case "json":
+
                         // Ensure unique final path with extension to avoid overwriting existing files.
                         var filePath = EnsureUniquePath(fileName, ".json");
 

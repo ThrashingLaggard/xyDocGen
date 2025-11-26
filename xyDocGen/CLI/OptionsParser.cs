@@ -35,11 +35,11 @@ namespace xyDocumentor.CLI
             // Handle null args while tokenizing.
             List<string> tokens = args?.ToList() ?? [];
 
-            // Build a quick lookup for "--key=value" forms so we can prefer them during parsing.
-            var dictEq = BuildEqMap(tokens);
+            // Build a quick lookup  
+            Dictionary<string, string> dictEq = BuildEqMap(tokens);
 
             // Cursor for scanning tokens left-to-right.
-            var i = 0;
+            int i = 0;
 
             // Inbound paths (root of source and base out directory).
             string? rootPath = null;
