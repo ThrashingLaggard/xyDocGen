@@ -29,10 +29,10 @@ namespace xyDocumentor.CLI
         /// </summary>
         public static bool TryParseOptions(string[] args, out CliOptions opts, out string error)
         {
-            // Default error placeholder; will be overridden with a specific message on actual error.
+            // Default error placeholder; 
             error = "Invalid arguments. Use --help to see available options.";
 
-            // Tokenize input safely; allow null args (empty list).
+            // Handle null args while tokenizing.
             List<string> tokens = args?.ToList() ?? [];
 
             // Build a quick lookup for "--key=value" forms so we can prefer them during parsing.

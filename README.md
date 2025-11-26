@@ -12,7 +12,7 @@ Each format is written into its **own subfolder**.
 ## Usage example:
 
 (Sample for easiest input to generate everything according to the standard settings)
-xydocgen               =====>>>>>               xydocgen      --root [current working directory]     --folder docs     --subfolder api     --exclude .git;bin;obj;node_modules;.vs;TestResults     --format md     
+xydocgen               =====>>>>>               xydocgen      --root [current working directory]     --folder docs     --subfolder api     --exclude .git;bin;obj;node_modules;.vs;TestResults     --format (all)    
 
 (Use dotnet at the start when installed locally)
 dotnet xydocgen --root . --out docs/api --exclude .git;bin;obj;node_modules;.vs;TestResults
