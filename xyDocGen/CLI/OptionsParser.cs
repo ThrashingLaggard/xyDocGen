@@ -69,9 +69,6 @@ namespace xyDocumentor.CLI
             bool help = false;               // Print help text and exit.
             bool info = false;               // Print current configuration + README and exit.
 
-            // -----------------------
-            // First pass over tokens
-            // -----------------------
             while (i < tokens.Count)
             {
                 string t = tokens[i];
