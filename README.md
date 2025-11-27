@@ -41,9 +41,8 @@ xydocgen --help
 - Only put content list in pdf when there are nested types
 - Outputting the remarks
 - Upgrading the visual result of the outputs
-
 - eventually add font and fontsize as parameters
-
+- Add more details
   
 ## Installation
 
