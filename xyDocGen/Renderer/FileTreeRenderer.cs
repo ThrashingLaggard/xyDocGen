@@ -113,7 +113,7 @@ namespace xyDocumentor.Renderer
         {
             // Stores INDEX.md  ordered by namespace
             StringBuilder indexBuilder = new StringBuilder();
-
+            string fileExt ="";
             // Adding the headline
             indexBuilder.AppendLine("# API‑Index (by namespace)\n");
 
@@ -127,7 +127,7 @@ namespace xyDocumentor.Renderer
                 foreach (TypeDoc tD in group.OrderBy(t => t.DisplayName))
                 {
                     // Choosing the file extension
-                    string fileExt = format == "pdf" ? "pdf" : format == "html" ? "html" : format == "json" ? "json" : "md";
+                    fileExt = format == "pdf" ? "pdf" : format == "html" ? "html" : format == "json" ? "json" : "md";
 
                     // Building the group data 
                     string rel = $"./{group.Key.Replace('<', '_').Replace('>', '_')}/{tD.DisplayName.Replace(' ', '_')}.{fileExt}";

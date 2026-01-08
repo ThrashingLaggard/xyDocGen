@@ -48,8 +48,12 @@ namespace xyDocumentor.CLI
             // Default folder used if --out is not provided (e.g., <root>/docs).
             string folder = "api";
 
+            // Only fill default if user has no wishes
+            List<string> listedFormats = [];
+            bool isSpecifiedByUser = false;
+            
             // Default formats to generate. Multiple formats are supported and may be expanded later.
-            List<string> listedFormats = ["pdf", "md", "html", "json"];
+            //listedFormats = ["pdf", "md", "html", "json"];
 
             // Optional per-format subfolders, 1:1 with formats if provided.
             List<string> listedSubfolders = [];
@@ -111,10 +115,12 @@ namespace xyDocumentor.CLI
 
                         case "--format":
                             {
+                                isSpecifiedByUser = true;
+
                                 // Accept aliases & duplicates; normalize to "md|html|pdf|json".
                                 List<string> normalizedListedFormats = Normalizer.NormalizeFormats(eqValue);
 
-                                // If user passed empty list (e.g., "--format="), default to md.
+                                //// If user passed empty list (e.g., "--format="), default to md.
                                 if (normalizedListedFormats.Count == 0) normalizedListedFormats = ["md"];
 
                                 foreach (var f in normalizedListedFormats)
@@ -187,6 +193,7 @@ namespace xyDocumentor.CLI
                         if (!TryReadNext(tokens, ref i, out var fmt))
                         { error = "Missing value after --format."; opts = null!; return false; }
 
+                        isSpecifiedByUser = true;
                         // Same normalization logic as above, but for the space-separated form.
                         var fmtList = Normalizer.NormalizeFormats(fmt);
                         foreach (var f in fmtList)
@@ -227,6 +234,11 @@ namespace xyDocumentor.CLI
             // -----------------------
             // Resolve paths & defaults
             // -----------------------
+
+            if (!isSpecifiedByUser)
+            {
+                listedFormats.AddRange(["pdf", "md", "html", "json"]);
+            }
 
             // If user did not provide a root, compute a sensible default that works in Debug/Release.
             if (string.IsNullOrWhiteSpace(rootPath))
