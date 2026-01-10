@@ -96,6 +96,9 @@
         /// <returns>A task that completes when the CLI workflow finishes.</returns>
         async static Task MainAsync(string[] args)
         {
+            // ### Needed to localize where the chosen formats go missing
+            // args = [ "--format", "pdf,json"];
+
             // --- Parse typed options ---------------------------------------------------------
             // Try to translate raw CLI args into a strongly typed options object.
             // If parsing fails, print a helpful message and the auto-generated help text.
