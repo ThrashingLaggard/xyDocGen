@@ -46,7 +46,7 @@ namespace xyDocumentor.CLI
             string? outPath = null;  // User may pass --out; we later resolve a normalized base "outBase".
 
             // Default folder used if --out is not provided (e.g., <root>/docs).
-            string folder = "api";
+            string folder = "documentation";
 
             // Only fill default if user has no wishes
             List<string> listedFormats = [];
