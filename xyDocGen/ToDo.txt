@@ -3,7 +3,7 @@
 - Befehle für output in Dictionary speichern?
 
 
-
+- Herausfinden, welche Arten von XML Tags ausgelesen werden und ggf nutzbar machen
 
 
 

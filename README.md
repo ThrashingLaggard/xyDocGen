@@ -1,7 +1,7 @@
 # xyDocumentor
 
 xyDocumentor is an open source CLI tool for generating API documentation from C# projects.  
-It supports Markdown,PDF, JSON , and HTML output.
+It supports Markdown, PDF, JSON , and HTML output.
 
 Scans all C# files in the specified directory and below.
 Extracts all types and nested types, methods, properties, events, fields, etc.
