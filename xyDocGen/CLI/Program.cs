@@ -214,39 +214,6 @@
                 }
             }
 
-            //// --- Index / Tree artifacts ------------------------------------------------------
-            //// Build index/tree only if requested. These can be written to disk or shown in console.
-            //if (opt.BuildIndex || opt.BuildTree || opt.ShowIndexToConsole || opt.ShowTreeToConsole)
-            //{
-            //    // Decide whether to persist artifacts to disk:
-            //    // - In --show mode, we never write.
-            //    // - If either "show index" or "show tree" is requested, we display instead of saving.
-            //    bool writeToDisk = !opt.ShowOnly && !(opt.ShowIndexToConsole || opt.ShowTreeToConsole);
-
-            //    foreach (var fmt in opt.Formats.Select(f => f.ToLowerInvariant()))
-            //    {
-            //        // Resolve target directory for this format (top-level holder for index/tree).
-            //        var formatDir = CliRuntimeHelper.ResolveFormatDir(opt, fmt); // e.g., <OutPath>/<fmt> or mapping
-            //        if (writeToDisk) Directory.CreateDirectory(formatDir);
-
-            //        // Build index if requested or display requested; render into formatDir when persisting.
-            //        if (opt.BuildIndex || opt.ShowIndexToConsole)
-            //        {
-            //            var index = await FileTreeRenderer.BuildProjectIndex(flattened, fmt, formatDir, writeToDisk);
-            //            if (!writeToDisk) Console.WriteLine(index.ToString());
-            //        }
-
-            //        // Build tree if requested or display requested; same persistence rule as above.
-            //        if (opt.BuildTree || opt.ShowTreeToConsole)
-            //        {
-            //            var tree = await FileTreeRenderer.BuildProjectTree(
-            //            new StringBuilder(), fmt, opt.RootPath, formatDir, opt.ExcludedParts, writeToDisk);
-            //            if (!writeToDisk) Console.WriteLine(tree.ToString());
-
-            //        }
-            //    }
-            // }
-
             // --- Final summary ---------------------------------------------------------------
             // Produce a compact mapping of format -> output directory for quick operator feedback.
             var summary = string.Join(',', opt.Formats.Select(f => $"\n{f}→{CliRuntimeHelper.ResolveFormatDir(opt, f.ToLowerInvariant())}"));
