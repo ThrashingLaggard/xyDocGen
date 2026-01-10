@@ -97,7 +97,7 @@
         async static Task MainAsync(string[] args)
         {
             // ### Needed to localize where the chosen formats go missing
-            // args = [ "--format", "pdf,json"];
+            //args = [ "--show-tree","--show-index", "--format", "pdf,json"];
 
             // --- Parse typed options ---------------------------------------------------------
             // Try to translate raw CLI args into a strongly typed options object.
@@ -110,7 +110,6 @@
             }
 
             // --- Early exits for meta flags --------------------------------------------------
-            // --help: print full help and exit without performing any work.
             if (opt.Help)
             {
                 xyLog.Log(OptionsParser.BuildHelpText());
@@ -124,8 +123,6 @@
             }
 
             // --- Prepare output --------------------------------------------------------------
-            // Ensure the base output directory exists when we actually write files.
-            // In --show (dry-run) mode, outputs are not written, so we skip creation.
             if (!opt.ShowOnly)
                 Directory.CreateDirectory(opt.OutPath);
 
@@ -133,7 +130,6 @@
             // Enumerate all *.cs files under the root, exclude well-known directories/patterns.
             IEnumerable<string> files = Directory.EnumerateFiles(opt.RootPath, "*.cs", SearchOption.AllDirectories).Where(p => !Utils.IsExcluded(p, opt.ExcludedParts));
 
-            // Defensive check: abort gracefully if nothing to process.
             if (!files.Any())
             {
                 xyLog.Log($"⚠️ No `.cs` files found in '{opt.RootPath}'. Aborting.");
@@ -149,24 +145,37 @@
 
             // Precompute commonly referenced roots to speed lookups/rendering for large repos.
             CliRuntimeHelper.EnsureDominantRootCached(flattened);
+            
+            // --- Index / Tree (BUILT EXACTLY ONCE) -------------------------------------------
+            StringBuilder? index = null;
+            StringBuilder? tree = null;
+
+            if (opt.BuildIndex || opt.ShowIndexToConsole)
+            {
+                index = await FileTreeRenderer.BuildProjectIndex(flattened,"md",writeToDisk: false);
+            }
+
+            if (opt.BuildTree || opt.ShowTreeToConsole)
+            {
+                tree = await FileTreeRenderer.BuildProjectTree(new StringBuilder(),"md",opt.RootPath,opt.OutPath,opt.ExcludedParts,writeToDisk: false);
+            }
 
             // --- Output strategy -------------------------------------------------------------
             if (opt.ShowOnly)
             {
-                // In show-only mode, prefer markdown output for console readability.
+                // In show-only mode, markdown output for console readability.
                 if (!string.Equals(opt.Format, "md", StringComparison.OrdinalIgnoreCase))
                     xyLog.Log("ℹ️ '--show' active: using Markdown in console (ignoring --format).");
 
-                // Render each top-level type to markdown and stream to console.
                 foreach (var t in dataFromFiles)
                 {
-                    string md = MarkdownRenderer.Render(t);
-                    xyLog.Log(md);
+                    xyLog.Log(MarkdownRenderer.Render(t));
                     xyLog.Log("\n---\n");
                 }
             }
             else
             {
+            
                 // For each requested format:
                 // 1) Resolve the per-format target directory (may come from mapping or subfolder).
                 // 2) Ensure the directory exists.
@@ -182,38 +191,61 @@
                 }
             }
 
-            // --- Index / Tree artifacts ------------------------------------------------------
-            // Build index/tree only if requested. These can be written to disk or shown in console.
-            if (opt.BuildIndex || opt.BuildTree || opt.ShowIndexToConsole || opt.ShowTreeToConsole)
-            {
-                // Decide whether to persist artifacts to disk:
-                // - In --show mode, we never write.
-                // - If either "show index" or "show tree" is requested, we display instead of saving.
-                bool writeToDisk = !opt.ShowOnly && !(opt.ShowIndexToConsole || opt.ShowTreeToConsole);
+            // --- Console output (NO repetition) ----------------------------------------------
+            if (opt.ShowIndexToConsole && index != null)
+                Console.WriteLine(index.ToString());
 
+            if (opt.ShowTreeToConsole && tree != null)
+                Console.WriteLine(tree.ToString());
+
+            // --- Disk persistence (NO rebuild) -----------------------------------------------
+            if (!opt.ShowOnly && (opt.BuildIndex || opt.BuildTree))
+            {
                 foreach (var fmt in opt.Formats.Select(f => f.ToLowerInvariant()))
                 {
-                    // Resolve target directory for this format (top-level holder for index/tree).
-                    var formatDir = CliRuntimeHelper.ResolveFormatDir(opt, fmt); // e.g., <OutPath>/<fmt> or mapping
-                    if (writeToDisk) Directory.CreateDirectory(formatDir);
+                    var formatDir = CliRuntimeHelper.ResolveFormatDir(opt, fmt);
+                    Directory.CreateDirectory(formatDir);
 
-                    // Build index if requested or display requested; render into formatDir when persisting.
-                    if (opt.BuildIndex || opt.ShowIndexToConsole)
-                    {
-                        var index = await FileTreeRenderer.BuildProjectIndex(flattened, fmt, formatDir, writeToDisk);
-                        if (!writeToDisk) Console.WriteLine(index.ToString());
-                    }
+                    if (opt.BuildIndex && index != null)
+                        File.WriteAllText(Path.Combine(formatDir, "index.md"), index.ToString());
 
-                    // Build tree if requested or display requested; same persistence rule as above.
-                    if (opt.BuildTree || opt.ShowTreeToConsole)
-                    {
-                        var tree = await FileTreeRenderer.BuildProjectTree(
-                        new StringBuilder(), fmt, opt.RootPath, formatDir, opt.ExcludedParts, writeToDisk);
-                        if (!writeToDisk) Console.WriteLine(tree.ToString());
-
-                    }
+                    if (opt.BuildTree && tree != null)
+                        File.WriteAllText(Path.Combine(formatDir, "tree.md"), tree.ToString());
                 }
             }
+
+            //// --- Index / Tree artifacts ------------------------------------------------------
+            //// Build index/tree only if requested. These can be written to disk or shown in console.
+            //if (opt.BuildIndex || opt.BuildTree || opt.ShowIndexToConsole || opt.ShowTreeToConsole)
+            //{
+            //    // Decide whether to persist artifacts to disk:
+            //    // - In --show mode, we never write.
+            //    // - If either "show index" or "show tree" is requested, we display instead of saving.
+            //    bool writeToDisk = !opt.ShowOnly && !(opt.ShowIndexToConsole || opt.ShowTreeToConsole);
+
+            //    foreach (var fmt in opt.Formats.Select(f => f.ToLowerInvariant()))
+            //    {
+            //        // Resolve target directory for this format (top-level holder for index/tree).
+            //        var formatDir = CliRuntimeHelper.ResolveFormatDir(opt, fmt); // e.g., <OutPath>/<fmt> or mapping
+            //        if (writeToDisk) Directory.CreateDirectory(formatDir);
+
+            //        // Build index if requested or display requested; render into formatDir when persisting.
+            //        if (opt.BuildIndex || opt.ShowIndexToConsole)
+            //        {
+            //            var index = await FileTreeRenderer.BuildProjectIndex(flattened, fmt, formatDir, writeToDisk);
+            //            if (!writeToDisk) Console.WriteLine(index.ToString());
+            //        }
+
+            //        // Build tree if requested or display requested; same persistence rule as above.
+            //        if (opt.BuildTree || opt.ShowTreeToConsole)
+            //        {
+            //            var tree = await FileTreeRenderer.BuildProjectTree(
+            //            new StringBuilder(), fmt, opt.RootPath, formatDir, opt.ExcludedParts, writeToDisk);
+            //            if (!writeToDisk) Console.WriteLine(tree.ToString());
+
+            //        }
+            //    }
+            // }
 
             // --- Final summary ---------------------------------------------------------------
             // Produce a compact mapping of format -> output directory for quick operator feedback.

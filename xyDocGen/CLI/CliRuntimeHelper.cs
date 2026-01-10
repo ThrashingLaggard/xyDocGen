@@ -176,7 +176,7 @@ namespace xyDocumentor.CLI
                 // --- Build and optionally write the project index ----------------------------
                 if (opt.BuildIndex || opt.ShowIndexToConsole)
                 {
-                    var index = await FileTreeRenderer.BuildProjectIndex(flattened, fmt, formatDir, writeToDisk);
+                    var index = await FileTreeRenderer.BuildProjectIndex(flattened, fmt, writeToDisk,formatDir );
 
                     // Print to console if not writing to disk.
                     if (!writeToDisk) Console.WriteLine(index.ToString());

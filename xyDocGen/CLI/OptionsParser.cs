@@ -217,12 +217,14 @@ namespace xyDocumentor.CLI
                         continue;
 
                     // Presence-only boolean flags (if present → true).
-                    case "--show": showOnly = true; i++; continue;
+                    case "--show-only": showOnly = true; i++; continue;
                     case "--index": buildIndex = true; i++; continue;
                     case "--tree": buildTree = true; i++; continue;
                     case "--help": help = true; i++; continue;
                     case "--info": info = true; i++; continue;
                     case "--private": includeNonPublic = false; i++; continue;
+                    case "--show-tree": showTreeToConsole = true; i++; continue;
+                    case "--show-index": showIndexToConsole = true; i++; continue;
 
                     default:
                         // Unknown flag → hard error (fail fast and hint at --help).
@@ -352,7 +354,7 @@ namespace xyDocumentor.CLI
             sb.AppendLine("  --private                                    Exclude non-public members from documentation");
             sb.AppendLine("  --index                                       Build namespace index (INDEX.md)");
             sb.AppendLine("  --tree                                        Build project structure (PROJECT-STRUCTURE.md)");
-            sb.AppendLine("  --show                                        Print documentation to console (no files written)");
+            sb.AppendLine("  --show-only                                       Print documentation to console (no files written)");
             sb.AppendLine("  --show-index                              Print namespace index to console only");
             sb.AppendLine("  --show-tree                               Print project tree to console only");
             sb.AppendLine();

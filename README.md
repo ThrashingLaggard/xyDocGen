@@ -31,9 +31,8 @@ xydocgen --help
 
 ## Changes
 
-- Now every format has its own folder
-- Generate multiple formats in one go
-- removed projectname from foldernames
+- Only the chosen format gets put out
+- Fixed the tree and index output on console
 
 ## Planned features & improvements
 
@@ -65,7 +64,7 @@ dotnet tool update xydocgen [--local/--global]
 
 ## Problems
 
-Output is not very bonita.
+
 
 
 # Author

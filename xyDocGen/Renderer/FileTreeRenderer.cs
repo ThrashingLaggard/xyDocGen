@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -86,6 +87,8 @@ namespace xyDocumentor.Renderer
         /// <returns></returns>
         public static async Task<StringBuilder> BuildProjectTree(StringBuilder treeBuilder, string format, string rootPath, string outPath, HashSet<string> excludedParts, bool writeToDisk, string prefix = "")
         {
+            if (string.IsNullOrEmpty(outPath) && writeToDisk is true) outPath = Environment.CurrentDirectory;
+
             string headline = "# Project structure\n";
             string fileName = "PROJECT-STRUCTURE.md";
 
@@ -109,8 +112,11 @@ namespace xyDocumentor.Renderer
         /// <summary>
         /// Builds an INDEX.md file listing all documented types, grouped by namespace.
         /// </summary>
-        public static async Task<StringBuilder> BuildProjectIndex(IEnumerable<TypeDoc> flattenedtypes, string format, string outpath, bool writeToDisk)
+        public static async Task<StringBuilder> BuildProjectIndex(IEnumerable<TypeDoc> flattenedtypes, string format, bool writeToDisk, string? outPath = null)
         {
+            if (string.IsNullOrEmpty(outPath) && writeToDisk is true) 
+                outPath = Environment.CurrentDirectory;
+            
             // Stores INDEX.md  ordered by namespace
             StringBuilder indexBuilder = new StringBuilder();
             string fileExt ="";
@@ -139,9 +145,9 @@ namespace xyDocumentor.Renderer
                 indexBuilder.AppendLine();
             }
 
-            // if (writeToDisk)
+             if (writeToDisk)
             {
-                string indexPath = Path.Combine(outpath, "INDEX.md");
+                string indexPath = Path.Combine(outPath, "INDEX.md");
                 await xyFiles.SaveToFile(indexBuilder.ToString(), indexPath);
             }
             return indexBuilder;
@@ -177,7 +183,7 @@ namespace xyDocumentor.Renderer
         /// <param name="outpath"></param>
         /// <returns></returns>
         public static Task<StringBuilder> BuildProjectIndex(IEnumerable<TypeDoc> flattenedtypes, string format, string outpath)
-            => BuildProjectIndex(flattenedtypes, format, outpath, writeToDisk: true);
+            => BuildProjectIndex(flattenedtypes, format,  writeToDisk: true,outpath);
 
 
      
