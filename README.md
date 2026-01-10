@@ -31,8 +31,9 @@ xydocgen --help
 
 ## Changes
 
-- Only the chosen format gets put out
+- Only the chosen formats are generated
 - Fixed the tree and index output on console
+- Tree and index now get rendered before the other docs do
 
 ## Planned features & improvements
 
@@ -64,7 +65,7 @@ dotnet tool update xydocgen [--local/--global]
 
 ## Problems
 
-
+PDF output needs ton be optimized!
 
 
 # Author
