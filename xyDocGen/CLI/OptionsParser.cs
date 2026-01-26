@@ -66,8 +66,8 @@ namespace xyDocumentor.CLI
 
             // Output/printing switches
             bool showOnly = false;           // If true, suppress file output and print content to console.
-            bool buildIndex = false;         // Generate namespace index file(s) unless suppressed by showOnly.
-            bool buildTree = false;          // Generate project structure file(s) unless suppressed by showOnly.
+            bool buildIndex = true;         // Generate namespace index file(s) unless suppressed by showOnly.
+            bool buildTree = true;          // Generate project structure file(s) unless suppressed by showOnly.
             bool showIndexToConsole = false; // Print index only to console (no files).
             bool showTreeToConsole = false;  // Print tree only to console (no files).
             bool help = false;               // Print help text and exit.
