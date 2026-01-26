@@ -2,6 +2,7 @@
 
 - Befehle für output in Dictionary speichern?
 
+- Remove TOC from PDF output if theres only one object in the file
 
 - Herausfinden, welche Arten von XML Tags ausgelesen werden und ggf nutzbar machen
 

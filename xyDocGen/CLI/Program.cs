@@ -1,10 +1,13 @@
 ﻿namespace xyDocumentor.CLI
 {
+    using Microsoft.EntityFrameworkCore.Metadata.Internal;
     using PdfSharpCore.Fonts;
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Runtime.Intrinsics.X86;
     using System.Text;
     using System.Threading.Tasks;
     using xyDocumentor.Docs;
@@ -99,9 +102,7 @@
             // ### Needed to localize where the chosen formats go missing
             //args = [ "--show-tree","--show-index", "--format", "pdf,json"];
 
-            // --- Parse typed options ---------------------------------------------------------
             // Try to translate raw CLI args into a strongly typed options object.
-            // If parsing fails, print a helpful message and the auto-generated help text.
             if (!OptionsParser.TryParseOptions(args, out var opt, out var err))
             {
                 xyLog.Log("❌ " + err);
@@ -109,25 +110,22 @@
                 return;
             }
 
-            // --- Early exits for meta flags --------------------------------------------------
+            // List the commands
             if (opt.Help)
             {
                 xyLog.Log(OptionsParser.BuildHelpText());
                 return;
             }
 
-            // --info: print a small configuration summary (and README if present), then continue.
+            // Print a small configuration summary (and README if present)
             if (opt.Info)
             {
                 PrintReadmeToConsole(opt);
             }
 
-            // --- Prepare output --------------------------------------------------------------
             if (!opt.ShowOnly)
                 Directory.CreateDirectory(opt.OutPath);
 
-            // --- Discover input files --------------------------------------------------------
-            // Enumerate all *.cs files under the root, exclude well-known directories/patterns.
             IEnumerable<string> files = Directory.EnumerateFiles(opt.RootPath, "*.cs", SearchOption.AllDirectories).Where(p => !Utils.IsExcluded(p, opt.ExcludedParts));
 
             if (!files.Any())
@@ -136,8 +134,7 @@
                 return;
             }
 
-            // --- Extract model ---------------------------------------------------------------
-            // Parse source files into structured type metadata (optionally including non-publics).
+
             List<TypeDoc> dataFromFiles = await TypeExtractor.TryParseDataFromFile(files, opt.IncludeNonPublic);
 
             // Flatten nested type hierarchies into a linear sequence to simplify downstream processing.
@@ -146,7 +143,6 @@
             // Precompute commonly referenced roots to speed lookups/rendering for large repos.
             CliRuntimeHelper.EnsureDominantRootCached(flattened);
             
-            // --- Index / Tree (BUILT EXACTLY ONCE) -------------------------------------------
             StringBuilder? index = null;
             StringBuilder? tree = null;
 
@@ -160,46 +156,93 @@
                 tree = await FileTreeRenderer.BuildProjectTree(new StringBuilder(),"md",opt.RootPath,opt.OutPath,opt.ExcludedParts,writeToDisk: false);
             }
 
-            // --- Output strategy -------------------------------------------------------------
+            // Output "strategy"
             if (opt.ShowOnly)
             {
-                // In show-only mode, markdown output for console readability.
+                PrintAllToConsole(opt, dataFromFiles);
+            }
+            else
+            {
+                await WriteDataToFiles(opt, dataFromFiles);
+            }
+
+            CheckShowIndexAndTreeInConsole(opt, index, tree);
+
+            // Disk persistence (NO rebuild) 
+            if (!opt.ShowOnly && (opt.BuildIndex || opt.BuildTree))
+            {
+                // Per flag umschalten? Oder ist das egal, lohnt der Aufwand?
+                //WriteIndexAndTreeIntoAllSubFolders(opt, index, tree);
+
+                WriteIndexAndTreeInSameFolderAsFormatFolders(opt,index,tree);
+            }
+
+            PrintSummary(opt, flattened);
+        }
+
+        private static bool WriteIndexAndTreeInSameFolderAsFormatFolders(CliOptions opt, StringBuilder index, StringBuilder tree)
+        {
+            try
+            {
+                string formatDir = CliRuntimeHelper.ResolveFormatDir(opt, "md");
+                string targetDir = Directory.GetParent(formatDir).FullName;
+
+                Directory.CreateDirectory(formatDir);
+
+                if (opt.BuildIndex && index != null)
+                    File.WriteAllText(Path.Combine(targetDir, "index.md"), index.ToString());
+
+                if (opt.BuildTree && tree != null)
+                    File.WriteAllText(Path.Combine(targetDir, "tree.md"), tree.ToString());
+            }
+            catch (Exception ex)
+            {
+                xyLog.ExLog(ex);
+                return false;
+            }
+            return true;
+        }
+
+
+        private static bool PrintAllToConsole(CliOptions opt, List<TypeDoc> dataFromFiles)
+        {
                 if (!string.Equals(opt.Format, "md", StringComparison.OrdinalIgnoreCase))
                     xyLog.Log("ℹ️ '--show' active: using Markdown in console (ignoring --format).");
 
-                foreach (var t in dataFromFiles)
+                foreach (TypeDoc t in dataFromFiles)
                 {
                     xyLog.Log(MarkdownRenderer.Render(t));
                     xyLog.Log("\n---\n");
                 }
-            }
-            else
-            {
             
-                // For each requested format:
-                // 1) Resolve the per-format target directory (may come from mapping or subfolder).
-                // 2) Ensure the directory exists.
-                // 3) Write files using the utils method, log warnings if any file fails.
-                foreach (var fmt in opt.Formats.Select(f => f.ToLowerInvariant()))
-                {
-                    var formatDir = CliRuntimeHelper.ResolveFormatDir(opt, fmt);
-                    Directory.CreateDirectory(formatDir);
+            return true;
+        }
 
-                    // Write type files into that per-format directory using YOUR Utils.
+
+        private static async Task<bool> WriteDataToFiles(CliOptions opt, List<TypeDoc> dataFromFiles )
+        {
+            try
+            {
+                foreach (string fmt in opt.Formats.Select(f => f.ToLowerInvariant()))
+                {
+                    string formatDir = CliRuntimeHelper.ResolveFormatDir(opt, fmt);
+                    Directory.CreateDirectory(formatDir);
+                                        
                     bool written = await Utils.WriteDataToFilesOrderedByNamespace(dataFromFiles, formatDir, fmt);
                     if (!written) xyLog.Log($"⚠️ One or more files could not be written for format '{fmt}'.");
                 }
+                return true;
             }
+            catch(Exception ex)
+            {
+                xyLog.ExLog(ex);
+                return false;
+            }
+        }
 
-            // --- Console output (NO repetition) ----------------------------------------------
-            if (opt.ShowIndexToConsole && index != null)
-                Console.WriteLine(index.ToString());
-
-            if (opt.ShowTreeToConsole && tree != null)
-                Console.WriteLine(tree.ToString());
-
-            // --- Disk persistence (NO rebuild) -----------------------------------------------
-            if (!opt.ShowOnly && (opt.BuildIndex || opt.BuildTree))
+        private static bool WriteIndexAndTreeIntoAllSubFolders(CliOptions opt, StringBuilder index, StringBuilder tree)
+        {
+            try
             {
                 foreach (var fmt in opt.Formats.Select(f => f.ToLowerInvariant()))
                 {
@@ -212,15 +255,42 @@
                     if (opt.BuildTree && tree != null)
                         File.WriteAllText(Path.Combine(formatDir, "tree.md"), tree.ToString());
                 }
+                return true;
             }
-
-            // --- Final summary ---------------------------------------------------------------
-            // Produce a compact mapping of format -> output directory for quick operator feedback.
-            var summary = string.Join(',', opt.Formats.Select(f => $"\n{f}→{CliRuntimeHelper.ResolveFormatDir(opt, f.ToLowerInvariant())}"));
-            xyLog.Log($"✅ Finished. Types: {flattened.Count()}, Formats: {summary}\n");
+            catch (Exception ex)
+            {
+                xyLog.ExLog(ex);
+                return false;
+            }
         }
 
 
+        /// <summary>
+        /// If the flag is raised, print index and/or tree to console
+        /// </summary>
+        /// <param name="opt"></param>
+        /// <param name="index"></param>
+        /// <param name="tree"></param>
+        private static void CheckShowIndexAndTreeInConsole(CliOptions opt, StringBuilder index, StringBuilder tree)
+        {
+            if (opt.ShowIndexToConsole && index != null)
+                Console.WriteLine(index.ToString());
+
+            if (opt.ShowTreeToConsole && tree != null)
+                Console.WriteLine(tree.ToString());
+        }
+
+        /// <summary>
+        /// Producing a compact mapping of format -> output directory for quick operator feedback.
+        /// </summary>
+        /// <param name="opt"></param>
+        /// <param name="flattened"></param>
+        private static void PrintSummary(CliOptions opt, IEnumerable<TypeDoc> flattened) 
+        { 
+            var summary = string.Join(',', opt.Formats.Select(f => $"\n{f}→{CliRuntimeHelper.ResolveFormatDir(opt, f.ToLowerInvariant())}"));
+            xyLog.Log($"✅ Finished. Types: {flattened.Count()}, Formats: {summary}\n");
+        
+        }
         /// <summary>
         /// Prints a short, human-readable configuration summary to the console and,
         /// when present, streams the repository's README.md for quick context.
