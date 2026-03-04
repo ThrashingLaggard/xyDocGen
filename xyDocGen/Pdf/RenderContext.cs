@@ -61,14 +61,12 @@ namespace xyDocumentor.Pdf
 
             if (pdf_Page_ is not null)
             {
-                // Wenn Seite noch keinem Document gehört → hinzufügen
                 if (pdf_Page_.Owner == null)
                 {
                     Document.Pages.Add(pdf_Page_);
                 }
                 else if (!ReferenceEquals(pdf_Page_.Owner, Document))
                 {
-                    // Sicherheit: Seite gehört zu einem anderen Document
                     throw new InvalidOperationException("Cannot add a page that belongs to another PdfDocument.");
                 }
 
@@ -76,7 +74,6 @@ namespace xyDocumentor.Pdf
             }
             else
             {
-                // Neue Seite direkt in diesem Document erzeugen
                 page = Document.AddPage();
                 page.Size = PdfSharpCore.PageSize.A4;
             }

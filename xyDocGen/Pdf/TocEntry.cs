@@ -22,14 +22,12 @@ namespace xyDocumentor.Pdf
         /// <summary>
         /// The member's signature
         /// </summary>
-        public string? Signature { get; set; }     // i.e., generic signature
+        public string? Signature { get; set; }     
         
         /// <summary>
         /// The description for this entry
         /// </summary>
-        public string? Description { get; set; } // i.e., summary snippet
-
-
+        public string? Description { get; set; } 
 
         /// <summary>
         /// The number of the page in a pdf document

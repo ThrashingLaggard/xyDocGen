@@ -1,4 +1,8 @@
-﻿## 26.01.2026
+﻿## 04.03.2026
+- Deleting lots of useless bloat, to make this more appealing to read for strangers
+- 
+
+## 26.01.2026
 - Tree and Index now get rendered in the same folder as the respective formats
 - Tree and index get built by default
 

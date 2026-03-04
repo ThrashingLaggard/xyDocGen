@@ -12,7 +12,7 @@ namespace xyDocumentor.Renderer
         private static readonly JsonSerializerOptions _options = new JsonSerializerOptions
         {
             WriteIndented = true, // Schönes Format!
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull // Null-Felder weglassen
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull 
         };
 
         /// <summary>

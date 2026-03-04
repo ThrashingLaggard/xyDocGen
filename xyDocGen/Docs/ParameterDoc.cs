@@ -69,7 +69,6 @@ namespace xyDocumentor.Docs
         {
             List<string> modifiers = [];
 
-            // Note: Order should usually match the C# language specification.
             if (pd_Parameter_.IsParams)
             {
                 modifiers.Add("params");
@@ -90,11 +89,6 @@ namespace xyDocumentor.Docs
             {
                 modifiers.Add("in");
             }
-
-            // Optional/Generic Type Param are typically not keywords in the signature itself, but can be added for documentation if needed.
-            // If they are only documentation flags, they are best handled in the renderer.
-            // if (pd_Parameter_.IsOptional) modifiers.Add("optional");
-            // if (pd_Parameter_.IsGenericTypeParam) modifiers.Add("T");
 
             return string.Join(" ", modifiers);
         }

@@ -31,9 +31,9 @@ namespace xyDocumentor.Docs
         /// </summary>
         public static string GetAnchorKey(this TypeDoc t)
         {
-            var ns = string.IsNullOrWhiteSpace(t.Namespace) ? "Global (Default)" : t.Namespace;
-            // Prefer DisplayName if it already includes containing types (e.g., "Outer.Inner")
-            var name = string.IsNullOrWhiteSpace(t.DisplayName) ? t.Name : t.DisplayName;
+            string ns = string.IsNullOrWhiteSpace(t.Namespace) ? "Global (Default)" : t.Namespace;
+
+            string name = string.IsNullOrWhiteSpace(t.DisplayName) ? t.Name : t.DisplayName;
             return $"{ns}.{name}";
         }
 
@@ -45,16 +45,13 @@ namespace xyDocumentor.Docs
         /// <returns></returns>
         public static IEnumerable<TypeDoc> FlattenNested(this TypeDoc td_CallingType_)
         {
-            // Add the caller to the output
+            // Add  caller to the output!!!!
             yield return td_CallingType_;
 
-            // For every nested type 
             foreach (TypeDoc td_NestedType in td_CallingType_.NestedTypes)
             {
-                // For every subtype
                 foreach (TypeDoc td_SubType in td_NestedType.FlattenNested())
                 {
-                    // Add the subtype to the output
                     yield return td_SubType;
                 }
             }
@@ -90,13 +87,8 @@ namespace xyDocumentor.Docs
             //    yield return md_Event;
             //}
 
-            // Combine all direct members using LINQ Concat, then yield them all.
             // Great for as long as i dont need specific changes 
-            foreach (var member in td_CallingType_.Fields
-                .Concat(td_CallingType_.Properties)
-                .Concat(td_CallingType_.Methods)
-                .Concat(td_CallingType_.Constructors)
-                .Concat(td_CallingType_.Events))
+            foreach (var member in td_CallingType_.Fields.Concat(td_CallingType_.Properties).Concat(td_CallingType_.Methods).Concat(td_CallingType_.Constructors).Concat(td_CallingType_.Events))
             {
                 yield return member;
             }

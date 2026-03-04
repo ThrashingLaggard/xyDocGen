@@ -77,8 +77,7 @@ namespace xyDocumentor.Helpers
             if (string.IsNullOrWhiteSpace(s)) return [];
 
             // Split on both semicolons and commas, remove empty results, and trim whitespace.
-            return [.. s.Split([';', ','],
-                StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)];
+            return [.. s.Split([';', ','],StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)];
         }
 
         /// <summary>

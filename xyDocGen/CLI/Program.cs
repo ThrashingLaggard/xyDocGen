@@ -52,12 +52,8 @@
         {
             try
             {
-                // 1) Register a font resolver so PdfSharpCore can find embedded or bundled fonts.
-                //    This must be done before any PDF rendering to ensure consistent typography.
                 GlobalFontSettings.FontResolver = new AutoResourceFontResolver();
 
-                // 2) Optional sanity check: try resolving a known test typeface early.
-                //    This helps catch missing embedded fonts at startup instead of during rendering.
                 IFontResolver resolver = GlobalFontSettings.FontResolver;
                 FontResolverInfo testFace = resolver.ResolveTypeface(AutoResourceFontResolver.FamilySans, false, false);
                 if (testFace == null)
@@ -65,14 +61,11 @@
                     xyLog.Log("⚠️ Warning: FontResolver returned null for FamilySans. Check embedded font resources.");
                 }
 
-                // 3) Hand over to the async workflow and block until it completes.
-                //    Using GetAwaiter().GetResult() preserves original exceptions without AggregateException wrapping.
                 MainAsync(args).GetAwaiter().GetResult();
                 return 0; // weirdly its success 
             }
             catch (Exception ex)
             {
-                // Unhandled exception at the top-level gets logged once here.
                 xyLog.ExLog(ex);
                 return 1; // what a failure
             }
@@ -99,10 +92,9 @@
         /// <returns>A task that completes when the CLI workflow finishes.</returns>
         async static Task MainAsync(string[] args)
         {
-            // ### Needed to localize where the chosen formats go missing
+            // ### Needed to localize where the chosen formats go missing ###
             //args = [ "--show-tree","--show-index", "--format", "pdf,json"];
 
-            // Try to translate raw CLI args into a strongly typed options object.
             if (!OptionsParser.TryParseOptions(args, out var opt, out var err))
             {
                 xyLog.Log("❌ " + err);
@@ -110,21 +102,18 @@
                 return;
             }
 
-            // List the commands
             if (opt.Help)
             {
                 xyLog.Log(OptionsParser.BuildHelpText());
                 return;
             }
 
-            // Print a small configuration summary (and README if present)
             if (opt.Info)
             {
                 PrintReadmeToConsole(opt);
             }
 
-            if (!opt.ShowOnly)
-                Directory.CreateDirectory(opt.OutPath);
+            if (!opt.ShowOnly)Directory.CreateDirectory(opt.OutPath);
 
             IEnumerable<string> files = Directory.EnumerateFiles(opt.RootPath, "*.cs", SearchOption.AllDirectories).Where(p => !Utils.IsExcluded(p, opt.ExcludedParts));
 
@@ -134,13 +123,10 @@
                 return;
             }
 
-
             List<TypeDoc> dataFromFiles = await TypeExtractor.TryParseDataFromFile(files, opt.IncludeNonPublic);
 
-            // Flatten nested type hierarchies into a linear sequence to simplify downstream processing.
             IEnumerable<TypeDoc> flattened = TypeDocExtensions.FlattenTypes(dataFromFiles);
 
-            // Precompute commonly referenced roots to speed lookups/rendering for large repos.
             CliRuntimeHelper.EnsureDominantRootCached(flattened);
             
             StringBuilder? index = null;
@@ -302,26 +288,21 @@
         /// <param name="opt">The resolved CLI options to display.</param>
         public static void PrintReadmeToConsole(CliOptions opt)
         {
-            // Attempt to locate a README near the root path. This is best-effort.
             var readmePath = CliRuntimeHelper.FindReadme(opt.RootPath);
 
-            // Print the effective configuration so operators can verify the run context.
             Console.WriteLine("xyDocGen – current configuration:");
             Console.WriteLine($"  Root: {opt.RootPath}");
             Console.WriteLine($"  Out : {opt.OutPath}");
             Console.WriteLine($"  Formats: {string.Join(", ", opt.Formats)}");
             Console.WriteLine($"  Subfolders: {string.Join(", ", opt.Subfolders)}");
 
-            // If a README exists, print a delineated section with its full contents.
             if (readmePath is not null && File.Exists(readmePath))
             {
                 Console.WriteLine("\n\n--- README.md ---\n");
                 Console.WriteLine(File.ReadAllText(readmePath));
             }
             else
-                // Otherwise, note absence without failing the run.
                 Console.WriteLine("README.md not found near root.");
-            // Explicit return for clarity (no further side effects).
             return;
         }
 
@@ -336,8 +317,7 @@
         /// </summary>
         private class Awawa()
         {
-            // Intentionally left blank.
-            // Add private fields, methods, or constructors here if/when this stub is used.
+          
         }
 
         /// <summary>
@@ -350,8 +330,7 @@
         /// </summary>
         private static class Ahuhu
         {
-            // Intentionally left blank.
-            // Add static methods or constants here if/when this stub is used.
+
         }
 
     }

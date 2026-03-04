@@ -30,7 +30,7 @@ namespace xyDocumentor.Pdf_Layout
             if (_pw.Y + heightNeeded <= _pw._bottom) return;
 
             _pw.Gfx.Dispose();
-            // New page
+            
             _pw.Page = _pw.Ctx.AddPage();
             
             _pw.Gfx = XGraphics.FromPdfPage(_pw.Page);
@@ -42,18 +42,14 @@ namespace xyDocumentor.Pdf_Layout
 
 
 
-        // when you need a new page during layout:
         internal void NewPage()
         {
-            // Create a brand new page owned by this document
             var next = _pw.Ctx.Document.AddPage();
             next.Size = PdfSharpCore.PageSize.A4;
 
-            // swap graphics to the new page
             _pw.Gfx.Dispose();
             _pw.Page = next;
             _pw.Gfx = XGraphics.FromPdfPage(_pw.Page);
-            // reset Y / header/footer as you already do...
         }
 
 

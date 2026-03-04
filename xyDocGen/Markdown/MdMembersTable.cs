@@ -71,14 +71,13 @@ namespace xyDocumentor.Markdown
 
             foreach (var t in root.FlattenNested())
             {
-                // Derive the same unique key we use everywhere else
                 string key = MdAnchor.GetUniqueTypeName(t);
                 if (!anchorMap.TryGetValue(key, out string? anchor))
                 {
                     anchor = MdAnchor.GetAnchorIDFromTypeName(key);
                     anchorMap[key] = anchor; // cache for consistent linking
                 }
-                // Indent nested entries with bullets for a visual hierarchy
+
                 int depth = Math.Max(0, t.DisplayName.Count(c => c == '.')); // "Outer.Inner" → depth 1
                 string bullet = new string(' ', depth * 2) + "-";             // 2 spaces per depth level
                 sb.AppendLine($"{bullet} [{t.DisplayName}](#{anchor})");

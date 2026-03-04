@@ -44,9 +44,7 @@ namespace xyDocumentor.Extractors
         /// <returns></returns>
         public TypeDoc? HandleType(TypeDeclarationSyntax typeNode, string? namespaceName, string filePath, TypeDoc? parentType = null)
         {
-            // Prüfen, ob wir non-public Types ignorieren
-            if (!_includeNonPublic && parentType == null && !HasPublicLike(typeNode.Modifiers))
-                return null;
+            if (!_includeNonPublic && parentType == null && !HasPublicLike(typeNode.Modifiers)) return null;
 
             TypeDoc typeDoc = new()
             {
@@ -161,7 +159,6 @@ namespace xyDocumentor.Extractors
         /// <returns></returns>
         private TypeDoc? HandleEnum(EnumDeclarationSyntax enumDeclaration_, string? namespace_, string filePath_, TypeDoc? parentType_ = null)
         {
-            // If its not public and thus not to be included return NULL
             if (!_includeNonPublic)
             {
                 if (parentType_ == null && !HasPublicLike(enumDeclaration_.Modifiers))
@@ -227,7 +224,7 @@ namespace xyDocumentor.Extractors
 
             string modifiers = delegateNode.Modifiers.ToString();
 
-            // Die Signatur eines Delegates ist im Prinzip der Rückgabetyp, der Name und die Parameter.
+            ///############
             string signature = $"{delegateNode.ReturnType} {delegateNode.Identifier}{delegateNode.TypeParameterList}{delegateNode.ParameterList}";
 
             IList<ParameterDoc> delegateParameters = Extractor.ExtractParameters(delegateNode.ParameterList, delegateNode);
@@ -248,13 +245,12 @@ namespace xyDocumentor.Extractors
                
             };
 
-            // Hinzufügen des "Invoke"-Members für die Dokumentation
             td_Delegate.Methods.Add(new MemberDoc
             {
-                Kind = "invoke", // Spezial-Kind für Delegate-Aufruf
+                Kind = "invoke",
                 Signature = signature,
                 Modifiers = modifiers.Trim(),
-                Summary = td_Delegate.Summary, // Wiederverwendung der Summary
+                Summary = td_Delegate.Summary, 
                 Remarks = Extractor.ExtractXmlRemarksFromSyntaxNode(delegateNode),
                 Parameters = delegateParameters,
                 ReturnType = returnType,
@@ -273,11 +269,8 @@ namespace xyDocumentor.Extractors
         /// <returns> A List of TypeDocs filled with all members in the chosen scope</returns>
         public IList<TypeDoc> ProcessMembers(SyntaxList<MemberDeclarationSyntax> listedMembers_, string? namespace_, string file_)
         {
-            // Used to store the values for return
             IList<TypeDoc> listedMembers = [];
 
-
-            // For every member declaration:  Call the HandleType() Method with the according parameter
             foreach (MemberDeclarationSyntax memberDeclaration in listedMembers_)
             {
                 if (!_includeNonPublic && !HasPublicLike(memberDeclaration.Modifiers))
@@ -291,7 +284,7 @@ namespace xyDocumentor.Extractors
                     TypeDeclarationSyntax tds_TypeNode => HandleType(tds_TypeNode, namespace_, file_),
                     EnumDeclarationSyntax eds_EnumNode => HandleEnum(eds_EnumNode, namespace_, file_),
                     DelegateDeclarationSyntax dds_DelegateNode => HandleDelegate(dds_DelegateNode, namespace_, file_),
-                    _ =>null // Discards every other kind for now
+                    _ =>null 
                 };
                 if (extractedType is not null) 
                 {
@@ -329,14 +322,8 @@ namespace xyDocumentor.Extractors
         /// </summary>
         /// <param name="listedModifiers_"></param>
         /// <returns></returns>
-        private static bool HasPublicLike(SyntaxTokenList listedModifiers_)
-        {
-            // For every modifier in the list, check what kind it is
-            return listedModifiers_.Any(t =>
-                t.IsKind(SyntaxKind.PublicKeyword) ||
-                t.IsKind(SyntaxKind.ProtectedKeyword) ||
-                t.IsKind(SyntaxKind.InternalKeyword));
-        }
+        private static bool HasPublicLike(SyntaxTokenList listedModifiers_) =>listedModifiers_.Any(t =>t.IsKind(SyntaxKind.PublicKeyword) ||t.IsKind(SyntaxKind.ProtectedKeyword) ||t.IsKind(SyntaxKind.InternalKeyword));
+        
 
         /// <summary>
         /// Parses all collected .cs files into <see cref="TypeDoc"/> objects.
@@ -368,20 +355,14 @@ namespace xyDocumentor.Extractors
                 {
                     switch (member)
                     {
-                        // Standard-Namespace-Deklaration (Block-Scoped)
                         case NamespaceDeclarationSyntax namespaceDecl:
-                            // Rekursiver Aufruf für Mitglieder IM Namensraum
                             allTypes.AddRange(extractor.ProcessMembers(namespaceDecl.Members, namespaceDecl.Name.ToString(), file));
                             break;
 
-                        // File-Scoped-Namespace-Deklaration (C# 10+)
                         case FileScopedNamespaceDeclarationSyntax fileNamespaceDecl:
-                            // Rekursiver Aufruf für Mitglieder IM Namensraum
                             allTypes.AddRange(extractor.ProcessMembers(fileNamespaceDecl.Members, fileNamespaceDecl.Name.ToString(), file));
                             break;
 
-                        // Alle anderen Mitglieder (Typen, Delegates, Enums im globalen Scope).
-                        // Wir übergeben sie als Liste von 1 an ProcessMembers, um die Logik zu vereinheitlichen.
                         default:
                             allTypes.AddRange(extractor.ProcessMembers(SyntaxFactory.List(new[] { member }), null, file));
                             break;

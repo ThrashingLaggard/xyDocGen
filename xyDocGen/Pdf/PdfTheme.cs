@@ -91,7 +91,6 @@ namespace xyDocumentor.Pdf
 
             System.Diagnostics.Debug.WriteLine("Resolver=" + (PdfSharpCore.Fonts.GlobalFontSettings.FontResolver?.GetType().FullName ?? "null"));
 
-            // NOTE: keep it simple—no system font names like "Verdana"/"Consolas".
             var h1 = new XFont(Sans, 18, PdfSharpCore.Drawing.XFontStyle.Bold);
             var h2 = new XFont(Sans, 14, PdfSharpCore.Drawing.XFontStyle.Bold);
             var h3 = new XFont(Sans, 12, PdfSharpCore.Drawing.XFontStyle.Bold);

@@ -39,13 +39,11 @@ namespace xyDocumentor.Pdf_Layout
         /// <param name="items"></param>
         public void DrawDefinitionList(string title, IEnumerable<(string Key, string Value)> items)
         {
-            // Subheading stays as-is
             _pw.PageFlow.DrawSubheading(title);
 
             var keyFont = _pw.Theme.FontNormalBold;
             var valFont = _pw.Theme.FontNormal;
 
-            // 1) Measure the widest key to auto-size the key column (tight but safe)
             double maxKey = 0;
             foreach (var (k, _) in items)
             {
@@ -54,38 +52,31 @@ namespace xyDocumentor.Pdf_Layout
                 if (w > maxKey) maxKey = w;
             }
 
-            // Padding on the key column so the text doesn't touch the gutter
-            const double keyPad = 1.5; // pt (very small – keeps columns visually tight)
-                                       // Horizontal space between columns (the "gutter")
-            const double gutter = 3.0; // ↓ reduce if you still want it tighter
+            const double keyPad = 1.5; 
+            const double gutter = 3.0; 
 
-            // Clamp key column between 12% and 35% of the width, using measured maxKey
             double keyWidth = Math.Min(_pw._contentWidth * 0.35, Math.Max(_pw._contentWidth * 0.12, maxKey + keyPad));
             double valWidth = Math.Max(24, _pw._contentWidth - keyWidth - gutter);
 
 
-            const double lineHeightFactor = 1.5;// 0.90/ 0.85 /0.95
+            const double lineHeightFactor = 1.5;
             double keyLH = _pw.Theme.LineHeight(keyFont!) * lineHeightFactor;
             double valLH = _pw.Theme.LineHeight(valFont!) * lineHeightFactor;
-            double rowLH = Math.Max(keyLH, valLH); // same baseline step for both columns
+            double rowLH = Math.Max(keyLH, valLH); 
 
             foreach (var (k, v) in items)
             {
                 string keyText = k ?? string.Empty;
                 string valText = v ?? string.Empty;
 
-                // Wrap both sides using the actual column widths
-                // (Use the gfx-based WrapText so measurement matches drawing)
                 var keyLines = PdfTextLayout.WrapText(keyText, keyFont!, keyWidth, _pw.Gfx);
                 var valLines = PdfTextLayout.WrapText(valText, valFont!, valWidth, _pw.Gfx);
 
                 int linesCount = Math.Max(keyLines.Length, valLines.Length);
                 double rowHeight = linesCount * rowLH;
 
-                // Ensure there is enough space for the whole row (keys + values)
                 _pw.PageFlow.EnsureSpace(rowHeight + 1);
 
-                // --- Draw key column (left, bold) ---
                 double yKey = _pw.Y;
                 for (int i = 0; i < keyLines.Length; i++)
                 {
@@ -94,7 +85,6 @@ namespace xyDocumentor.Pdf_Layout
                     yKey += rowLH;
                 }
 
-                // --- Draw value column (right, normal) ---
                 double xVal = _pw._left + keyWidth + gutter;
                 double yVal = _pw.Y;
                 for (int i = 0; i < valLines.Length; i++)
@@ -104,17 +94,16 @@ namespace xyDocumentor.Pdf_Layout
                     yVal += rowLH;
                 }
 
-                // Advance Y by the full row height, then a tiny gap between rows
                 _pw.Y += rowHeight;
                 _pw.PageFlow.Spacer(1); // tighten: was 2
-                                        // Optional hairline between rows (very subtle):
-                                        // var pen = new XPen(XColors.Black, 0.2) { Transparency = 0.1 };
-                                        // Gfx.DrawLine(pen, _left, Y, _right, Y);
-                                        // Spacer(1);
+            
+                // Optional hairline between rows (very subtle):
+                // var pen = new XPen(XColors.Black, 0.2) { Transparency = 0.1 };
+                // Gfx.DrawLine(pen, _left, Y, _right, Y);
+                // Spacer(1);
             }
 
-            // Smaller gap after the whole block
-            _pw.PageFlow.Spacer(2); // was 4
+            _pw.PageFlow.Spacer(2); // was 4 before
         }
 
 
@@ -171,7 +160,8 @@ namespace xyDocumentor.Pdf_Layout
                 {
                     if (line.Length > 0) lines.Add(line.ToString());
                     line.Clear();
-                    // If single word longer than maxWidth: hard-cut (rare for wide generics)
+
+                    // Hard cut!!!
                     if (_pw.Gfx.MeasureString(w, font).Width > maxWidth)
                     {
                         var cut = new StringBuilder();
@@ -228,7 +218,13 @@ namespace xyDocumentor.Pdf_Layout
         }
 
 
-        // Fits text into maxWidth by trimming and appending an ellipsis if needed.
+        /// <summary>
+        /// Fits text into maxWidth by trimming and appending an ellipsis if needed.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="font"></param>
+        /// <param name="maxWidth"></param>
+        /// <returns></returns>
         internal string FitWithEllipsis(string text, XFont font, double maxWidth)
         {
             if (string.IsNullOrEmpty(text)) return string.Empty;

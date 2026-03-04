@@ -10,7 +10,7 @@
 
         public static string Canonical(string? ns, string displayName)
         {
-            var nsPart = string.IsNullOrWhiteSpace(ns) ? "Global (Default)" : ns!;
+            string nsPart = string.IsNullOrWhiteSpace(ns) ? "Global (Default)" : ns!;
             return $"{nsPart}.{displayName}";
         }
     }

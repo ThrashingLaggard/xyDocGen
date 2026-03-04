@@ -72,8 +72,7 @@ namespace xyDocumentor.Models
         /// The dictionary uses a case-insensitive key comparer to ensure consistent lookups.
         /// </para>
         /// </summary>
-        public Dictionary<string, string> OutputDirs { get; set; } =
-            new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, string> OutputDirs { get; set; } =new(StringComparer.OrdinalIgnoreCase);
 
         // --------------------------------------------------------------------
         // Compatibility section (for older code paths)
@@ -188,8 +187,6 @@ namespace xyDocumentor.Models
         /// <returns>
         /// A case-insensitive <see cref="HashSet{T}"/> containing the default excluded paths.
         /// </returns>
-        public static HashSet<string> DefaultExcludes() =>
-            new([".git", "bin", "obj", "node_modules", ".vs", "TestResults"],
-                StringComparer.OrdinalIgnoreCase);
+        public static HashSet<string> DefaultExcludes() =>new([".git", "bin", "obj", "node_modules", ".vs", "TestResults"],StringComparer.OrdinalIgnoreCase);
     }
 }

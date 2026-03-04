@@ -131,13 +131,9 @@ public sealed partial class AutoResourceFontResolver : IFontResolver
     {
         var fam = (familyName ?? "").Trim().ToLowerInvariant();
 
-        // Mono family? (+Comic & Monospace)
-        if (fam.Contains("comic") || fam.Contains("monospace") ||
-            fam.Contains("mono") || fam.Contains("cascadia") ||
-            fam.Contains("consolas") || fam.Contains("courier") || fam.Contains("code")) 
+        if (fam.Contains("comic") || fam.Contains("monospace") ||fam.Contains("mono") || fam.Contains("cascadia") ||fam.Contains("consolas") || fam.Contains("courier") || fam.Contains("code")) 
             return new FontResolverInfo(FaceMonoRegular);
 
-        // Sans family
         if (isBold && _resSansBold != null)
             return new FontResolverInfo(FaceSansBold);
 
@@ -158,7 +154,9 @@ public sealed partial class AutoResourceFontResolver : IFontResolver
             FaceSansRegular => _bufSansReg ??= GetBytesFromAssemblyManifest(_asm, _resSansReg!),
             FaceSansBold => _bufSansBold ??= GetBytesFromAssemblyManifest(_asm, _resSansBold ?? _resSansReg!),
             FaceMonoRegular => _bufMonoReg ??= GetBytesFromAssemblyManifest(_asm, _resMonoReg ?? _resSansReg!),
-            // Comic Sans MS is missing here
+            
+            // Comic Sans MS is missing here!!!!!!!!!!!!!!!!!!
+
             _ => throw new ArgumentException($"Unknown face name: {faceName}", nameof(faceName))
         };
     }
@@ -172,14 +170,11 @@ public sealed partial class AutoResourceFontResolver : IFontResolver
     /// <exception cref="FileNotFoundException"></exception>
     private static byte[] GetBytesFromAssemblyManifest(Assembly asm, string manifestName)
     {
-        // Read the target resource from this assembly
         using Stream DataStreamFromManifestResource = asm.GetManifestResourceStream(manifestName)?? 
             throw new FileNotFoundException($"Embedded font not found: {manifestName} \nCheck <EmbeddedResource> items and the project's default namespace.");
         
-        // Copy the data into a MemoryStream 
         using MemoryStream ms_RessourceStream = new ();         DataStreamFromManifestResource.CopyTo(ms_RessourceStream);
 
-        // Convert and return it
         byte[]  bytesFromResourceStream =ms_RessourceStream.ToArray();      
         return bytesFromResourceStream;
     }
@@ -196,13 +191,10 @@ public sealed partial class AutoResourceFontResolver : IFontResolver
         string styleTokensToRemove = "(regular|bold|italic|oblique|medium|semi.?bold|black|light|thin|extra|ultra)";
         string emptyStringForReplacement="";
        
-        // Split the filename up by the dot and reverse the order 
         IEnumerable<string> splitUpReversedFontFileName = fontFileName_.Split('.').Reverse();
 
-        // Get the second last word from the the filename
         if (splitUpReversedFontFileName.Skip(1).FirstOrDefault() is string stemFromFileName)
         {
-            // Override the whole name with only the stem
             fontStem = stemFromFileName;
         }
         else
@@ -211,7 +203,6 @@ public sealed partial class AutoResourceFontResolver : IFontResolver
             xyLog.Log($"No second entry in the enumerable {fontFileName_}!!!    \nPlease contact supervisor and stay calm!");
         }
 
-        // Remove style tokens, low lines & hyphens from the stem and garantuee it's in lower case:
         string afterRemovingStyleTokens = Regex.Replace(fontStem, styleTokensToRemove, emptyStringForReplacement, RegexOptions.IgnoreCase);
         string removedLowLinesAndDashes = afterRemovingStyleTokens.Replace("_", "").Replace("-", "");
         string loweredStem = removedLowLinesAndDashes.ToLowerInvariant();

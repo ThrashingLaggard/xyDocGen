@@ -37,6 +37,7 @@ xydocgen --help
 
 ## Planned features & improvements
 
+- Reading more kinds of xml tags
 - Change fontsizes
 - Only put content list in pdf when there are nested types
 - Outputting the remarks

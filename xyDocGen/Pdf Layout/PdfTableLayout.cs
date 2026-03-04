@@ -35,6 +35,7 @@ namespace xyDocumentor.Pdf_Layout
         public void DrawTable(TableColumnSpec[] columns, IEnumerable<string[]> rows)
         {
             double gap = _pw.Theme.TableColGap;
+         
             // Subtract (n-1) gaps from the content width to avoid overflow
             double availableWidth = _pw._contentWidth - (columns.Length - 1) * gap;
 
@@ -58,7 +59,6 @@ namespace xyDocumentor.Pdf_Layout
             // Rows
             foreach (var row in rows)
             {
-                // Wrap each cell to lines
                 var wrappedCells = new List<string[]>();
                 var innerWidths = new List<double>();
 
@@ -68,7 +68,6 @@ namespace xyDocumentor.Pdf_Layout
                 {
                     var font = columns[c].Font ?? _pw.Theme.FontNormal;
 
-                    // Use an *inner* cell width with small left/right padding to prevent touching borders
                     const double cellPad = 2.0;
                     double innerWidth = Math.Max(1, widths[c] - 2 * cellPad);
                     innerWidths.Add(innerWidth);
@@ -99,12 +98,10 @@ namespace xyDocumentor.Pdf_Layout
 
                     x += widths[c] + gap;
                 }
-                // Vertical line
                 double xx = _pw._left;
                 for (int c = 0; c < columns.Length - 1; c++)
                 {
                     xx += widths[c];
-                    // draw a faint separator in the gap center
                     double sepX = xx + gap / 2.0;
                     var pen = new XPen(XColors.LightGray, 0.3);
                     pen.DashStyle = XDashStyle.Dot;

@@ -48,19 +48,16 @@ namespace xyDocumentor.Pdf
         /// </returns>
         public static PdfRectangle ToPdfRect(PdfPage page, double x, double y, double width, double height)
         {
-            // In PDF, the origin is at the bottom-left. Our inputs are top-left based.
-            // Convert the top-left "y" to a bottom-left "lly" by inverting with page height.
+            // In PDF, the origin is at the bottom-left. 
             // The formula is: lly = pageHeight - (top + height).
             double llx = x;
             double lly = page.Height - (y + height);
             
-            // Guard against negative sizes: clamp width/height to zero (a zero-sized
-            // rectangle is ignored by most viewers and is safe to pass through).
+
             double w = width < 0 ? 0 : width;
             double h = height < 0 ? 0 : height;
 
-            // If the computed bottom-left "lly" underflows the page (above top edge),
-            // clamp it to 0 and reduce height accordingly to avoid crossing the page bounds.
+       
             if (lly < 0) 
             { 
                 h += lly; 
@@ -89,16 +86,14 @@ namespace xyDocumentor.Pdf
        ///<returns> </returns>
         public static void AddInternalLink(PdfPage fromPage, PdfRectangle rect, PdfPage toPage, PdfDocument owningDoc)
         {
-            // Resolve the 1-based page number for the target page within the owning document.
-            // PdfSharpCore's document link API uses 1-based indexing.
+            
             int pageNumber = GetPageNumber1Based(owningDoc, toPage);
             if (pageNumber <= 0)
             {
                 pageNumber = 1;
                 throw new System.ArgumentException("Target page does not belong to the provided document.", nameof(toPage));
             }
-            // Delegate to PdfSharpCore's convenience API for page-local document links.
-            // Signature: AddDocumentLink(rectangleInPdfSpace, targetPageNumber1Based)
+          
             fromPage.AddDocumentLink(rect, pageNumber);
         }
 
@@ -116,8 +111,6 @@ namespace xyDocumentor.Pdf
         {
             if (doc == null || page == null) return -1;
 
-            // Some builds may keep page.Owner == doc; do not rely on that!!!
-            // *Performs a linear scan and compares by reference to be precise*.
             for (int i = 0; i < doc.Pages.Count; i++)
             {
                 if (ReferenceEquals(doc.Pages[i], page))
@@ -148,36 +141,30 @@ namespace xyDocumentor.Pdf
         /// <param name="targetYTop">Target top Y on <paramref name="targetPage"/> (top-left origin).</param>
 internal static void AddGoToLink(PdfPage viewPage, double x, double yTop, double width, double height,PdfPage targetPage, double targetYTop)
     {
-            // Guard clauses: abort early if pages are missing or if the rectangle has no visible area.
+            
        if (viewPage is null || targetPage is null) return;
         if (width <= 0 || height <= 0) return;
 
-            // Convert the clickable rectangle from top-left origin space to PDF space.
-            // PDF-space Y is measured from the bottom edge: y_pdf = pageHeight - (y_top + height).
+      
            double viewPageHeightPt = viewPage.Height.Point;
             double rectY = viewPageHeightPt - (yTop + height);
 
-            // Create a link annotation object and set its rectangular bounds (in PDF coordinates).
+   
             var link = new PdfLinkAnnotation
             {
                 Rectangle = new PdfRectangle(new XRect(x, rectY, width, height))
             };
 
-            // Build the PDF /Dest array for the link: [ targetPage /FitH top ].
-            // For /FitH destinations, the 'top' value is a bottom-up Y coordinate,
-            // so convert from our top-left based targetYTop:
-            //   destTop = targetPageHeight - targetYTop
+           
             double targetPageHeightPt = targetPage.Height.Point;
             double destTop = targetPageHeightPt - targetYTop;
 
-            // Create the destination array in the context of the document that owns viewPage.
-            // PdfArray requires a PdfDocument reference; use viewPage.Owner to ensure consistency.
+   
             var dest = new PdfArray(viewPage.Owner);
-            dest.Elements.Add(targetPage);           // the target page object
-            dest.Elements.Add(new PdfName("/FitH")); // fit horizontally
-            dest.Elements.Add(new PdfReal(destTop)); // vertical position (bottom-up)
+            dest.Elements.Add(targetPage);           
+            dest.Elements.Add(new PdfName("/FitH")); 
+            dest.Elements.Add(new PdfReal(destTop)); 
 
-            // Attach the destination to the annotation so viewers know where to navigate.
             link.Elements["/Dest"] = dest;
             link.Elements["/Dest"] = dest;
 
@@ -190,7 +177,7 @@ internal static void AddGoToLink(PdfPage viewPage, double x, double yTop, double
             //     new PdfReal(0)   // line width (0 = invisible)
             // };
 
-            // Finally, add the annotation to the source page so the TOC entry becomes clickable.
+           
             viewPage.Annotations.Add(link);
         }
 

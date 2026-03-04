@@ -34,17 +34,13 @@ internal static class StringAnalyzer
     /// </summary>
     internal static (string root, string outPath, string format, bool includeNonPublic, HashSet<string> excludedParts) AnalyzeArgs(string[] args_)
     {
-        // Try the new parser first; if it fails, fall back to a minimal default, also logging the parse error for visibility.
         if (!OptionsParser.TryParseOptions(args_, out var o, out string parseError))
         {
-            // Fallback: alter Default-Pfad mit 'docs/api'
             var defRoot = Utils.GetDefaultRoot();
             xyLog.Log(parseError);
             return (defRoot, Path.Combine(defRoot, "docs"), "md", true, CliOptions.DefaultExcludes());
         }
 
-        // Legacy behavior wants a single output directory:
-        // If a specific format was selected and mapped, use that mapping. Otherwise, fall back to "<OutPath>/<firstSubfolder-or-format>".
         string legacyOut;
         string selectedFormat = o.Format;
         if (!string.IsNullOrWhiteSpace(selectedFormat) && o.OutputDirs != null
@@ -54,7 +50,6 @@ internal static class StringAnalyzer
         }
         else
         {
-            // Fallback: OutPath + erster Subfolder (falls kein Mapping verfügbar)
             var sub = o.Subfolders?.FirstOrDefault() ?? o.Format;
             legacyOut = Path.Combine(o.OutPath ?? Utils.GetDefaultRoot(), sub);
         }

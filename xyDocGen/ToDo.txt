@@ -4,8 +4,8 @@
 
 - Remove TOC from PDF output if theres only one object in the file
 
-- Herausfinden, welche Arten von XML Tags ausgelesen werden und ggf nutzbar machen
-
+- Weitere Arten von XML Tags auslesen und ggf nutzbar machen
+	-> para, param, ....
 
 
 https://github.com/ThrashingLaggard/xyDocGen.git

@@ -58,7 +58,7 @@ namespace xyDocumentor.Renderer
             sb.AppendLine("  <h2>Description</h2>");
             sb.AppendLine($"  <p>{type.Summary}</p>");
 
-            // Render members
+            
             void RenderMembers(string title, List<MemberDoc> members)
             {
                 if (members.Count == 0) return;
@@ -79,8 +79,8 @@ namespace xyDocumentor.Renderer
             RenderMembers("Events", type.Events);
             RenderMembers("Fields", type.Fields);
 
-            // --- Nested Types ---
-            var nestedTypes = type.NestedInnerTypes(); // <- als Methode aufrufen!
+            
+            var nestedTypes = type.NestedInnerTypes(); 
             if (nestedTypes != null)
             {
                 foreach (var nt in nestedTypes)

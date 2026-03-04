@@ -168,7 +168,7 @@ namespace xyDocumentor.CLI
                 switch (KeyName(key))
                 {
                     case "--root":
-                        // Require the next token as the value for --root.
+                      
                         if (!TryReadNext(tokens, ref i, out rootPath))
                         { error = "Missing value after --root."; opts = null!; return false; }
                         continue;
@@ -216,7 +216,7 @@ namespace xyDocumentor.CLI
                             excludes.Add(part);
                         continue;
 
-                    // Presence-only boolean flags (if present → true).
+                    // If present --> true
                     case "--show-only": showOnly = true; i++; continue;
                     case "--index": buildIndex = true; i++; continue;
                     case "--tree": buildTree = true; i++; continue;
@@ -227,7 +227,6 @@ namespace xyDocumentor.CLI
                     case "--show-index": showIndexToConsole = true; i++; continue;
 
                     default:
-                        // Unknown flag → hard error (fail fast and hint at --help).
                         error = $"Unknown option '{key}'. Use --help.";
                         opts = null!; return false;
                 }
@@ -242,22 +241,13 @@ namespace xyDocumentor.CLI
                 listedFormats.AddRange(["pdf", "md", "html", "json"]);
             }
 
-            // If user did not provide a root, compute a sensible default that works in Debug/Release.
-            if (string.IsNullOrWhiteSpace(rootPath))
-                rootPath = Utils.GetDefaultRoot();
+            if (string.IsNullOrWhiteSpace(rootPath))    rootPath = Utils.GetDefaultRoot();
 
-            // Decide base output directory:
-            //   - If --out is specified, use it as-is.
-            //   - Else derive from <root>/<folder>.
-            var outBase = string.IsNullOrWhiteSpace(outPath)
-                ? Path.Combine(rootPath, folder)
-                : outPath;
+            var outBase = string.IsNullOrWhiteSpace(outPath)? Path.Combine(rootPath, folder): outPath;
 
-            // Normalize both paths to absolute canonical forms.
             outBase = Normalizer.NormalizePath(outBase);
             rootPath = Normalizer.NormalizePath(rootPath);
 
-            // Validate the root exists before proceeding; otherwise we cannot enumerate source files.
             if (!Directory.Exists(rootPath))
             {
                 error = $"Root path does not exist: '{rootPath}'.";
@@ -268,8 +258,7 @@ namespace xyDocumentor.CLI
             // Subfolder consistency
             // -----------------------
 
-            // If exactly one subfolder is provided but multiple formats are requested,
-            // replicate the single subfolder across all formats (common UX shortcut).
+            // If exactly one subfolder is provided but multiple formats are requested, replicate the single subfolder across all formats 
             if (listedSubfolders.Count == 1 && listedFormats.Count > 1)
             {
                 listedSubfolders = [.. Enumerable.Repeat(listedSubfolders[0], listedFormats.Count)];
@@ -300,23 +289,22 @@ namespace xyDocumentor.CLI
             // -----------------------
             opts = new CliOptions
             {
-                RootPath = rootPath,                         // Final source root directory
-                OutPath = outBase,                           // Base output directory
+                RootPath = rootPath,                         
+                OutPath = outBase,                           
                 Formats = [.. listedFormats.Distinct(StringComparer.OrdinalIgnoreCase)],
-                Subfolders = listedSubfolders,               // For reference / diagnostics
-                OutputDirs = outputDirs,                     // Format → absolute target directory
-                IncludeNonPublic = includeNonPublic,         // Include/protect members toggle
-                ExcludedParts = excludes,                    // Exclusion filters (path parts)
-                ShowOnly = showOnly,                         // Console-only (no file output)
-                ShowIndexToConsole = showIndexToConsole,     // Print index to console only
-                ShowTreeToConsole = showTreeToConsole,       // Print tree to console only
-                BuildIndex = buildIndex,                     // Build index file(s)
-                BuildTree = buildTree,                       // Build project tree file(s)
-                Help = help,                                 // Show help and exit
-                Info = info                                  // Show info+README and exit
+                Subfolders = listedSubfolders,             
+                OutputDirs = outputDirs,                     
+                IncludeNonPublic = includeNonPublic,  
+                ExcludedParts = excludes,                   
+                ShowOnly = showOnly,                         
+                ShowIndexToConsole = showIndexToConsole,     
+                ShowTreeToConsole = showTreeToConsole,       
+                BuildIndex = buildIndex,                     
+                BuildTree = buildTree,                       
+                Help = help,                                 
+                Info = info                                  
             };
 
-            // Success: the caller can now decide to write files, print to console, or exit early for --help/--info.
             return true;
         }
 
@@ -376,8 +364,8 @@ namespace xyDocumentor.CLI
         /// </summary>
         private static string KeyName(string key)
         {
-            // Normalize "--key=value" → "--key"
-            var eq = key.IndexOf('=');
+            int eq = key.IndexOf('=');
+
             return eq > 0 ? key[..eq] : key;
         }
 
@@ -465,7 +453,7 @@ namespace xyDocumentor.CLI
                 case "--tree": buildTree = value; break;
                 case "--help": help = value; break;
                 case "--info": info = value; break;
-                case "--private": if (value) includeNonPublic = false; break;   // "--private" flips IncludeNonPublic off when true.
+                case "--private": if (value) includeNonPublic = false; break;   
             }
         }
 

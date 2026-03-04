@@ -21,23 +21,17 @@ namespace xyDocumentor.Markdown
         /// <param name="dic_AnchorMap_"></param>
         internal static void RenderHeader(StringBuilder sb_MarkdownBuilder_, TypeDoc type, int level_, Dictionary<string, string> dic_AnchorMap_)
         {
-            // Retrieve the anchor ID using the unique name as the key.
             string uniqueName = MdAnchor.GetUniqueTypeName(type);
 
             if (!dic_AnchorMap_.TryGetValue(uniqueName, out string? anchorID))
             {
-                // Be forgiving: if the key is missing (edge-case), generate and cache deterministically
                 anchorID = MdAnchor.GetAnchorIDFromTypeName(uniqueName);
                 dic_AnchorMap_[uniqueName] = anchorID;
             }
-            // Insert the `invisible` HTML anchor (the target for internal links)
-            //sb_MarkdownBuilder_.AppendLine($"<a id=\"{anchorID}\"></a>");
 
-            // Not more than 6!!!
             string headingPrefix = new('#', Math.Min(level_, 6));
 
             var visibility = string.IsNullOrWhiteSpace(type.Modifiers) ? "" : $" · `{type.Modifiers}`";
-            // Put anchor as invisible <span> at end of the heading line
             sb_MarkdownBuilder_.AppendLine($"{headingPrefix} `{type.DisplayName}` **{type.Kind}**{visibility} <span id=\"{anchorID}\"></span>");
             sb_MarkdownBuilder_.AppendLine();
         }
@@ -61,7 +55,6 @@ namespace xyDocumentor.Markdown
 
             sb_MarkdownBuilder_.AppendLine($"**Source File:** `{td_TargetType_.FilePath}`");
 
-            // Helper method simplifies adding lists of metadata, such as attributes or base types.
             AppendMetadataList(sb_MarkdownBuilder_, "Attributes", td_TargetType_.Attributes);
             AppendMetadataList(sb_MarkdownBuilder_, "Base Classes/Interfaces", td_TargetType_.BaseTypes);
 
@@ -76,10 +69,8 @@ namespace xyDocumentor.Markdown
         /// <param name="listedItems_">The list of strings to be appended.</param>
         internal static void AppendMetadataList(StringBuilder sb_MarkdownRenderer_, string title_, IReadOnlyList<string> listedItems_)
         {
-            // Checks if the list exists and contains any elements.
             if (listedItems_?.Count > 0)
             {
-                // Formats each item as inline code for better readability in Markdown.
                 IEnumerable<string> formattedItems = listedItems_.Select(item => $"`{item}`");
 
                 sb_MarkdownRenderer_.AppendLine($"**{title_}:** {string.Join(", ", formattedItems)}");
@@ -96,7 +87,6 @@ namespace xyDocumentor.Markdown
         internal static void RenderDescriptionFromXmlSummaryInTypeDoc(StringBuilder sb_MarkdownBuilder_, TypeDoc td_Type_, int level_, Dictionary<string, string> dic_AnchorMap_)
         {
             sb_MarkdownBuilder_.AppendLine($"{xy.Repeat("#", (ushort)(level_ + 1))} Description");
-            // Appends the summary if it's not null or whitespace.
             sb_MarkdownBuilder_.AppendLine((!string.IsNullOrWhiteSpace(td_Type_.Summary) ? td_Type_.Summary.Trim() : "(No description available)"));
 
             sb_MarkdownBuilder_.AppendLine();
@@ -117,11 +107,10 @@ namespace xyDocumentor.Markdown
 
             if (!nestedTypes.Any()) return;
 
-            sb_MarkdownRenderer.AppendLine("---"); // A horizontal rule for better readability.
+            sb_MarkdownRenderer.AppendLine("---"); // For better readability.
 
             foreach (TypeDoc td_nestedType in nestedTypes)
             {
-                // Use the SAME anchor map for all nested levels to keep links stable
                 sb_MarkdownRenderer.AppendLine(MarkdownRenderer.Render(td_nestedType, level_ + 1, dic_AnchorMap_));
                 sb_MarkdownRenderer.AppendLine();
             }
@@ -158,12 +147,8 @@ namespace xyDocumentor.Markdown
 
             //return result;
 
-
-            // Build alias map once per call – if you link viele Signaturen in einem Rutsch,
-            // kannst du das auch vorziehen/cachen.
             var aliasMap = MdAnchor.BuildAnchorAliasMap(dic_AnchorIdMapping_);
 
-            // Sort longer keys first to avoid partial replacements
             var keys = aliasMap.Keys.OrderByDescending(k => k.Length).ToList();
 
             string result = signature_;
@@ -171,9 +156,6 @@ namespace xyDocumentor.Markdown
             {
                 if (string.IsNullOrWhiteSpace(key)) continue;
                 var anchorId = aliasMap[key];
-                // Replace whole words / identifier boundaries: avoid "Program" inside "Programmer"
-                // \b passt bei ., <, > etc. nicht immer; identifizierbar per custom boundaries:
-                // left boundary: start or non-identifier; right boundary: end or non-identifier
                 var pattern = $@"(?<![A-Za-z0-9_]){RegexEscape(key)}(?![A-Za-z0-9_])";
                 result = Regex.Replace(result, pattern, $"[{key}](#{anchorId})");
             }

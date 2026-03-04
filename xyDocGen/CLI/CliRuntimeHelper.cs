@@ -160,43 +160,34 @@ namespace xyDocumentor.CLI
         /// </returns>
         public static async Task RenderIndexAndTree(CliOptions opt, System.Collections.Generic.IEnumerable<TypeDoc> flattened)
         {
-            // Ensure that the dominant root namespace is computed once before writing.
             EnsureDominantRootCached(flattened);
 
-            // Determine whether to persist outputs to disk or display in console.
             bool writeToDisk = !opt.ShowOnly && !(opt.ShowIndexToConsole || opt.ShowTreeToConsole);
 
-            // Iterate through all requested output formats (normalized to lowercase).
             foreach (var fmt in opt.Formats.Select(f => f.ToLowerInvariant()))
             {
-                // Resolve or create the per-format output directory.
                 var formatDir = ResolveFormatDir(opt, fmt);
                 if (writeToDisk) Directory.CreateDirectory(formatDir);
 
-                // --- Build and optionally write the project index ----------------------------
                 if (opt.BuildIndex || opt.ShowIndexToConsole)
                 {
                     var index = await FileTreeRenderer.BuildProjectIndex(flattened, fmt, writeToDisk,formatDir );
 
-                    // Print to console if not writing to disk.
                     if (!writeToDisk) Console.WriteLine(index.ToString());
                 }
 
-                // --- Build and optionally write the project tree -----------------------------
                 if (opt.BuildTree || opt.ShowTreeToConsole)
                 {
                     var tree = await FileTreeRenderer.BuildProjectTree(
                         new StringBuilder(), fmt, opt.RootPath, formatDir, opt.ExcludedParts, writeToDisk);
 
-                    // Print to console if not writing to disk.
                     if (!writeToDisk) Console.WriteLine(tree.ToString());
                 }
             }
         }
 
         /// <summary>
-        /// Ensures that the dominant root namespace of the project is detected and cached
-        /// exactly once per execution.  
+        /// Ensures that the dominant root namespace of the project is detected and cached exactly once per execution.  
         /// <para>
         /// This cache allows consistent relative path generation for subsequent rendering
         /// and output operations (especially for large projects with nested namespaces).
@@ -211,10 +202,8 @@ namespace xyDocumentor.CLI
         /// </param>
         public static void EnsureDominantRootCached(System.Collections.Generic.IEnumerable<TypeDoc> allTypes)
         {
-            // Trigger detection of the dominant namespace root.
             var root = Utils.GetDominantRoot(allTypes);
 
-            // Store the result in the shared Utils cache for downstream access.
             Utils.PrimeDominantRoot(root);
         }
     }
