@@ -45,42 +45,42 @@ namespace xyDocumentor.Renderer
         {
             using PdfDocument document = CreatePdfDocumentWithBasicValues(root);
 
-            var theme = PdfTheme.CreateDefault();
-            var ctx = new RenderContext(document, theme);
-            
-            var tocPage = ctx.AddPage();
+            List<TocEntry> tocEntries = [];
+            PdfTheme theme = PdfTheme.CreateDefault();
+            RenderContext ctx = new(document, theme);
 
-            ctx.Writer = new PageWriter(ctx, ctx.AddPage());
+            FillToc(ctx, root, 1, tocEntries);
 
+            // I dont like useless tocs!
+            if(tocEntries.Count() > 1)
+            {
+                SetupWriterOnNewPage(ctx, false);
+                
+                RenderToc(ctx, "Table of Contents", tocEntries);
+            }
 
-            ctx.Writer.DrawHeaderFooter = false; 
+            SetupWriterOnNewPage(ctx, false);
 
-            var tocEntries = new List<TocEntry>();
-
-
+            RenderTypeRecursive(ctx, root, level: 1, tocEntries);
+           
             // eventually Root heading + bookmark:
             //AddBookmark(document, ctx.Writer.Page, $"{root.DisplayName} ({root.Kind})");
             //tocEntries.Add(new TocEntry { Title = $"{root.DisplayName} ({root.Kind})", PageNumber = ctx.PageNumber });
 
-            RenderTypeRecursive(ctx, root, level: 1, tocEntries);
-
-            ctx.Writer = new PageWriter(ctx, tocPage);
-            ctx.Writer.DrawHeaderFooter = false;
-            RenderToc(ctx, "Table of Contents", tocEntries);
-
             document.Save(outputPath);
         }
 
-        // -----------------------------
-        // Core type rendering
-        // -----------------------------
-        private static void RenderTypeRecursive(RenderContext ctx, TypeDoc t, int level, List<TocEntry> toc)
-        { 
+        private static void SetupWriterOnNewPage(RenderContext ctx , bool hasHeaderAndFooter) 
+        {
+            ctx.Writer = new(ctx, ctx.AddPage())
+            {
+                DrawHeaderFooter = hasHeaderAndFooter
+            };
+        }
+
+        private static void FillToc(RenderContext ctx, TypeDoc t, int level, List<TocEntry> toc)
+        {
             double yTop = ctx.Writer?.Y?? 4 ;
-
-            ctx.Writer?.DrawHeading(level, $"{t.DisplayName}  [{t.Kind}]");
-            if (level <= 2) ctx.CurrentSectionTitle = t.DisplayName;
-
             string? signature = BuildTypeSignatureForToc(t);      
             string? descr = BuildSummarySnippet(t.Summary);   
 
@@ -93,6 +93,20 @@ namespace xyDocumentor.Renderer
                 Page = ctx.Writer?.Page,
                 Y = yTop
             });
+
+            foreach(var nested in t.NestedInnerTypes())
+            {
+                FillToc(ctx, nested,level++,toc);
+            }
+        }
+
+
+
+        private static void RenderTypeRecursive(RenderContext ctx, TypeDoc t, int level, List<TocEntry> toc)
+        { 
+
+            ctx.Writer?.DrawHeading(level, $"{t.DisplayName}  [{t.Kind}]");
+            if (level <= 2) ctx.CurrentSectionTitle = t.DisplayName;
 
             ctx.Writer?.Spacer(6);
 
