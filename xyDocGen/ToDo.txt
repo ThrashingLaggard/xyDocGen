@@ -2,8 +2,6 @@
 
 - Befehle für output in Dictionary speichern?
 
-- Remove TOC from PDF output if theres only one object in the file
-
 - Weitere Arten von XML Tags auslesen und ggf nutzbar machen
 	-> para, param, ....
 

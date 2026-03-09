@@ -1,6 +1,8 @@
-﻿## 04.03.2026
+﻿## 09.03.2026 
+- TOC only get rendered, if there are at least two entries
+
+## 04.03.2026
 - Deleting lots of useless bloat, to make this more appealing to read for strangers
-- 
 
 ## 26.01.2026
 - Tree and Index now get rendered in the same folder as the respective formats
