@@ -58,7 +58,7 @@ dotnet tool install --global xyDocGen --version 1.0.xx
 ## Update
 
 ### Checking the Version of installed dotnet tools
-dotnet list tool [--local/--global]
+dotnet tool list [--local/--global]
 
 ### Updating the Version
 dotnet tool update xydocgen [--local/--global]
