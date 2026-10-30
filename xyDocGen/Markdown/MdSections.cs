@@ -5,7 +5,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using xyDocumentor.Docs;
 using xyDocumentor.Renderer;
-using xyToolz.QOL;
+using xyToolz.Extensions;
+
 
 namespace xyDocumentor.Markdown
 {
@@ -45,7 +46,7 @@ namespace xyDocumentor.Markdown
         /// <param name="dic_AnchorMap_"></param>
         internal static void RenderMetadata(StringBuilder sb_MarkdownBuilder_, TypeDoc td_TargetType_, int level_, Dictionary<string, string> dic_AnchorMap_)
         {
-            sb_MarkdownBuilder_.AppendLine($"{xy.Repeat("#", (ushort)(level_ + 1))} Metadata");
+            sb_MarkdownBuilder_.AppendLine($"{("#".Repeat((ushort)(level_ + 1)) +"Metadata")}");
             sb_MarkdownBuilder_.AppendLine($"**Namespace**: `{(string.IsNullOrWhiteSpace(td_TargetType_.Namespace) ? "Global (Default)" : td_TargetType_.Namespace)}`");
 
             if (!string.IsNullOrWhiteSpace(td_TargetType_.Modifiers))
@@ -86,7 +87,7 @@ namespace xyDocumentor.Markdown
         /// <param name="dic_AnchorMap_">Not yet used</param>
         internal static void RenderDescriptionFromXmlSummaryInTypeDoc(StringBuilder sb_MarkdownBuilder_, TypeDoc td_Type_, int level_, Dictionary<string, string> dic_AnchorMap_)
         {
-            sb_MarkdownBuilder_.AppendLine($"{xy.Repeat("#", (ushort)(level_ + 1))} Description");
+            sb_MarkdownBuilder_.AppendLine($"{("#".Repeat ((ushort)(level_ + 1))+ " Description")}");
             sb_MarkdownBuilder_.AppendLine((!string.IsNullOrWhiteSpace(td_Type_.Summary) ? td_Type_.Summary.Trim() : "(No description available)"));
 
             sb_MarkdownBuilder_.AppendLine();

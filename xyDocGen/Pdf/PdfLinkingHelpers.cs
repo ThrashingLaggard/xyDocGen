@@ -2,7 +2,6 @@
 using PdfSharpCore.Drawing;              // XRect
 using PdfSharpCore.Pdf;                  // PdfDocument, PdfPage, PdfRectangle
 using PdfSharpCore.Pdf.Annotations;
-using System.Reflection.Metadata;
 
 namespace xyDocumentor.Pdf
 {

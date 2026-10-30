@@ -1,10 +1,12 @@
-﻿namespace xyDocumentor.Helpers;
+﻿using xyLogger.Loggers;
+
+namespace xyDocumentor.Helpers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using xyDocumentor.CLI;
 using xyDocumentor.Models;
-using xyToolz.Helper.Logging;
+
 
 /// <summary>
 /// Parses CLI arguments for xyDocGen.
@@ -18,7 +20,7 @@ using xyToolz.Helper.Logging;
 /// The parser is intentionally permissive: it normalizes case, accepts aliases (e.g., "markdown" → "md"),
 /// and falls back to sensible defaults when a flag is omitted.
 /// </summary>
-internal static class StringAnalyzer
+public static class StringAnalyzer
 {
 #nullable enable
 
@@ -32,7 +34,7 @@ internal static class StringAnalyzer
     /// Returns a tuple with resolved root, a single effective out-path, the selected (single) format,
     /// whether non-public members should be included, and the exclude set.
     /// </summary>
-    internal static (string root, string outPath, string format, bool includeNonPublic, HashSet<string> excludedParts) AnalyzeArgs(string[] args_)
+    public static (string root, string outPath, string format, bool includeNonPublic, HashSet<string> excludedParts) AnalyzeArgs(string[] args_)
     {
         if (!OptionsParser.TryParseOptions(args_, out var o, out string parseError))
         {

@@ -1,4 +1,6 @@
-﻿namespace xyDocumentor.Helpers;
+﻿using xyLogger.Loggers;
+
+namespace xyDocumentor.Helpers;
 #nullable enable
 
 using System;
@@ -8,7 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using PdfSharpCore.Fonts;
-using xyToolz.Helper.Logging;
+
 
 /// <summary>
 /// PdfSharpCore font resolver that auto-detects embedded font resources (EmbeddedResource).

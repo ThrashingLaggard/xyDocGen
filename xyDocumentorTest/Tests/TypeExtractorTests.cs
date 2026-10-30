@@ -1,6 +1,5 @@
 ﻿namespace xyDocumentor.Tests;
 using Microsoft.CodeAnalysis.CSharp;
-using System.Linq;
 using Xunit;
 using xyDocumentor.Extractors;
 

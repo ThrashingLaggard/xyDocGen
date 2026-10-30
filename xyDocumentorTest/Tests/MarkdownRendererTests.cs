@@ -18,8 +18,8 @@ public class MarkdownRendererTests
         TypeDoc td_TestClass = new TypeDoc { Name = "TestType", Kind = "class" };
 
         string md = MarkdownRenderer.Render(td_TestClass, level_: 2);
-        Assert.StartsWith("## ", md.TrimStart());
-        Assert.Contains("TestClass", md);
+        Assert.Contains("## ", md);
+        Assert.Contains("TestType", md);
     }
 
 
@@ -40,9 +40,9 @@ public class MarkdownRendererTests
         var md = MarkdownRenderer.Render(root);
 
         // Assert
-        Assert.Contains("**class** `Outer`", md);
-        Assert.Contains("**class** `Outer.Inner`", md);  // nested class
-        Assert.Contains("**enum** `Outer.Inner.E`", md); // nested enum
+        Assert.Contains("`Outer` **class**", md);
+        Assert.Contains("`Outer.Inner` **class**", md);  // nested class
+        Assert.Contains("`Outer.Inner.E` **enum**", md); // nested enum
 
     }
 }

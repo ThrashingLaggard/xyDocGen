@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using xyDocumentor.Docs;
 using xyDocumentor.Markdown;
-using xyToolz.QOL;
+
 
 namespace xyDocumentor.Renderer
 {

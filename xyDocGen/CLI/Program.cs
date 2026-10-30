@@ -1,21 +1,21 @@
-﻿namespace xyDocumentor.CLI
+using xyLogger.Loggers;
+
+namespace xyDocumentor.CLI
 {
-    using Microsoft.EntityFrameworkCore.Metadata.Internal;
-    using PdfSharpCore.Fonts;
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
     using System.Linq;
-    using System.Runtime.Intrinsics.X86;
     using System.Text;
     using System.Threading.Tasks;
-    using xyDocumentor.Docs;
-    using xyDocumentor.Extractors;
-    using xyDocumentor.Helpers;
-    using xyDocumentor.Models;
-    using xyDocumentor.Renderer;
-    using xyToolz.Helper.Logging;
+    using PdfSharpCore.Fonts;
+    using Docs;
+    using Extractors;
+    using Helpers;
+    using Models;
+    using Renderer;
+    
+
 
 
     /// <summary>
@@ -90,7 +90,7 @@
         /// </summary>
         /// <param name="args">Raw command-line arguments forwarded from <see cref="Main(string[])"/>.</param>
         /// <returns>A task that completes when the CLI workflow finishes.</returns>
-        async static Task MainAsync(string[] args)
+        static async Task MainAsync(string[] args)
         {
             // ### Needed to localize where the chosen formats go missing ###
             //args = [ "--show-tree","--show-index", "--format", "pdf,json"];

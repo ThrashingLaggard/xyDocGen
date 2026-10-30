@@ -6,15 +6,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using xyDocumentor.Docs;
 using xyDocumentor.Extractors;
 using xyDocumentor.Renderer;
+using xyLogger.Loggers;
 using xyToolz.Filesystem;
-using xyToolz.Helper.Logging;
-using xyToolz.Logging.Helper;
+
 
 namespace xyDocumentor.Helpers
 {
@@ -36,7 +35,7 @@ namespace xyDocumentor.Helpers
     /// The type is declared <c>partial</c> to allow feature-specific helpers to be split
     /// into additional files without bloating a single unit.
     /// </summary>
-    internal static partial class Utils
+    public static partial class Utils
     {
         /// <summary>
         /// Optional human-readable description injected by callers for diagnostics/tracing.

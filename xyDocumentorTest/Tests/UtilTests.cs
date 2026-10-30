@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
-using System;
-using Xunit;
+using Xunit.v3;
 using xyDocumentor.Helpers;
 
 namespace xyDocumentor.Tests
@@ -18,7 +17,7 @@ namespace xyDocumentor.Tests
         public void CleanDoc_ShouldRemoveBrackets()
         {
             var input = "<Hello>";
-            var result = Utils.CleanDoc(input);
+            var result = xyDocumentor.Helpers.Utils.CleanDoc(input);
             result.Should().Be("Hello");
         }
 

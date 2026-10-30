@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 using xyDocumentor.CLI;
-using xyDocumentor.Helpers;
 
 namespace xyDocumentor.Tests
 {

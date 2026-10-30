@@ -1,6 +1,5 @@
 ﻿using System;
 using xyDocumentor.Interfaces;
-using xyDocumentor.RendererAdapter;
 
 
 namespace xyDocumentor.RendererAdapter;
