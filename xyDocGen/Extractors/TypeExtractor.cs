@@ -6,8 +6,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using xyDocumentor.Docs;
 using xyDocumentor.Helpers;
+using xyLogger.Loggers;
 using xyToolz.Filesystem;
-using xyToolz.Helper.Logging;
+
 
 
 namespace xyDocumentor.Extractors
@@ -273,6 +274,13 @@ namespace xyDocumentor.Extractors
 
             foreach (MemberDeclarationSyntax memberDeclaration in listedMembers_)
             {
+                if (memberDeclaration is BaseNamespaceDeclarationSyntax ns)
+                {
+                    foreach (var m in ProcessMembers(ns.Members, ns.Name.ToString(), file_))
+                        listedMembers.Add(m);
+                    continue;
+                }
+
                 if (!_includeNonPublic && !HasPublicLike(memberDeclaration.Modifiers))
                 {
                     xyLog.Log($" Skipped non-public top-level member: {memberDeclaration.Kind()}");
