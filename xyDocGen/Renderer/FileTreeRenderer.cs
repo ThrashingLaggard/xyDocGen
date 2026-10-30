@@ -44,12 +44,14 @@ namespace xyDocumentor.Renderer
 
             for (int i = 0; i < di_SubDirectories.Length; i++)
             {
-                RenderTree(di_SubDirectories[i], prefix_ + (isLast_ ? "  " : "│ "), i == di_SubDirectories.Length - 1, sb_TreeBuilder_, hs_ExcludeTheseParts_);
+                bool isLastSub = (i == di_SubDirectories.Length - 1) && (fi_Files.Length == 0);
+                RenderTree(di_SubDirectories[i], prefix_ + (isLast_ ? "  " : "│ "), isLastSub, sb_TreeBuilder_, hs_ExcludeTheseParts_);
             }
 
             for (int i = 0; i < fi_Files.Length; i++)
-            {                                                                                                                                                                                                                                            //string fileName = fi_Files[i].Name; //sb_TreeBuilder_.AppendLine($"{prefix_}{(di_SubDirectories.Length + i == di_SubDirectories.Length + fi_Files.Length - 1 ? "└─" : "├─")}{fileName}");
-                sb_TreeBuilder_.AppendLine($"{prefix_}{ChangePrefixIfIndexIsAtLastTreeLevel(di_SubDirectories,fi_Files,i)}{fi_Files[i].Name}");
+            {
+                bool isLastFile = (i == fi_Files.Length - 1);
+                sb_TreeBuilder_.AppendLine($"{prefix_}{(isLastFile ? "└─" : "├─")}{fi_Files[i].Name}");
             }
         }
 
