@@ -288,11 +288,11 @@ jobs:
 
       # ----------------------------------------------------------------------------
       # B.7) TEST
-      #   - Runs unit tests without rebuilding. If tests fail, the job fails here.
+      #   - Restores and builds the separate test project, then runs its unit tests. If tests fail, the job fails here.
       # ----------------------------------------------------------------------------
       - name: B.7) Test
         id: test
-        run: dotnet test xyDocGen/xyDocumentor.csproj --no-build --verbosity detailed # quiet|minimal|normal|detailed|diagnostic
+        run: dotnet test xyDocumentorTest/xyDocumentorTest.csproj --configuration Release --verbosity detailed # quiet|minimal|normal|detailed|diagnostic
 
       # ----------------------------------------------------------------------------
       # B.8) PACK
