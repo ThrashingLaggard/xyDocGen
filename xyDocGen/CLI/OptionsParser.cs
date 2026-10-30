@@ -9,8 +9,8 @@ using xyDocumentor.Models;
 namespace xyDocumentor.CLI
 {
 #nullable enable
-    
-    internal class OptionsParser
+
+    public class OptionsParser
     {
 
         /// <summary>  The set of formats this tool understands. Case-insensitive. "markdown" is normalized to "md".</summary>
@@ -86,7 +86,7 @@ namespace xyDocumentor.CLI
                 // Prefer "--key=value" when present, to avoid ambiguity with "--key value".
                 if (TryGetEq(dictEq, key, out string eqValue))
                 {
-                    switch (KeyName(key)) // Strip "=value" for switch matching
+                    switch (KeyName(key).ToLowerInvariant()) // Strip "=value" for switch matching
                     {
                         case "--root":
                             // Source code root; the directory that will be scanned for *.cs files.
@@ -165,7 +165,7 @@ namespace xyDocumentor.CLI
                 }
 
                 // If no "--key=value" was present, parse the "--key value" form (or presence-only boolean).
-                switch (KeyName(key))
+                switch (KeyName(key).ToLowerInvariant())
                 {
                     case "--root":
                       
@@ -217,6 +217,7 @@ namespace xyDocumentor.CLI
                         continue;
 
                     // If present --> true
+                    case "--show":
                     case "--show-only": showOnly = true; i++; continue;
                     case "--index": buildIndex = true; i++; continue;
                     case "--tree": buildTree = true; i++; continue;
@@ -448,7 +449,8 @@ namespace xyDocumentor.CLI
         {
             switch (key)
             {
-                case "--show": showOnly = value; break;
+                case "--show":
+            case "--show-only": showOnly = value; break;
                 case "--index": buildIndex = value; break;
                 case "--tree": buildTree = value; break;
                 case "--help": help = value; break;
