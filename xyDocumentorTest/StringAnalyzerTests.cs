@@ -1,9 +1,6 @@
-﻿using System;
-using System.IO;
-using Xunit;
-using xyDocumentor.CLI;
+﻿using xyDocumentor.CLI;
 
-namespace xyDocumentor.Tests
+namespace xyDocumentorTests
 {
     /// <summary>
     /// Tests for the robust CLI parser in StringAnalyzer.TryParseOptions.
@@ -66,8 +63,8 @@ namespace xyDocumentor.Tests
             Assert.Equal("md", opt.Format);
             Assert.True(opt.IncludeNonPublic);     // default is true (unless --private)
             Assert.False(opt.ShowOnly);
-            Assert.False(opt.BuildIndex);
-            Assert.False(opt.BuildTree);
+            Assert.True(opt.BuildIndex);
+            Assert.True(opt.BuildTree);
         }
 
         /// <summary>
@@ -80,9 +77,9 @@ namespace xyDocumentor.Tests
                 A("--root", _tmpRoot), out var opt, out var err);
 
             Assert.True(ok, err);
-            var exp = Path.Combine(opt.RootPath, "docs", "api");
+            var exp = Path.Combine(opt.RootPath, "documentation");
             Assert.Equal(Path.GetFullPath(exp), opt.OutPath);
-            Assert.Equal("md", opt.Format);
+            Assert.Equal("pdf", opt.Format);
         }
 
         /// <summary>

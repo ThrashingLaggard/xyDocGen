@@ -1,4 +1,4 @@
-﻿namespace xyDocumentor.Tests;
+﻿namespace xyDocumentorTests;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 using xyDocumentor.Extractors;

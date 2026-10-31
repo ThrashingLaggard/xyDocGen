@@ -22,7 +22,7 @@ namespace xyDocumentor.Helpers
     /// </list>
     /// </para>
     /// </summary>
-    internal class Normalizer
+    internal static class Normalizer
     {
         /// <summary>
         /// Normalizes a single format alias and lowercases it for consistent comparison.
@@ -64,7 +64,7 @@ namespace xyDocumentor.Helpers
         /// </para>
         /// </summary>
         /// <param name="s">
-        /// The delimited input string, e.g. <c>"pdf, html; md"</c>.
+        /// The delimited input string, e.g. <c>"pdf, HTML; md"</c>.
         /// </param>
         /// <returns>
         /// A list of non-empty, trimmed strings, e.g. <c>["pdf", "html", "md"]</c>.

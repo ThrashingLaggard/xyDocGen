@@ -1,8 +1,6 @@
 ﻿using FluentAssertions;
-using Xunit.v3;
-using xyDocumentor.Helpers;
 
-namespace xyDocumentor.Tests
+namespace xyDocumentorTests
 {
     /// <summary>
     /// Awesome Tests for the even more awesome Utils class

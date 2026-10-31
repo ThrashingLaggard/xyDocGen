@@ -1,4 +1,4 @@
-namespace  xyDocumentor.Tests;
+namespace  xyDocumentorTests;
 
 using Xunit;
 using xyDocumentor.Docs;

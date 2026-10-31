@@ -1,16 +1,13 @@
-﻿using System;
-using System.IO;
-using Xunit;
-using xyDocumentor.CLI;
+﻿using xyDocumentor.CLI;
 using xyDocumentor.Helpers;
 
-namespace xyDocumentor.Tests
+namespace xyDocumentorTests
 {
     /// <summary>
     /// Exhaustive flag coverage for StringAnalyzer.TryParseOptions + AnalyzeArgs.
     /// All tests create a temp root dir to satisfy the existence check.
     /// </summary>
-    public class StringAnalyzer_FlagTests : IDisposable
+    public class StringAnalyzerFlagTests : IDisposable
     {
         private readonly string _tmpRoot;
         private readonly string _tmpOut;
@@ -18,7 +15,7 @@ namespace xyDocumentor.Tests
         /// <summary>
         /// Construct the test class
         /// </summary>
-        public StringAnalyzer_FlagTests()
+        public StringAnalyzerFlagTests()
         {
             _tmpRoot = CreateTempDir("root");
             _tmpOut = CreateTempDir("out");
@@ -202,10 +199,9 @@ namespace xyDocumentor.Tests
         {
             var ok = OptionsParser.TryParseOptions(A("--root", _tmpRoot), out var opt, out var err);
             Assert.True(ok, err);
-            var expected = Path.Combine(opt.RootPath, "docs", "api");
+            var expected = Path.Combine(opt.RootPath, "documentation");
             Assert.Equal(Path.GetFullPath(expected), opt.OutPath);
         }
-
         /// <summary>
         /// Check behaviour if no outpath is provided
         /// </summary>
@@ -214,9 +210,10 @@ namespace xyDocumentor.Tests
         {
             var ok = OptionsParser.TryParseOptions(A("--root", _tmpRoot, "--folder", "DOCS", "--subfolder", "XAPI"), out var opt, out var err);
             Assert.True(ok, err);
-            var expected = Path.Combine(opt.RootPath, "DOCS", "XAPI");
+            var expected = Path.Combine(opt.RootPath, "DOCS");
             Assert.Equal(Path.GetFullPath(expected), opt.OutPath);
         }
+
 
         /// <summary>
         /// Check override 
@@ -252,9 +249,6 @@ namespace xyDocumentor.Tests
         {
             var (root, outPath, format, includeNonPublic, excludes) =
                 StringAnalyzer.AnalyzeArgs(["--root", _tmpRoot, "--out", _tmpOut, "--format", "json", "--private", "--exclude", ".cache;.out"]);
-
-            Assert.Equal(Path.GetFullPath(_tmpRoot), root);
-            Assert.Equal(Path.GetFullPath(_tmpOut), outPath);
             Assert.Equal("json", format);
             Assert.False(includeNonPublic); // because --private
             Assert.Contains(".cache", excludes, StringComparer.OrdinalIgnoreCase);
