@@ -9,14 +9,14 @@ namespace xyDocumentorTests
     {
 
         /// <summary>
-        /// Check for any left brackets
+        /// Remove XML Tag
         /// </summary>
         [Fact]
-        public void CleanDoc_ShouldRemoveBrackets()
+        public void CleanDoc_ShouldRemoveTags()
         {
             var input = "<Hello>";
             var result = xyDocumentor.Helpers.Utils.CleanDoc(input);
-            result.Should().Be("Hello");
+            result.Should().Be("");
         }
 
        

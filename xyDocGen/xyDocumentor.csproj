@@ -7,13 +7,13 @@
 
 		<!-- NuGet Metadata -->
 		<PackageId>xyDocGen</PackageId>
-		<ToolCommandName>xyDocGen</ToolCommandName>
+		<ToolCommandName>xydocgen</ToolCommandName>
 		<IsPackable>true</IsPackable>
 		<PackageVersion>1.0.50</PackageVersion>
 		<Authors>ThrashingLaggard</Authors>
 		<Company>ThrashingLaggardIndustries</Company>
 		<PackAsTool>true</PackAsTool>
-		<Description>Helper library for generating [Markdown/...] documentation from C# projects</Description>
+		<Description>Helper library for generating [JSON/Markdown/] documentation from C# projects</Description>
 		<PackageTags>documentation;markdown;csharp;api</PackageTags>
 		<RepositoryUrl>https://github.com/ThrashingLaggard/xyDocGen</RepositoryUrl>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
