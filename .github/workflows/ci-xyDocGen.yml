@@ -14,9 +14,12 @@ on:
 # 1) PERMISSIONS
 #    - We need write access to contents in order to commit the updated version back
 #      into the repository (only after successful build/test/pack and publish policy).
+#    - id-token: write lets the job request a GitHub OIDC token, which NuGet Trusted
+#      Publishing exchanges for a short-lived API key (no stored secret needed).
 # ==================================================================================
 permissions:
   contents: write
+  id-token: write
 
 # ==================================================================================
 # 2) CONCURRENCY
@@ -332,6 +335,20 @@ jobs:
           fi
 
       # ----------------------------------------------------------------------------
+      # B.10a) NUGET LOGIN (TRUSTED PUBLISHING)
+      #   - Exchanges the GitHub OIDC token for a temporary NuGet API key (~1 h).
+      #   - "user" is the nuget.org profile name (not the e-mail address).
+      #   - Matches the Trusted Publishing policy on nuget.org: owner, repository
+      #     and workflow file name "ci-xyDocGen.yml".
+      # ----------------------------------------------------------------------------
+      - name: B.10a) NuGet login (OIDC -> temporary API key)
+        id: nuget_login
+        if: steps.check_version.outputs.skip_publish == 'false'
+        uses: NuGet/login@v1
+        with:
+          user: ThrashingLaggard
+
+      # ----------------------------------------------------------------------------
       # B.10) PUBLISH TO NUGET
       #   - Runs only when the version does not already exist.
       #   - --skip-duplicate is kept for safety in edge cases (e.g., race conditions).
@@ -342,7 +359,7 @@ jobs:
         run: >
           dotnet nuget push out/*.nupkg
           --source https://api.nuget.org/v3/index.json
-          --api-key ${{ secrets.XYDOCGEN_API_KEY }}
+          --api-key ${{ steps.nuget_login.outputs.NUGET_API_KEY }}
           --skip-duplicate
 
 
