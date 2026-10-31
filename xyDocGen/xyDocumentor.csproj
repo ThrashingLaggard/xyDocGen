@@ -13,7 +13,7 @@
 		<Authors>ThrashingLaggard</Authors>
 		<Company>ThrashingLaggardIndustries</Company>
 		<PackAsTool>true</PackAsTool>
-		<Description>Helper library for generating [JSON/Markdown/] documentation from C# projects</Description>
+		<Description>Library for generating [JSON/Markdown/HTML/PDF] documentation from the comments in C# projects</Description>
 		<PackageTags>documentation;markdown;csharp;api</PackageTags>
 		<RepositoryUrl>https://github.com/ThrashingLaggard/xyDocGen</RepositoryUrl>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
