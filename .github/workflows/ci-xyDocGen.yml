@@ -292,7 +292,7 @@ jobs:
       # ----------------------------------------------------------------------------
       - name: B.7) Test
         id: test
-        run: dotnet test xyDocumentorTest/xyDocumentorTest.csproj --configuration Release --verbosity detailed # quiet|minimal|normal|detailed|diagnostic
+        run: dotnet run --project xyDocumentorTest/xyDocumentorTest.csproj --configuration Release # xunit.v3 test project is an executable; avoids the VSTest/MTP error of dotnet test on .NET 10 SDK
 
       # ----------------------------------------------------------------------------
       # B.8) PACK
